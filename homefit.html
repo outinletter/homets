@@ -1,0 +1,723 @@
+<title>홈트 트레이너</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+:root {
+  --bg:#0D0D16; --sf:#141420; --sf2:#1C1C2A; --sf3:#242434;
+  --bdr:rgba(255,255,255,.07); --bdr2:rgba(255,255,255,.13);
+  --ac:#00E5A0; --acd:rgba(0,229,160,.14); --acb:rgba(0,229,160,.25);
+  --aw:#FF6B4A; --warn:#FFB800;
+  --t1:#F0F0F8; --t2:#8888A0; --t3:#48485A;
+  --r:14px; --rs:10px;
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px)
+}
+@media(prefers-color-scheme:light){:root{
+  --bg:#F0F0F6; --sf:#FFFFFF; --sf2:#EAEAF2; --sf3:#DEDEE8;
+  --bdr:rgba(0,0,0,.07); --bdr2:rgba(0,0,0,.13);
+  --ac:#009E72; --acd:rgba(0,158,114,.11); --acb:rgba(0,158,114,.22);
+  --aw:#D94E2A; --warn:#C48A00;
+  --t1:#0D0D18; --t2:#5C5C72; --t3:#9898AA
+}}
+:root[data-theme=dark]{--bg:#0D0D16;--sf:#141420;--sf2:#1C1C2A;--sf3:#242434;--bdr:rgba(255,255,255,.07);--bdr2:rgba(255,255,255,.13);--ac:#00E5A0;--acd:rgba(0,229,160,.14);--acb:rgba(0,229,160,.25);--aw:#FF6B4A;--warn:#FFB800;--t1:#F0F0F8;--t2:#8888A0;--t3:#48485A}
+:root[data-theme=light]{--bg:#F0F0F6;--sf:#FFFFFF;--sf2:#EAEAF2;--sf3:#DEDEE8;--bdr:rgba(0,0,0,.07);--bdr2:rgba(0,0,0,.13);--ac:#009E72;--acd:rgba(0,158,114,.11);--acb:rgba(0,158,114,.22);--aw:#D94E2A;--warn:#C48A00;--t1:#0D0D18;--t2:#5C5C72;--t3:#9898AA}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t1);font-family:-apple-system,'Pretendard',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer}
+#app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;position:relative}
+
+/* HEADER */
+.hdr{padding:calc(var(--st) + 14px) 18px 10px;background:var(--bg);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10;border-bottom:1px solid var(--bdr)}
+.hdr-date{font-size:12px;color:var(--t2);letter-spacing:.3px;margin-bottom:1px}
+.hdr-title{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.streak{display:flex;align-items:center;gap:5px;background:var(--acd);border:1px solid var(--acb);border-radius:20px;padding:5px 11px;font-size:13px;font-weight:700;color:var(--ac)}
+.streak svg{width:14px;height:14px}
+.icon-btn{width:34px;height:34px;border-radius:50%;background:var(--sf2);border:1px solid var(--bdr);color:var(--t2);display:flex;align-items:center;justify-content:center}
+.icon-btn svg{width:18px;height:18px}
+
+/* SCROLL */
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(72px + var(--sb))}
+.scroll-area::-webkit-scrollbar{display:none}
+
+/* TAB BAR */
+.tab-bar{position:absolute;bottom:0;left:0;right:0;height:calc(60px + var(--sb));padding-bottom:var(--sb);background:var(--sf);border-top:1px solid var(--bdr);display:flex;z-index:20}
+.tab-btn{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--t3);transition:color .2s;padding-top:6px}
+.tab-btn.active{color:var(--ac)}
+.tab-btn svg{width:22px;height:22px}
+.tab-btn span{font-size:10px;font-weight:700;letter-spacing:.4px}
+
+.view{display:none}
+.view.active{display:block}
+
+/* TODAY: TOP AREA */
+.today-banner{padding:16px 16px 10px}
+.today-h{font-size:24px;font-weight:800;color:var(--t1);letter-spacing:-.5px}
+.today-sub{font-size:13px;color:var(--t2);margin-top:3px}
+.today-sub strong{color:var(--ac)}
+
+/* SUMMARY */
+.summary{display:flex;gap:8px;padding:0 16px 14px}
+.chip{flex:1;background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:11px 6px;text-align:center}
+.chip-val{font-size:20px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums;line-height:1}
+.chip-val.g{color:var(--ac)}
+.chip-lbl{font-size:10px;color:var(--t2);margin-top:3px;letter-spacing:.4px}
+
+/* SETTINGS ROW */
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:6px 16px 10px}
+.settings-label{font-size:12px;color:var(--t2);font-weight:600;letter-spacing:.4px}
+.sets-stepper{display:flex;align-items:center;gap:8px}
+.ss-btn{width:26px;height:26px;border-radius:7px;background:var(--sf);border:1px solid var(--bdr);color:var(--t1);font-size:16px;font-weight:300;display:flex;align-items:center;justify-content:center}
+.ss-val{font-size:14px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums;min-width:18px;text-align:center}
+
+/* ══════════════════════════════════
+   TABLE LAYOUT
+══════════════════════════════════ */
+.ex-table-wrap{padding:0 16px;margin-bottom:14px}
+
+/* Table container */
+.ex-table{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+
+/* Column header */
+.ex-table-head{display:flex;align-items:center;background:var(--sf2);border-bottom:1px solid var(--bdr);padding:7px 14px;gap:0}
+.th-left{width:128px;flex-shrink:0;font-size:10px;font-weight:800;color:var(--t3);letter-spacing:.7px;text-transform:uppercase}
+.th-div{width:1px;background:var(--bdr);height:14px;margin-right:12px}
+.th-right{flex:1;font-size:10px;font-weight:800;color:var(--t3);letter-spacing:.7px;text-transform:uppercase}
+
+/* Exercise row */
+.ex-row{display:flex;align-items:flex-start;border-bottom:1px solid var(--bdr);transition:background .2s;min-height:52px}
+.ex-row:last-child{border-bottom:none}
+.ex-row.row-done{background:rgba(0,229,160,.03)}
+
+/* LEFT CELL */
+.ex-left{width:128px;flex-shrink:0;padding:10px 0 10px 14px;display:flex;flex-direction:column;justify-content:center;gap:2px;border-right:1px solid var(--bdr)}
+.ex-name-row{display:flex;align-items:center;gap:6px}
+.ex-ico{font-size:15px;line-height:1;flex-shrink:0}
+.ex-name{font-size:13px;font-weight:700;color:var(--t1);line-height:1.2}
+.ex-meta{display:flex;align-items:center;gap:4px;margin-top:3px;flex-wrap:wrap}
+.ex-tag{font-size:9px;color:var(--t3);background:var(--sf2);border-radius:3px;padding:1px 5px;letter-spacing:.2px}
+.ex-tgt{font-size:9px;color:var(--ac);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* RIGHT CELL */
+.ex-right{flex:1;padding:9px 12px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+
+/* Chips row: completed + pending dots */
+.set-chips{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+
+/* Completed set chip */
+.chip-done{background:var(--acd);border:1px solid var(--acb);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:800;color:var(--ac);font-variant-numeric:tabular-nums;cursor:pointer;transition:opacity .15s;flex-shrink:0;line-height:1.2}
+.chip-done:active{opacity:.7}
+.chip-done .chip-sub{font-size:9px;font-weight:500;color:var(--ac);opacity:.7;margin-left:1px}
+
+/* Pending set dot */
+.dot-pending{width:7px;height:7px;border-radius:50%;background:var(--sf3);flex-shrink:0}
+
+/* Active set stepper row */
+.set-active{display:flex;align-items:center;gap:4px}
+.set-label{font-size:10px;font-weight:700;color:var(--t2);min-width:34px;letter-spacing:.2px;flex-shrink:0}
+.stp-btn{width:26px;height:26px;border-radius:7px;background:var(--sf2);border:1px solid var(--bdr);color:var(--t1);font-size:16px;font-weight:300;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .1s,transform .1s}
+.stp-btn:active{background:var(--sf3);transform:scale(.9)}
+.stp-num{min-width:26px;text-align:center;font-size:16px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums}
+.stp-unit{font-size:10px;color:var(--t2);flex-shrink:0}
+.ok-btn{background:var(--ac);color:#000;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:800;letter-spacing:.3px;flex-shrink:0;transition:opacity .15s,transform .1s;line-height:1.2}
+.ok-btn:active{opacity:.82;transform:scale(.95)}
+
+/* All done state */
+.row-done-mark{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ac);font-weight:700}
+.row-done-mark svg{width:14px;height:14px}
+
+/* Add set */
+.add-set-link{background:none;border:none;color:var(--t3);font-size:11px;display:flex;align-items:center;gap:3px;padding:0;line-height:1}
+.add-set-link:hover{color:var(--t2)}
+.add-set-link svg{width:11px;height:11px}
+
+/* COMPLETE BANNER */
+.complete-banner{margin:0 16px 14px;background:var(--acd);border:1px solid var(--acb);border-radius:var(--r);padding:18px;text-align:center}
+.complete-emoji{font-size:32px;margin-bottom:6px}
+.complete-h{font-size:18px;font-weight:800;color:var(--ac);margin-bottom:3px}
+.complete-sub{font-size:12px;color:var(--t2)}
+
+/* EXERCISE TOGGLE */
+.ex-toggle-section{padding:12px 16px 0}
+.ex-toggle-title{font-size:11px;color:var(--t2);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px}
+.ex-toggle-grid{display:flex;flex-wrap:wrap;gap:6px}
+.ex-toggle-chip{border:1px solid var(--bdr2);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;color:var(--t2);background:var(--sf);transition:all .2s}
+.ex-toggle-chip.on{background:var(--acd);border-color:var(--acb);color:var(--ac)}
+
+/* ── HISTORY ── */
+.history-wrap{padding:16px}
+.section-hdr{font-size:11px;font-weight:800;color:var(--t2);letter-spacing:.7px;text-transform:uppercase;margin-bottom:10px}
+.history-item{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.history-date{background:var(--sf2);border-radius:8px;padding:7px 10px;text-align:center;flex-shrink:0}
+.hd-month{font-size:9px;color:var(--t2);letter-spacing:.5px;text-transform:uppercase}
+.hd-day{font-size:22px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums;line-height:1}
+.history-info{flex:1;min-width:0}
+.history-exercises{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-meta{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap}
+.hm{font-size:11px;color:var(--t2)}
+.hm strong{color:var(--ac);font-variant-numeric:tabular-nums}
+.chevron{color:var(--t3)}
+.chevron svg{width:15px;height:15px}
+.empty-msg{text-align:center;color:var(--t3);font-size:14px;padding:40px 20px}
+.history-detail{background:var(--sf2);border:1px solid var(--bdr);border-top:none;border-radius:0 0 var(--rs) var(--rs);padding:8px 14px;margin-top:-8px;margin-bottom:8px}
+.hd-ex-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.hd-ex-row:last-child{border-bottom:none}
+.hd-ex-name{color:var(--t1);font-weight:600}
+.hd-ex-val{color:var(--ac);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ── STATS ── */
+.stats-wrap{padding:16px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.kpi{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:14px}
+.kpi-val{font-size:28px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums;line-height:1}
+.kpi-val.ac{color:var(--ac)}
+.kpi-lbl{font-size:11px;color:var(--t2);margin-top:5px;letter-spacing:.2px}
+.chart-card{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:16px;margin-bottom:12px}
+.chart-title{font-size:11px;font-weight:800;color:var(--t2);letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px}
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:88px}
+.bc-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bc-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .6s cubic-bezier(.4,0,.2,1)}
+.bc-bar.today-bar{background:var(--ac)}
+.bc-bar.past-bar{background:var(--sf3)}
+.bc-lbl{font-size:9px;color:var(--t3);font-variant-numeric:tabular-nums}
+.pr-card{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);overflow:hidden;margin-bottom:12px}
+.pr-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--bdr)}
+.pr-row:last-child{border-bottom:none}
+.pr-ico{font-size:16px;flex-shrink:0;width:24px;text-align:center}
+.pr-name{flex:1;font-size:13px;font-weight:600;color:var(--t1)}
+.pr-val{font-size:15px;font-weight:800;color:var(--ac);font-variant-numeric:tabular-nums}
+.pr-unit{font-size:10px;color:var(--t2);margin-left:2px}
+.pr-default{color:var(--t3)}
+.muscle-card{background:var(--sf);border:1px solid var(--bdr);border-radius:var(--rs);padding:16px;margin-bottom:12px}
+.muscle-row{margin-bottom:10px}
+.muscle-row:last-child{margin-bottom:0}
+.muscle-hdr{display:flex;justify-content:space-between;margin-bottom:5px}
+.muscle-name{font-size:12px;color:var(--t1);font-weight:600}
+.muscle-pct{font-size:12px;color:var(--ac);font-weight:700;font-variant-numeric:tabular-nums}
+.muscle-track{height:5px;background:var(--sf2);border-radius:3px;overflow:hidden}
+.muscle-bar{height:100%;background:var(--ac);border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* REST TIMER */
+.rest-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;padding:0 16px calc(16px + var(--sb));animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.rest-card{background:var(--sf);border:1px solid var(--bdr2);border-radius:24px;padding:26px 24px 22px;width:100%;max-width:398px;text-align:center}
+.rest-ttl{font-size:11px;font-weight:800;color:var(--t2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px}
+.rest-num{font-size:68px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums;line-height:1;margin-bottom:14px;transition:color .3s}
+.rest-num.urgent{color:var(--aw)}
+.rest-track{height:4px;background:var(--sf2);border-radius:2px;overflow:hidden;margin-bottom:18px}
+.rest-prog{height:100%;background:var(--ac);border-radius:2px;transition:width .9s linear}
+.rest-prog.urgent{background:var(--aw)}
+.rest-btns{display:flex;gap:10px}
+.rest-add{flex-shrink:0;padding:13px 16px;border-radius:14px;background:var(--sf2);border:1px solid var(--bdr);color:var(--t2);font-size:13px;font-weight:700}
+.rest-skip{flex:1;padding:13px;border-radius:14px;background:var(--ac);border:none;color:#000;font-size:14px;font-weight:800;letter-spacing:.2px}
+
+/* TOAST */
+.toast{position:fixed;top:calc(var(--st) + 62px);left:50%;transform:translateX(-50%);background:var(--sf2);border:1px solid var(--bdr2);border-radius:12px;padding:9px 16px;font-size:13px;font-weight:600;color:var(--t1);z-index:200;white-space:nowrap;animation:toastIn .25s ease,toastOut .25s ease 1.5s forwards;pointer-events:none}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div id="app">
+  <header class="hdr">
+    <div>
+      <div class="hdr-date" id="hdr-date"></div>
+      <div class="hdr-title">홈트 트레이너</div>
+    </div>
+    <div class="hdr-right">
+      <div class="streak" id="hdr-streak">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>
+        <span id="streak-num">0</span>일
+      </div>
+      <button class="icon-btn" id="theme-btn" aria-label="테마 변경">
+        <svg id="theme-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="view-today" class="view active scroll-area"><div id="today-content"></div></div>
+  <div id="view-history" class="view scroll-area"><div id="history-content"></div></div>
+  <div id="view-stats" class="view scroll-area"><div id="stats-content"></div></div>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-tab="today">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.72L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5V2.05z"/></svg>
+      <span>운동</span>
+    </button>
+    <button class="tab-btn" data-tab="history">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zm0-13H5V5h14v1zM7 10h5v5H7z"/></svg>
+      <span>기록</span>
+    </button>
+    <button class="tab-btn" data-tab="stats">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+      <span>통계</span>
+    </button>
+  </nav>
+
+  <div id="rest-overlay" style="display:none" class="rest-overlay" role="dialog" aria-modal="true">
+    <div class="rest-card">
+      <div class="rest-ttl">휴식 시간</div>
+      <div class="rest-num" id="rest-num">60</div>
+      <div class="rest-track"><div class="rest-prog" id="rest-prog" style="width:100%"></div></div>
+      <div class="rest-btns">
+        <button class="rest-add" id="rest-add-btn">+30초</button>
+        <button class="rest-skip" id="rest-skip-btn">다음 세트 시작</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXERCISES = [
+  {id:'pushup',  name:'푸시업',         ico:'💪', tags:['가슴','삼두'],    def:15, muscles:['가슴','삼두','어깨']},
+  {id:'squat',   name:'스쿼트',         ico:'🦵', tags:['허벅지','엉덩이'], def:20, muscles:['허벅지','엉덩이']},
+  {id:'lunge',   name:'런지',           ico:'🦿', tags:['하체'],           def:12, muscles:['허벅지','엉덩이']},
+  {id:'plank',   name:'플랭크',         ico:'⏱', tags:['코어'],           def:30, isTime:true, muscles:['코어']},
+  {id:'burpee',  name:'버피',           ico:'🔥', tags:['전신'],           def:10, muscles:['전신','코어','하체']},
+  {id:'mountain',name:'마운틴 클라이머', ico:'⛰', tags:['코어'],           def:20, muscles:['코어','어깨']},
+  {id:'dip',     name:'트라이셉 딥',    ico:'💺', tags:['삼두'],           def:12, muscles:['삼두','가슴']},
+  {id:'legraise',name:'레그레이즈',     ico:'🎯', tags:['복근'],           def:15, muscles:['코어','복근']},
+  {id:'crunch',  name:'크런치',         ico:'🌀', tags:['복근'],           def:20, muscles:['복근']},
+  {id:'bridge',  name:'힙 브릿지',      ico:'🌉', tags:['엉덩이','허벅지'], def:15, muscles:['엉덩이','허벅지']},
+  {id:'jumpjack',name:'점핑잭',         ico:'⚡', tags:['전신','유산소'],   def:30, muscles:['전신']},
+  {id:'inchworm',name:'인치웜',         ico:'🐛', tags:['전신','유연성'],   def:10, muscles:['코어','어깨','전신']},
+];
+const EX_MAP = Object.fromEntries(EXERCISES.map(e=>[e.id,e]));
+const DEFAULT_ACTIVE = ['pushup','squat','lunge','plank','burpee','crunch','bridge'];
+
+function dateKey(d=new Date()){return d.toISOString().slice(0,10)}
+function prevDayKey(k){const d=new Date(k);d.setDate(d.getDate()-1);return dateKey(d)}
+function formatDateKR(k){const d=new Date(k+'T00:00');const days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`}
+function formatMonthDay(k){const d=new Date(k+'T00:00');const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return{m:m[d.getMonth()],d:d.getDate()}}
+
+function loadData(){try{return JSON.parse(localStorage.getItem('homefit_v2')||'{}')}catch{return{}}}
+function saveData(d){localStorage.setItem('homefit_v2',JSON.stringify(d))}
+
+let DATA=loadData();
+if(!DATA.days) DATA.days={};
+if(!DATA.settings) DATA.settings={sets:3,restTime:60,active:[...DEFAULT_ACTIVE]};
+if(!DATA.settings.active) DATA.settings.active=[...DEFAULT_ACTIVE];
+const TODAY=dateKey();
+
+function ensureToday(){
+  if(!DATA.days[TODAY]){
+    const prev=DATA.days[prevDayKey(TODAY)];
+    const exData={};
+    DATA.settings.active.forEach(id=>{
+      const ex=EX_MAP[id];if(!ex)return;
+      let target=ex.def;
+      if(prev?.exercises?.[id]){
+        const ps=prev.exercises[id].sets.filter(s=>s.done);
+        if(ps.length>0) target=Math.max(...ps.map(s=>s.reps));
+      }
+      exData[id]={sets:Array.from({length:DATA.settings.sets},()=>({reps:target,done:false})),target,nextReps:target};
+    });
+    DATA.days[TODAY]={exercises:exData,startTime:Date.now(),endTime:null};
+    saveData(DATA);
+  } else {
+    const day=DATA.days[TODAY];
+    DATA.settings.active.forEach(id=>{
+      if(!day.exercises[id]){
+        const ex=EX_MAP[id];if(!ex)return;
+        const prev=DATA.days[prevDayKey(TODAY)];
+        let target=ex.def;
+        if(prev?.exercises?.[id]){const ps=prev.exercises[id].sets.filter(s=>s.done);if(ps.length>0)target=Math.max(...ps.map(s=>s.reps));}
+        day.exercises[id]={sets:Array.from({length:DATA.settings.sets},()=>({reps:target,done:false})),target,nextReps:target};
+      }
+    });
+  }
+}
+
+function getPR(id){
+  let max=null;
+  Object.values(DATA.days).forEach(day=>{
+    day.exercises?.[id]?.sets.filter(s=>s.done).forEach(s=>{if(max===null||s.reps>max)max=s.reps;});
+  });
+  return max;
+}
+function getStreak(){
+  let streak=0,d=new Date(TODAY+'T00:00');
+  for(let i=0;i<365;i++){
+    const k=dateKey(d);
+    const day=DATA.days[k];
+    const hasWork=day&&Object.values(day.exercises||{}).some(e=>e.sets.some(s=>s.done));
+    if(!hasWork){if(k===TODAY){d.setDate(d.getDate()-1);continue;}break;}
+    streak++;d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+function getTodayStats(){
+  const day=DATA.days[TODAY];
+  if(!day)return{sets:0,reps:0,exDone:0,total:0};
+  let sets=0,reps=0,exDone=0,total=0;
+  Object.entries(day.exercises).forEach(([,ex])=>{
+    total++;const done=ex.sets.filter(s=>s.done);
+    sets+=done.length;reps+=done.reduce((a,s)=>a+s.reps,0);
+    if(done.length===ex.sets.length&&ex.sets.length>0)exDone++;
+  });
+  return{sets,reps,exDone,total};
+}
+
+// REST TIMER
+let restState=null;
+function startRest(duration){
+  if(restState){clearInterval(restState.iv);restState=null;}
+  const overlay=document.getElementById('rest-overlay');
+  const numEl=document.getElementById('rest-num');
+  const progEl=document.getElementById('rest-prog');
+  overlay.style.display='flex';
+  let remaining=duration,total=duration;
+  function tick(){
+    numEl.textContent=remaining;
+    numEl.className='rest-num'+(remaining<=10?' urgent':'');
+    progEl.style.width=`${(remaining/total)*100}%`;
+    progEl.className='rest-prog'+(remaining<=10?' urgent':'');
+    if(remaining<=0){endRest();return;}
+    remaining--;
+  }
+  tick();
+  restState={iv:setInterval(tick,1000)};
+  document.getElementById('rest-add-btn').onclick=()=>{remaining+=30;total=Math.max(total,remaining);};
+  document.getElementById('rest-skip-btn').onclick=endRest;
+}
+function endRest(){
+  if(restState){clearInterval(restState.iv);restState=null;}
+  document.getElementById('rest-overlay').style.display='none';
+}
+
+// TABS
+let currentTab='today';
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(`view-${tab}`).classList.add('active');
+  if(tab==='today') renderToday();
+  else if(tab==='history') renderHistory();
+  else renderStats();
+}
+
+// THEME
+function applyTheme(t){
+  if(t) document.documentElement.setAttribute('data-theme',t);
+  else document.documentElement.removeAttribute('data-theme');
+  const isDark=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+  document.getElementById('theme-ico').innerHTML=isDark
+    ?'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    :'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+}
+document.getElementById('theme-btn').onclick=()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const isDark=cur==='dark'||(!cur&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+  applyTheme(isDark?'light':'dark');
+};
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
+}
+
+/* ═══════════════════════════════════
+   RENDER TODAY — TABLE LAYOUT
+═══════════════════════════════════ */
+function renderToday(){
+  ensureToday();
+  const day=DATA.days[TODAY];
+  const stats=getTodayStats();
+  const allDone=stats.exDone===stats.total&&stats.total>0;
+  const active=DATA.settings.active;
+
+  let html=`<div class="today-banner">
+    <div class="today-h">${formatDateKR(TODAY)}</div>
+    <div class="today-sub">목표 <strong>${active.length}종</strong> 운동</div>
+  </div>
+  <div class="summary">
+    <div class="chip"><div class="chip-val g">${stats.exDone}/${stats.total}</div><div class="chip-lbl">완료 운동</div></div>
+    <div class="chip"><div class="chip-val">${stats.sets}</div><div class="chip-lbl">완료 세트</div></div>
+    <div class="chip"><div class="chip-val">${stats.reps.toLocaleString()}</div><div class="chip-lbl">총 횟수</div></div>
+  </div>`;
+
+  if(allDone){
+    html+=`<div class="complete-banner"><div class="complete-emoji">🎉</div><div class="complete-h">오늘 운동 완료!</div><div class="complete-sub">총 ${stats.reps}회 · ${stats.sets}세트 달성</div></div>`;
+  }
+
+  html+=`<div class="settings-row">
+    <div class="settings-label">기본 세트 수</div>
+    <div class="sets-stepper">
+      <button class="ss-btn" id="sets-minus">−</button>
+      <div class="ss-val" id="sets-val">${DATA.settings.sets}</div>
+      <button class="ss-btn" id="sets-plus">+</button>
+    </div>
+  </div>`;
+
+  /* ── TABLE ── */
+  html+=`<div class="ex-table-wrap"><div class="ex-table">
+    <div class="ex-table-head">
+      <div class="th-left">운동</div>
+      <div class="th-div"></div>
+      <div class="th-right">세트 기록</div>
+    </div>`;
+
+  active.forEach(id=>{
+    const ex=EX_MAP[id];if(!ex)return;
+    const exData=day.exercises[id];if(!exData)return;
+    const doneSets=exData.sets.filter(s=>s.done);
+    const cardDone=doneSets.length===exData.sets.length&&exData.sets.length>0;
+    const unit=ex.isTime?'초':'회';
+    const nextIdx=exData.sets.findIndex(s=>!s.done);
+
+    /* LEFT CELL */
+    const leftHtml=`<div class="ex-left">
+      <div class="ex-name-row">
+        <span class="ex-ico">${ex.ico}</span>
+        <span class="ex-name">${ex.name}</span>
+      </div>
+      <div class="ex-meta">
+        ${ex.tags.map(t=>`<span class="ex-tag">${t}</span>`).join('')}
+        <span class="ex-tgt">목표 ${exData.target}${unit}</span>
+      </div>
+    </div>`;
+
+    /* RIGHT CELL */
+    let rightHtml=`<div class="ex-right">`;
+
+    /* Chips row: done sets + pending dots */
+    rightHtml+=`<div class="set-chips">`;
+    exData.sets.forEach((s,i)=>{
+      if(s.done){
+        rightHtml+=`<button class="chip-done" data-id="${id}" data-idx="${i}" title="탭해서 수정">${s.reps}<span class="chip-sub">${unit}</span></button>`;
+      } else if(i!==nextIdx){
+        rightHtml+=`<span class="dot-pending"></span>`;
+      }
+    });
+    rightHtml+=`</div>`;
+
+    /* Active set stepper or done mark */
+    if(cardDone){
+      rightHtml+=`<div class="row-done-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        완료 · 최고 ${Math.max(...doneSets.map(s=>s.reps))}${unit}
+      </div>`;
+    } else if(nextIdx!==-1){
+      rightHtml+=`<div class="set-active">
+        <div class="set-label">세트${nextIdx+1}</div>
+        <button class="stp-btn" data-id="${id}" data-action="minus">−</button>
+        <div class="stp-num" id="reps-${id}">${exData.nextReps||exData.target}</div>
+        <span class="stp-unit">${unit}</span>
+        <button class="stp-btn" data-id="${id}" data-action="plus">+</button>
+        <button class="ok-btn" data-id="${id}">완료</button>
+      </div>`;
+    }
+
+    /* Add set link */
+    rightHtml+=`<button class="add-set-link" data-id="${id}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      세트 추가
+    </button>`;
+
+    rightHtml+=`</div>`;
+
+    html+=`<div class="ex-row${cardDone?' row-done':''}" data-id="${id}">${leftHtml}${rightHtml}</div>`;
+  });
+
+  html+=`</div></div>`; /* close table */
+
+  /* Exercise toggle */
+  html+=`<div class="ex-toggle-section">
+    <div class="ex-toggle-title">운동 선택</div>
+    <div class="ex-toggle-grid">`;
+  EXERCISES.forEach(ex=>{
+    html+=`<button class="ex-toggle-chip${active.includes(ex.id)?' on':''}" data-ex="${ex.id}">${ex.ico} ${ex.name}</button>`;
+  });
+  html+=`</div></div><div style="height:20px"></div>`;
+
+  document.getElementById('today-content').innerHTML=html;
+  bindTodayEvents();
+}
+
+function bindTodayEvents(){
+  document.getElementById('sets-minus').onclick=()=>{
+    if(DATA.settings.sets>1){DATA.settings.sets--;saveData(DATA);renderToday();}
+  };
+  document.getElementById('sets-plus').onclick=()=>{
+    if(DATA.settings.sets<10){DATA.settings.sets++;saveData(DATA);renderToday();}
+  };
+  document.querySelectorAll('.stp-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.dataset.id,action=btn.dataset.action;
+      const ex=DATA.days[TODAY].exercises[id];
+      const cur=ex.nextReps||ex.target;
+      const step=EX_MAP[id].isTime?5:1;
+      ex.nextReps=action==='plus'?cur+step:Math.max(EX_MAP[id].isTime?5:1,cur-step);
+      saveData(DATA);
+      document.getElementById(`reps-${id}`).textContent=ex.nextReps;
+    };
+  });
+  document.querySelectorAll('.ok-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.dataset.id;
+      const ex=DATA.days[TODAY].exercises[id];
+      const idx=ex.sets.findIndex(s=>!s.done);if(idx===-1)return;
+      const reps=ex.nextReps||ex.target;
+      ex.sets[idx]={reps,done:true};
+      ex.nextReps=reps;
+      if(Object.values(DATA.days[TODAY].exercises).every(e=>e.sets.every(s=>s.done)))
+        DATA.days[TODAY].endTime=Date.now();
+      saveData(DATA);
+      renderToday();updateHeader();
+      const allDone=ex.sets.every(s=>s.done);
+      if(!allDone) startRest(DATA.settings.restTime||60);
+      else showToast(`${EX_MAP[id].name} 완료! 🎯`);
+    };
+  });
+  document.querySelectorAll('.chip-done').forEach(chip=>{
+    chip.onclick=()=>{
+      const id=chip.dataset.id,idx=parseInt(chip.dataset.idx);
+      const ex=DATA.days[TODAY].exercises[id];
+      const unit=EX_MAP[id].isTime?'초':'회';
+      const val=prompt(`세트 ${idx+1} 횟수 수정 (${unit}):`,ex.sets[idx].reps);
+      if(val===null)return;const n=parseInt(val);if(isNaN(n)||n<1)return;
+      ex.sets[idx].reps=n;saveData(DATA);renderToday();
+    };
+  });
+  document.querySelectorAll('.add-set-link').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.dataset.id;
+      const ex=DATA.days[TODAY].exercises[id];
+      ex.sets.push({reps:ex.target,done:false});
+      saveData(DATA);renderToday();
+    };
+  });
+  document.querySelectorAll('.ex-toggle-chip').forEach(chip=>{
+    chip.onclick=()=>{
+      const id=chip.dataset.ex;
+      const active=DATA.settings.active;
+      const idx=active.indexOf(id);
+      if(idx>=0){if(active.length<=1){showToast('최소 1개 운동이 필요해요');return;}active.splice(idx,1);}
+      else active.push(id);
+      saveData(DATA);ensureToday();renderToday();
+    };
+  });
+}
+
+/* ─── HISTORY ─── */
+let expandedDay=null;
+function renderHistory(){
+  const days=Object.entries(DATA.days)
+    .filter(([k])=>k!==TODAY||Object.values(DATA.days[k].exercises||{}).some(e=>e.sets.some(s=>s.done)))
+    .sort(([a],[b])=>b.localeCompare(a));
+  if(!days.length){
+    document.getElementById('history-content').innerHTML=`<div class="history-wrap"><div class="empty-msg">아직 운동 기록이 없어요.<br>오늘 첫 운동을 시작해보세요! 💪</div></div>`;
+    return;
+  }
+  let html=`<div class="history-wrap"><div class="section-hdr">운동 기록</div>`;
+  days.forEach(([k,day])=>{
+    const exs=Object.entries(day.exercises||{});
+    const totalReps=exs.reduce((a,[,e])=>a+e.sets.filter(s=>s.done).reduce((b,s)=>b+s.reps,0),0);
+    const totalSets=exs.reduce((a,[,e])=>a+e.sets.filter(s=>s.done).length,0);
+    const exNames=exs.filter(([,e])=>e.sets.some(s=>s.done)).map(([id])=>EX_MAP[id]?.name).filter(Boolean);
+    const {m,d}=formatMonthDay(k);const isExp=expandedDay===k;
+    html+=`<div class="history-item" data-day="${k}" style="${isExp?'border-radius:var(--rs) var(--rs) 0 0;border-bottom-color:transparent':''}">
+      <div class="history-date"><div class="hd-month">${m}</div><div class="hd-day">${d}</div></div>
+      <div class="history-info">
+        <div class="history-exercises">${exNames.join(', ')||'기록 없음'}</div>
+        <div class="history-meta">
+          <span class="hm">세트 <strong>${totalSets}</strong></span>
+          <span class="hm">총 <strong>${totalReps.toLocaleString()}</strong>회</span>
+          <span class="hm">${exNames.length}종 운동</span>
+        </div>
+      </div>
+      <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="${isExp?'18 15 12 9 6 15':'6 9 12 15 18 9'}"/></svg></div>
+    </div>`;
+    if(isExp){
+      html+=`<div class="history-detail">`;
+      exs.filter(([,e])=>e.sets.some(s=>s.done)).forEach(([id,e])=>{
+        const ex=EX_MAP[id];if(!ex)return;
+        const done=e.sets.filter(s=>s.done);
+        const unit=ex.isTime?'초':'회';
+        html+=`<div class="hd-ex-row"><span class="hd-ex-name">${ex.ico} ${ex.name}</span><span class="hd-ex-val">${done.length}세트 · 최대 ${Math.max(...done.map(s=>s.reps))}${unit}</span></div>`;
+      });
+      html+=`</div>`;
+    }
+  });
+  html+=`</div>`;
+  document.getElementById('history-content').innerHTML=html;
+  document.querySelectorAll('.history-item').forEach(item=>{
+    item.onclick=()=>{const k=item.dataset.day;expandedDay=expandedDay===k?null:k;renderHistory();};
+  });
+}
+
+/* ─── STATS ─── */
+function renderStats(){
+  const streak=getStreak();
+  const last7=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date(TODAY+'T00:00');d.setDate(d.getDate()-i);
+    const k=dateKey(d);
+    const day=DATA.days[k];
+    const reps=day?Object.values(day.exercises||{}).reduce((a,e)=>a+e.sets.filter(s=>s.done).reduce((b,s)=>b+s.reps,0),0):0;
+    const days=['일','월','화','수','목','금','토'];
+    last7.push({k,reps,lbl:days[d.getDay()],isToday:k===TODAY});
+  }
+  const maxReps=Math.max(...last7.map(x=>x.reps),1);
+  const totalDays=Object.keys(DATA.days).filter(k=>Object.values(DATA.days[k].exercises||{}).some(e=>e.sets.some(s=>s.done))).length;
+  const totalRepsAll=Object.values(DATA.days).reduce((a,day)=>a+Object.values(day.exercises||{}).reduce((b,e)=>b+e.sets.filter(s=>s.done).reduce((c,s)=>c+s.reps,0),0),0);
+  const muscleCounts={};
+  Object.values(DATA.days).forEach(day=>{
+    Object.entries(day.exercises||{}).forEach(([id,e])=>{
+      if(!e.sets.some(s=>s.done))return;
+      const ex=EX_MAP[id];if(!ex)return;
+      ex.muscles.forEach(m=>{muscleCounts[m]=(muscleCounts[m]||0)+e.sets.filter(s=>s.done).reduce((a,s)=>a+s.reps,0);});
+    });
+  });
+  const maxMuscle=Math.max(...Object.values(muscleCounts),1);
+  const muscleEntries=Object.entries(muscleCounts).sort(([,a],[,b])=>b-a).slice(0,6);
+  const prEntries=DATA.settings.active.map(id=>{const ex=EX_MAP[id];return ex?{id,name:ex.name,ico:ex.ico,pr:getPR(id),def:ex.def,isTime:ex.isTime}:null;}).filter(Boolean);
+
+  let html=`<div class="stats-wrap">
+    <div class="section-hdr">나의 기록</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-val ac">${streak}</div><div class="kpi-lbl">연속 운동일 🔥</div></div>
+      <div class="kpi"><div class="kpi-val">${totalDays}</div><div class="kpi-lbl">총 운동일</div></div>
+      <div class="kpi"><div class="kpi-val">${totalRepsAll.toLocaleString()}</div><div class="kpi-lbl">누적 총 횟수</div></div>
+      <div class="kpi"><div class="kpi-val">${DATA.settings.active.length}</div><div class="kpi-lbl">활성 운동 종류</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">주간 총 횟수</div>
+      <div class="bar-chart">`;
+  last7.forEach(({reps,lbl,isToday})=>{
+    const h=reps>0?Math.max(Math.round((reps/maxReps)*76),4):0;
+    html+=`<div class="bc-col"><div class="bc-bar ${isToday?'today-bar':'past-bar'}" style="height:${h}px"></div><div class="bc-lbl">${lbl}</div></div>`;
+  });
+  html+=`</div></div>
+    <div class="section-hdr">개인 기록 (PR)</div>
+    <div class="pr-card">`;
+  prEntries.forEach(({name,ico,pr,def,isTime})=>{
+    const unit=isTime?'초':'회';
+    html+=`<div class="pr-row"><div class="pr-ico">${ico}</div><div class="pr-name">${name}</div>${pr!==null?`<div class="pr-val">${pr}<span class="pr-unit">${unit}</span></div>`:`<div class="pr-val pr-default">${def}<span class="pr-unit">${unit} 기본</span></div>`}</div>`;
+  });
+  html+=`</div>`;
+  if(muscleEntries.length){
+    html+=`<div class="section-hdr">근육 그룹 누적</div><div class="muscle-card">`;
+    muscleEntries.forEach(([name,val])=>{
+      const pct=Math.round((val/maxMuscle)*100);
+      html+=`<div class="muscle-row"><div class="muscle-hdr"><span class="muscle-name">${name}</span><span class="muscle-pct">${pct}%</span></div><div class="muscle-track"><div class="muscle-bar" style="width:${pct}%"></div></div></div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`<div style="height:8px"></div></div>`;
+  document.getElementById('stats-content').innerHTML=html;
+}
+
+function updateHeader(){
+  const d=new Date();
+  const days=['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  document.getElementById('hdr-date').textContent=`${d.getMonth()+1}월 ${d.getDate()}일 ${days[d.getDay()]}`;
+  document.getElementById('streak-num').textContent=getStreak();
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab));
+applyTheme(null);updateHeader();ensureToday();renderToday();
+setInterval(()=>{if(dateKey()!==TODAY)location.reload();},60000);
+</script>

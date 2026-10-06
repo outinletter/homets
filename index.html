@@ -3,6 +3,14 @@
 <meta charset="utf-8">
 <title>Workout Log</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F5F7FA" id="app-theme-color">
+<meta name="application-name" content="HOMETS">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HOMETS">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <style>
 @font-face{font-family:Barlow;font-style:normal;font-weight:400 500;font-display:swap;src:url('fonts/Barlow-Regular.ttf') format('truetype')}
 @font-face{font-family:Barlow;font-style:normal;font-weight:600 700;font-display:swap;src:url('fonts/Barlow-SemiBold.ttf') format('truetype')}
@@ -322,6 +330,7 @@ button:disabled{opacity:.35;cursor:default}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-mark{width:32px;height:32px;border-radius:10px;background:var(--ac);color:var(--sf);display:grid;place-items:center}
 .brand-mark svg{width:22px;height:22px}
+.brand-mark img{width:100%;height:100%;border-radius:10px;display:block}
 .hdr-date{font-size:10px;margin-top:3px;letter-spacing:.3px}
 .hdr-title{font-size:16px;letter-spacing:1.5px;line-height:1}
 .hdr-right{gap:6px}
@@ -422,7 +431,7 @@ button:disabled{opacity:.35;cursor:default}
 <div id="app">
   <header class="hdr">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 12h10M4 7h3v10H4zM17 7h3v10h-3zM2 10v4M22 10v4"/></svg></span>
+      <span class="brand-mark" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="32" height="32"></span>
       <div><div class="hdr-title">HOMETS</div><div class="hdr-date" id="hdr-date"></div></div>
     </div>
     <div class="hdr-right">
@@ -687,6 +696,7 @@ function applyTheme(t){
   if(t) document.documentElement.setAttribute('data-theme',t);
   else document.documentElement.removeAttribute('data-theme');
   const isDark=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+  document.getElementById('app-theme-color').content=isDark?'#0C121C':'#F5F7FA';
   document.getElementById('theme-ico').innerHTML=isDark
     ?'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
     :'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';

@@ -221,7 +221,8 @@ button{font-family:inherit;cursor:pointer}
 /* 운동 중 한 손 입력과 작은 화면을 위한 컨트롤 */
 button,input,select{font:inherit;touch-action:manipulation}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.icon-btn,.ss-btn,.stp-btn{min-width:44px;height:44px}
+.icon-btn{width:32px;min-width:32px;height:32px}
+.ss-btn,.stp-btn{width:28px;min-width:28px;height:32px}
 .settings-row{gap:8px;flex-wrap:wrap}
 .settings-label{font-size:12px}
 .settings-label small{display:block;color:var(--t2);font-weight:400;margin-top:4px}
@@ -235,16 +236,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .ex-tgt,.previous-note{font-size:11px;line-height:1.5}
 .previous-note{color:var(--t2);margin-top:4px}
 .ex-right{min-width:0;padding:10px;gap:8px}
-.set-active{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:6px}
+.set-active{display:grid;grid-template-columns:28px minmax(28px,1fr) 28px 46px;gap:4px}
 .set-label{grid-column:1/-1;font-size:11px}
-.stp-num{width:100%;min-width:0;height:44px;border:1px solid var(--bdr2);border-radius:8px;background:var(--sf2);color:var(--t1);font-size:18px;appearance:textfield}
+.stp-num{width:100%;min-width:0;height:32px;border:1px solid var(--bdr2);border-radius:6px;background:var(--sf2);color:var(--t1);font-size:15px;appearance:textfield}
 .stp-num::-webkit-inner-spin-button{appearance:none}
-.ok-btn{grid-column:1/-1;min-height:44px;font-size:13px}
+.ok-btn{min-height:32px;padding:5px 6px;font-size:11px;background:var(--acd);color:var(--ac);border:1px solid var(--acb);border-radius:6px}
 .edit-actions{grid-column:1/-1;display:flex;gap:6px}
-.edit-actions button{flex:1;min-height:44px;border:1px solid var(--bdr2);border-radius:8px;background:var(--sf2);color:var(--t2);font-size:11px}
-.chip-done{min-height:44px;padding:6px 10px}
-.add-set-link{min-height:44px;color:var(--t2)}
-.ex-toggle-chip{min-height:44px}
+.edit-actions button{flex:1;min-height:30px;border:0;background:none;color:var(--t2);font-size:11px}
+.chip-done{min-height:30px;padding:4px 7px;border:0;background:none}
+.saved-set{display:inline-flex;align-items:center;background:var(--acd);border:1px solid var(--acb);border-radius:6px}
+.set-undo{min-height:30px;padding:4px 7px;border:0;border-left:1px solid var(--acb);background:none;color:var(--t2);font-size:10px}
+.row-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.add-set-link,.input-cancel{min-height:30px;color:var(--t2)}
+.input-cancel{border:0;background:none;padding:0;font-size:11px}
+.ex-toggle-chip{min-height:32px}
 .hint{font-size:12px;color:var(--t2);line-height:1.6;margin:0 16px 12px}
 .progress-track{height:5px;background:var(--sf3);margin:0 16px 10px;border-radius:5px;overflow:hidden}
 .progress-fill{height:100%;background:var(--ac)}
@@ -254,13 +259,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .rest-num{font-size:28px;margin:0;grid-column:2;grid-row:1/3}
 .rest-track{grid-column:1;margin:0;align-self:center}
 .rest-btns{grid-column:1/-1;gap:8px}
-.rest-add,.rest-skip{padding:8px;min-height:44px;border-radius:8px}
+.rest-add,.rest-skip{padding:7px;min-height:32px;border-radius:8px;font-size:12px}
 .resting .scroll-area{padding-bottom:calc(210px + var(--sb))}
 .period-tabs{display:flex;gap:4px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
-.period-tabs button{flex:1;min-height:44px;border:0;background:none;border-radius:8px;color:var(--t2);font-weight:700}
+.period-tabs button{flex:1;min-height:34px;border:0;background:none;border-radius:8px;color:var(--t2);font-weight:700}
 .period-tabs button[aria-pressed=true]{background:var(--sf);color:var(--ac)}
 .period-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:12px}
-.period-nav button{min-width:44px;height:44px;border:1px solid var(--bdr);border-radius:8px;background:var(--sf);color:var(--t1)}
+.period-nav button{min-width:32px;height:32px;border:1px solid var(--bdr);border-radius:8px;background:var(--sf);color:var(--t1)}
 button:disabled{opacity:.35;cursor:default}
 .stats-table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
 .stats-table th,.stats-table td{padding:12px 4px;border-bottom:1px solid var(--bdr);text-align:right}
@@ -270,10 +275,12 @@ button:disabled{opacity:.35;cursor:default}
 .bar-chart{height:128px}
 .bc-value{font-size:10px;color:var(--t2);font-variant-numeric:tabular-nums}
 .history-item{width:100%;text-align:left;font:inherit;color:inherit}
-.backup-btn{width:100%;min-height:44px;background:var(--sf);border:1px solid var(--bdr2);border-radius:10px;color:var(--t2);font-size:13px}
+.backup-btn{width:100%;min-height:34px;background:var(--sf);border:1px solid var(--bdr2);border-radius:10px;color:var(--t2);font-size:13px}
 .cumulative-details{margin-bottom:14px}
 .cumulative-details summary{min-height:44px;padding:12px 0;color:var(--t2);font-size:13px;cursor:pointer}
 .toast{white-space:normal;width:max-content;max-width:calc(100% - 32px);text-align:center}
+.toast.action-toast{display:flex;align-items:center;gap:12px;pointer-events:auto;animation:toastIn .2s ease}
+.toast button{border:0;background:none;color:var(--ac);font-size:12px;padding:6px}
 </style>
 
 <div id="app">
@@ -492,11 +499,19 @@ document.getElementById('theme-btn').onclick=()=>{
   DATA.settings.theme=isDark?'light':'dark';applyTheme(DATA.settings.theme);saveData(DATA);
 };
 
-function showToast(msg){
+function showToast(msg,undo){
+  document.querySelectorAll('.toast').forEach(el=>el.remove());
   const t=document.createElement('div');
   t.className='toast';t.setAttribute('role','status');t.textContent=msg;
+  if(undo){t.classList.add('action-toast');const btn=document.createElement('button');btn.textContent='취소';btn.onclick=()=>{t.remove();undo();};t.appendChild(btn);}
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2000);
+  setTimeout(()=>t.remove(),undo?6000:2000);
+}
+function cancelCompletedSet(id,idx){
+  const ex=DATA.days[TODAY].exercises[id],set=ex.sets[idx];
+  if(!set?.done)return;
+  set.done=false;ex.nextReps=set.reps;DATA.days[TODAY].endTime=null;
+  editingSet=null;endRest();saveData(DATA);renderToday();updateHeader();showToast('세트 저장을 취소했어요.');
 }
 
 /* ═══════════════════════════════════
@@ -519,7 +534,7 @@ function renderToday(){
     <div class="chip"><div class="chip-val">${stats.sets}</div><div class="chip-lbl">완료 세트</div></div>
     <div class="chip"><div class="chip-val">${stats.reps.toLocaleString()}</div><div class="chip-lbl">총 횟수</div></div>
   </div><div class="progress-track" role="progressbar" aria-label="오늘 세트 진행률" aria-valuenow="${stats.sets}" aria-valuemin="0" aria-valuemax="${planned}"><div class="progress-fill" style="width:${planned?stats.sets/planned*100:0}%"></div></div>
-  <p class="hint">${stats.sets} / ${planned}세트 완료 · 횟수를 조절하고 ‘세트 저장’을 누르세요.</p>`;
+  <p class="hint">${stats.sets} / ${planned}세트 완료 · 횟수를 조절하고 ‘저장’을 누르세요.</p>`;
 
   if(allDone){
     html+=`<div class="complete-banner"><div class="complete-emoji">🎉</div><div class="complete-h">오늘 운동 완료!</div><div class="complete-sub">총 ${stats.reps}회 · ${stats.sets}세트 달성</div></div>`;
@@ -574,7 +589,7 @@ function renderToday(){
     rightHtml+=`<div class="set-chips">`;
     exData.sets.forEach((s,i)=>{
       if(s.done){
-        rightHtml+=`<button class="chip-done" data-id="${id}" data-idx="${i}" aria-label="${ex.name} ${i+1}세트 ${s.reps}${unit} 수정">${i+1} · ${s.reps}<span class="chip-sub">${unit}</span></button>`;
+        rightHtml+=`<span class="saved-set"><button class="chip-done" data-id="${id}" data-idx="${i}" aria-label="${ex.name} ${i+1}세트 ${s.reps}${unit} 수정">${i+1} · ${s.reps}<span class="chip-sub">${unit}</span></button><button class="set-undo" data-undo="${id}" data-idx="${i}" aria-label="${ex.name} ${i+1}세트 저장 취소">취소</button></span>`;
       } else if(i!==nextIdx){
         rightHtml+=`<span class="dot-pending"></span>`;
       }
@@ -593,16 +608,16 @@ function renderToday(){
         <button class="stp-btn" data-id="${id}" data-action="minus" aria-label="${ex.name} 횟수 줄이기">−</button>
         <input class="stp-num" id="reps-${id}" data-id="${id}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${inputReps}" aria-label="${ex.name} 반복 횟수">
         <button class="stp-btn" data-id="${id}" data-action="plus" aria-label="${ex.name} 횟수 늘리기">+</button>
-        <button class="ok-btn" data-id="${id}">${isEditing?'수정 저장':'세트 저장'}</button>
-        ${isEditing?`<div class="edit-actions"><button data-cancel="${id}">수정 취소</button><button data-undo="${id}" data-idx="${inputIdx}">완료 취소</button></div>`:''}
+        <button class="ok-btn" data-id="${id}" aria-label="${ex.name} ${isEditing?'수정 저장':'세트 저장'}">저장</button>
+        ${isEditing?`<div class="edit-actions"><button data-cancel="${id}">수정 취소</button></div>`:''}
       </div>`;
     }
 
     /* Add set link */
-    rightHtml+=`<button class="add-set-link" data-id="${id}" aria-label="${ex.name} 세트 추가">
+    rightHtml+=`<div class="row-actions"><button class="add-set-link" data-id="${id}" aria-label="${ex.name} 세트 추가">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       세트 추가
-    </button>`;
+    </button>${!isEditing&&nextIdx!==-1?`<button class="input-cancel" data-reset="${id}" aria-label="${ex.name} 입력 취소">입력 취소</button>`:''}</div>`;
 
     rightHtml+=`</div>`;
 
@@ -654,6 +669,7 @@ function bindTodayEvents(){
       const input=document.getElementById(`reps-${id}`);
       const reps=Number(input.value);
       if(!Number.isInteger(reps)||reps<1||reps>999){showToast('횟수는 1~999 사이의 정수로 입력해주세요.');input.focus();return;}
+      const before={set:{...ex.sets[idx]},nextReps:ex.nextReps,endTime:DATA.days[TODAY].endTime};
       ex.sets[idx]={reps,done:true};
       if(!isEditing)ex.nextReps=reps;
       editingSet=null;
@@ -661,7 +677,10 @@ function bindTodayEvents(){
         DATA.days[TODAY].endTime=Date.now();
       const saved=saveData(DATA);
       renderToday();updateHeader();
-      if(saved)showToast(`${idx+1}세트 ${reps}회 ${isEditing?'수정':'저장'} 완료`);
+      if(saved)showToast(`${idx+1}세트 ${reps}회 ${isEditing?'수정':'저장'} 완료`,()=>{
+        ex.sets[idx]=before.set;ex.nextReps=before.nextReps;DATA.days[TODAY].endTime=before.endTime;
+        editingSet=null;endRest();saveData(DATA);renderToday();updateHeader();showToast(isEditing?'수정을 취소했어요.':'세트 저장을 취소했어요.');
+      });
       if(!isEditing&&!ex.sets.every(s=>s.done))startRest(DATA.settings.restTime||60);
     };
   });
@@ -673,9 +692,11 @@ function bindTodayEvents(){
   });
   document.querySelectorAll('[data-cancel]').forEach(btn=>btn.onclick=()=>{editingSet=null;renderToday();});
   document.querySelectorAll('[data-undo]').forEach(btn=>btn.onclick=()=>{
-    const ex=DATA.days[TODAY].exercises[btn.dataset.undo];
-    const set=ex.sets[Number(btn.dataset.idx)];set.done=false;ex.nextReps=set.reps;
-    DATA.days[TODAY].endTime=null;editingSet=null;endRest();saveData(DATA);renderToday();updateHeader();showToast('세트 완료를 취소했어요.');
+    cancelCompletedSet(btn.dataset.undo,Number(btn.dataset.idx));
+  });
+  document.querySelectorAll('[data-reset]').forEach(btn=>btn.onclick=()=>{
+    const ex=DATA.days[TODAY].exercises[btn.dataset.reset];ex.nextReps=ex.target;
+    saveData(DATA);renderToday();showToast('입력값을 목표 횟수로 되돌렸어요.');
   });
   document.querySelectorAll('.add-set-link').forEach(btn=>{
     btn.onclick=()=>{

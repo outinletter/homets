@@ -268,24 +268,19 @@ button{font-family:inherit;cursor:pointer}
 
 <script>
 const EXERCISES = [
-  {id:'pushup',  name:'푸시업',         ico:'💪', tags:['가슴','삼두'],    def:15, muscles:['가슴','삼두','어깨']},
-  {id:'squat',   name:'스쿼트',         ico:'🦵', tags:['허벅지','엉덩이'], def:20, muscles:['허벅지','엉덩이']},
-  {id:'lunge',   name:'런지',           ico:'🦿', tags:['하체'],           def:12, muscles:['허벅지','엉덩이']},
-  {id:'plank',   name:'플랭크',         ico:'⏱', tags:['코어'],           def:30, isTime:true, muscles:['코어']},
-  {id:'burpee',  name:'버피',           ico:'🔥', tags:['전신'],           def:10, muscles:['전신','코어','하체']},
-  {id:'mountain',name:'마운틴 클라이머', ico:'⛰', tags:['코어'],           def:20, muscles:['코어','어깨']},
-  {id:'dip',     name:'트라이셉 딥',    ico:'💺', tags:['삼두'],           def:12, muscles:['삼두','가슴']},
-  {id:'legraise',name:'레그레이즈',     ico:'🎯', tags:['복근'],           def:15, muscles:['코어','복근']},
-  {id:'crunch',  name:'크런치',         ico:'🌀', tags:['복근'],           def:20, muscles:['복근']},
-  {id:'bridge',  name:'힙 브릿지',      ico:'🌉', tags:['엉덩이','허벅지'], def:15, muscles:['엉덩이','허벅지']},
-  {id:'jumpjack',name:'점핑잭',         ico:'⚡', tags:['전신','유산소'],   def:30, muscles:['전신']},
-  {id:'inchworm',name:'인치웜',         ico:'🐛', tags:['전신','유연성'],   def:10, muscles:['코어','어깨','전신']},
+  {id:'shoulderpress',name:'숄더 프레스 머신',ico:'🏋️',tags:['어깨'],def:12,muscles:['어깨','삼두']},
+  {id:'latpulldown',name:'랫 풀다운',ico:'💪',tags:['등'],def:12,muscles:['등','이두']},
+  {id:'reardelt',name:'리어 델트 머신',ico:'🔄',tags:['어깨','등'],def:12,muscles:['어깨','등']},
+  {id:'legextension',name:'시티드 레그 익스텐션',ico:'🦵',tags:['허벅지 앞'],def:12,muscles:['허벅지']},
+  {id:'legcurl',name:'레그 컬',ico:'🦿',tags:['허벅지 뒤'],def:12,muscles:['허벅지','햄스트링']},
+  {id:'legpress',name:'레그 프레스',ico:'🦵',tags:['하체'],def:12,muscles:['허벅지','엉덩이']},
+  {id:'armcurl',name:'암 컬 머신',ico:'💪',tags:['이두'],def:12,muscles:['이두']},
 ];
 const EX_MAP = Object.fromEntries(EXERCISES.map(e=>[e.id,e]));
-const DEFAULT_ACTIVE = ['pushup','squat','lunge','plank','burpee','crunch','bridge'];
+const DEFAULT_ACTIVE = EXERCISES.map(e=>e.id);
 
-function dateKey(d=new Date()){return d.toISOString().slice(0,10)}
-function prevDayKey(k){const d=new Date(k);d.setDate(d.getDate()-1);return dateKey(d)}
+function dateKey(d=new Date()){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function prevDayKey(k){const d=new Date(k+'T00:00');d.setDate(d.getDate()-1);return dateKey(d)}
 function formatDateKR(k){const d=new Date(k+'T00:00');const days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`}
 function formatMonthDay(k){const d=new Date(k+'T00:00');const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return{m:m[d.getMonth()],d:d.getDate()}}
 
@@ -296,6 +291,7 @@ let DATA=loadData();
 if(!DATA.days) DATA.days={};
 if(!DATA.settings) DATA.settings={sets:3,restTime:60,active:[...DEFAULT_ACTIVE]};
 if(!DATA.settings.active) DATA.settings.active=[...DEFAULT_ACTIVE];
+if(DATA.settings.active.some(id=>!EX_MAP[id])){DATA.settings.active=[...DEFAULT_ACTIVE];saveData(DATA);}
 const TODAY=dateKey();
 
 function ensureToday(){
@@ -660,6 +656,14 @@ function renderStats(){
     const days=['일','월','화','수','목','금','토'];
     last7.push({k,reps,lbl:days[d.getDay()],isToday:k===TODAY});
   }
+  const thisMonth=new Date(TODAY+'T00:00');
+  const monthStart=new Date(thisMonth.getFullYear(),thisMonth.getMonth()-5,1);
+  const last6Months=Array.from({length:6},(_,i)=>{
+    const d=new Date(monthStart.getFullYear(),monthStart.getMonth()+i,1);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const reps=Object.entries(DATA.days).filter(([k])=>k.startsWith(key)).reduce((sum,[,day])=>sum+Object.values(day.exercises||{}).reduce((n,e)=>n+e.sets.filter(s=>s.done).reduce((a,s)=>a+s.reps,0),0),0);
+    return{key,reps,label:`${d.getMonth()+1}월`,isCurrent:key===TODAY.slice(0,7)};
+  });
   const maxReps=Math.max(...last7.map(x=>x.reps),1);
   const totalDays=Object.keys(DATA.days).filter(k=>Object.values(DATA.days[k].exercises||{}).some(e=>e.sets.some(s=>s.done))).length;
   const totalRepsAll=Object.values(DATA.days).reduce((a,day)=>a+Object.values(day.exercises||{}).reduce((b,e)=>b+e.sets.filter(s=>s.done).reduce((c,s)=>c+s.reps,0),0),0);
@@ -689,6 +693,15 @@ function renderStats(){
   last7.forEach(({reps,lbl,isToday})=>{
     const h=reps>0?Math.max(Math.round((reps/maxReps)*76),4):0;
     html+=`<div class="bc-col"><div class="bc-bar ${isToday?'today-bar':'past-bar'}" style="height:${h}px"></div><div class="bc-lbl">${lbl}</div></div>`;
+  });
+  const maxMonthReps=Math.max(...last6Months.map(x=>x.reps),1);
+  html+=`</div></div>
+    <div class="chart-card">
+      <div class="chart-title">월간 총 횟수 · 최근 6개월</div>
+      <div class="bar-chart">`;
+  last6Months.forEach(({reps,label,isCurrent})=>{
+    const h=reps>0?Math.max(Math.round((reps/maxMonthReps)*76),4):0;
+    html+=`<div class="bc-col"><div class="bc-bar ${isCurrent?'today-bar':'past-bar'}" style="height:${h}px" title="${label} ${reps.toLocaleString()}회"></div><div class="bc-lbl">${label}</div></div>`;
   });
   html+=`</div></div>
     <div class="section-hdr">개인 기록 (PR)</div>

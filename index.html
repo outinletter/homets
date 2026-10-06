@@ -284,6 +284,35 @@ button:disabled{opacity:.35;cursor:default}
 .toast{white-space:normal;width:max-content;max-width:calc(100% - 32px);text-align:center}
 .toast.action-toast{display:flex;align-items:center;gap:12px;pointer-events:auto;animation:toastIn .2s ease}
 .toast button{border:0;background:none;color:var(--ac);font-size:12px;padding:6px}
+.routine-kicker{font-size:10px;font-weight:700;letter-spacing:1.8px;color:var(--ac);margin-bottom:6px}
+.today-h{font-size:26px;letter-spacing:-.5px}
+.ex-table{border-radius:10px}
+.ex-name{font-weight:600}
+.ex-ico{width:18px;height:18px;display:inline-flex;align-items:center;color:var(--t2);margin-top:1px}
+.ex-ico svg{width:18px;height:18px}
+.set-pending{font-size:10px;color:var(--t2);border:1px dashed var(--bdr2);border-radius:5px;padding:4px 6px}
+.settings-dialog{width:calc(100% - 24px);max-width:430px;max-height:85dvh;padding:0;border:1px solid var(--bdr2);border-radius:18px;background:var(--sf);color:var(--t1);margin:auto;box-shadow:0 20px 70px #0004}
+.settings-dialog::backdrop{background:#0006;backdrop-filter:blur(3px)}
+.settings-shell{display:flex;flex-direction:column;max-height:85dvh}
+.settings-head{padding:18px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr)}
+.settings-head h2{font-size:22px;letter-spacing:-.3px}
+.settings-head p{font-size:12px;color:var(--t2);margin-top:4px}
+.library-tools{padding:12px 16px;border-bottom:1px solid var(--bdr)}
+.library-search{width:100%;height:36px;border:1px solid var(--bdr2);border-radius:8px;background:var(--sf2);color:var(--t1);padding:0 10px;font-size:13px}
+.library-filters{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.library-filters button{border:1px solid var(--bdr);background:none;color:var(--t2);min-height:30px;border-radius:6px;padding:4px 8px;font-size:11px}
+.library-filters button[aria-pressed=true]{color:var(--ac);border-color:var(--acb);background:var(--acd)}
+.library-list{overflow-y:auto;min-height:0;flex:1;padding:0 16px;overscroll-behavior:contain}
+.library-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bdr);cursor:pointer}
+.library-item input{width:16px;height:16px;accent-color:var(--ac);flex-shrink:0}
+.library-item strong{display:block;font-size:14px;font-weight:600}
+.library-item small{display:block;font-size:11px;color:var(--t2);margin-top:3px}
+.settings-footer{padding:12px 16px calc(12px + var(--sb));border-top:1px solid var(--bdr);background:var(--sf)}
+.settings-count{font-size:12px;color:var(--t2);margin-bottom:10px}
+.settings-footer p{font-size:11px;line-height:1.5;color:var(--t2);margin-bottom:10px}
+.settings-buttons{display:flex;gap:8px}
+.settings-buttons button{flex:1;min-height:34px;border-radius:8px;font-size:13px;border:1px solid var(--bdr2);background:var(--sf2);color:var(--t1)}
+.settings-buttons .apply{background:var(--ac);border-color:var(--ac);color:var(--bg);font-weight:700}
 </style>
 
 <div id="app">
@@ -299,6 +328,9 @@ button:disabled{opacity:.35;cursor:default}
       </div>
       <button class="icon-btn" id="theme-btn" aria-label="Switch theme">
         <svg id="theme-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <button class="icon-btn" id="settings-btn" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 3-1 3-3 1v3l-2 2 2 2v3l3 1 1 3h6l1-3 3-1v-3l2-2-2-2V7l-3-1-1-3z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
   </header>
@@ -334,6 +366,14 @@ button:disabled{opacity:.35;cursor:default}
     </div>
   </div>
 </div>
+<dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
+  <div class="settings-shell">
+    <header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
+    <div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
+    <div id="library-list" class="library-list"></div>
+    <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
+  </div>
+</dialog>
 
 <script>
 const EXERCISES = [
@@ -344,9 +384,28 @@ const EXERCISES = [
   {id:'legcurl',name:'Leg Curl',ico:'🦿',tags:['Hamstrings'],def:12,muscles:['Thighs','Hamstrings']},
   {id:'legpress',name:'Leg Press',ico:'🦵',tags:['Lower body'],def:12,muscles:['Thighs','Glutes']},
   {id:'armcurl',name:'Arm Curl Machine',ico:'💪',tags:['Biceps'],def:12,muscles:['Biceps']},
+  {id:'pushup',name:'Push-ups',group:'Bodyweight',tags:['Chest'],def:10,muscles:['Chest','Triceps']},
+  {id:'squat',name:'Squats',group:'Bodyweight',tags:['Legs'],def:15,muscles:['Thighs','Glutes']},
+  {id:'lunge',name:'Lunges',group:'Bodyweight',tags:['Legs'],def:12,muscles:['Thighs','Glutes']},
+  {id:'plank',name:'Plank',group:'Bodyweight',tags:['Core'],def:30,isTime:true,muscles:['Core']},
+  {id:'burpee',name:'Burpees',group:'Bodyweight',tags:['Full body'],def:10,muscles:['Full body']},
+  {id:'mountain',name:'Mountain Climbers',group:'Bodyweight',tags:['Core'],def:20,muscles:['Core']},
+  {id:'dip',name:'Triceps Dips',group:'Bodyweight',tags:['Triceps'],def:10,muscles:['Triceps','Chest']},
+  {id:'legraise',name:'Leg Raises',group:'Bodyweight',tags:['Core'],def:12,muscles:['Core']},
+  {id:'crunch',name:'Crunches',group:'Bodyweight',tags:['Core'],def:15,muscles:['Core']},
+  {id:'bridge',name:'Glute Bridge',group:'Bodyweight',tags:['Glutes'],def:15,muscles:['Glutes','Hamstrings']},
+  {id:'jumpjack',name:'Jumping Jacks',group:'Bodyweight',tags:['Cardio'],def:30,muscles:['Full body']},
+  {id:'inchworm',name:'Inchworms',group:'Bodyweight',tags:['Full body'],def:8,muscles:['Core','Shoulders']},
+  {id:'benchpress',name:'Bench Press',group:'Free weights',tags:['Chest'],def:10,muscles:['Chest','Triceps']},
+  {id:'dumbbellrow',name:'Dumbbell Row',group:'Free weights',tags:['Back'],def:12,muscles:['Back','Biceps']},
+  {id:'deadlift',name:'Deadlift',group:'Free weights',tags:['Posterior chain'],def:8,muscles:['Back','Hamstrings','Glutes']},
+  {id:'lateralraise',name:'Lateral Raises',group:'Free weights',tags:['Shoulders'],def:12,muscles:['Shoulders']},
+  {id:'calfraise',name:'Calf Raises',group:'Bodyweight',tags:['Calves'],def:15,muscles:['Calves']},
 ];
 const EX_MAP = Object.fromEntries(EXERCISES.map(e=>[e.id,e]));
-const DEFAULT_ACTIVE = EXERCISES.map(e=>e.id);
+const DEFAULT_ACTIVE = EXERCISES.slice(0,7).map(e=>e.id);
+function exerciseGroup(ex){return ex.group||'Machines';}
+function exerciseIcon(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 12h10M4 7h3v10H4zM17 7h3v10h-3zM2 10v4M22 10v4"/></svg>';}
 function exerciseName(id){return EX_MAP[id]?.name||({pushup:'Push-ups',squat:'Squats',lunge:'Lunges',plank:'Plank',burpee:'Burpees',mountain:'Mountain Climbers',dip:'Triceps Dips',legraise:'Leg Raises',crunch:'Crunches',bridge:'Glute Bridge',jumpjack:'Jumping Jacks',inchworm:'Inchworms'}[id])||'Previous Exercise';}
 
 function dateKey(d=new Date()){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -364,6 +423,37 @@ if(!DATA.settings.active) DATA.settings.active=[...DEFAULT_ACTIVE];
 if(DATA.settings.active.some(id=>!EX_MAP[id])){DATA.settings.active=[...DEFAULT_ACTIVE];saveData(DATA);}
 const TODAY=dateKey();
 let editingSet=null;
+let routineDraft=new Set(),libraryFilter='All';
+function renderExerciseLibrary(){
+  const query=document.getElementById('exercise-search').value.trim().toLowerCase();
+  const items=EXERCISES.filter(ex=>(libraryFilter==='All'||exerciseGroup(ex)===libraryFilter)&&[ex.name,...ex.tags,exerciseGroup(ex)].join(' ').toLowerCase().includes(query));
+  document.getElementById('library-filters').innerHTML=['All','Machines','Bodyweight','Free weights'].map(group=>`<button data-group="${group}" aria-pressed="${libraryFilter===group}">${group}</button>`).join('');
+  document.getElementById('library-list').innerHTML=items.length?items.map(ex=>`<label class="library-item"><input type="checkbox" data-ex="${ex.id}" ${routineDraft.has(ex.id)?'checked':''}><span class="ex-ico">${exerciseIcon()}</span><span><strong>${ex.name}</strong><small>${exerciseGroup(ex)} · ${ex.tags.join(' / ')} · ${ex.def}${ex.isTime?'s':' reps'} per set</small></span></label>`).join(''):'<p class="empty-msg">No exercises found. Try another search.</p>';
+  document.querySelectorAll('[data-group]').forEach(btn=>btn.onclick=()=>{libraryFilter=btn.dataset.group;renderExerciseLibrary();});
+  document.querySelectorAll('.library-item input').forEach(input=>input.onchange=()=>{
+    if(input.checked)routineDraft.add(input.dataset.ex);else routineDraft.delete(input.dataset.ex);
+    updateRoutineCount();
+  });
+  updateRoutineCount();
+}
+function updateRoutineCount(){
+  document.getElementById('settings-count').textContent=`${routineDraft.size} selected · ${EXERCISES.length} available`;
+  document.getElementById('settings-apply').disabled=routineDraft.size===0;
+}
+document.getElementById('settings-btn').onclick=()=>{
+  routineDraft=new Set(DATA.settings.active);libraryFilter='All';document.getElementById('exercise-search').value='';
+  renderExerciseLibrary();document.getElementById('settings-dialog').showModal();
+};
+document.getElementById('exercise-search').oninput=renderExerciseLibrary;
+document.getElementById('settings-close').onclick=document.getElementById('settings-cancel').onclick=()=>document.getElementById('settings-dialog').close();
+document.getElementById('settings-apply').onclick=()=>{
+  if(!routineDraft.size)return;
+  const previous=DATA.settings.active;DATA.settings.active=[...routineDraft];
+  if(!saveData(DATA)){DATA.settings.active=previous;return;}
+  editingSet=null;ensureToday();
+  if(!DATA.settings.active.every(id=>DATA.days[TODAY].exercises[id].sets.every(s=>s.done))){DATA.days[TODAY].endTime=null;saveData(DATA);}
+  document.getElementById('settings-dialog').close();switchTab(currentTab);showToast('Routine updated.');
+};
 
 function previousRecord(id){
   for(const k of Object.keys(DATA.days).filter(k=>k<TODAY).sort().reverse()){
@@ -435,15 +525,16 @@ function getStreak(){
 }
 function getTodayStats(){
   const day=DATA.days[TODAY];
-  if(!day)return{sets:0,reps:0,exDone:0,total:0};
-  let sets=0,reps=0,exDone=0,total=0;
+  if(!day)return{sets:0,reps:0,seconds:0,exDone:0,total:0};
+  let sets=0,reps=0,seconds=0,exDone=0,total=0;
   DATA.settings.active.forEach(id=>{
     const ex=day.exercises[id];if(!ex)return;
     total++;const done=ex.sets.filter(s=>s.done);
-    sets+=done.length;reps+=done.reduce((a,s)=>a+s.reps,0);
+    sets+=done.length;const value=done.reduce((a,s)=>a+s.reps,0);
+    if(EX_MAP[id]?.isTime)seconds+=value;else reps+=value;
     if(done.length===ex.sets.length&&ex.sets.length>0)exDone++;
   });
-  return{sets,reps,exDone,total};
+  return{sets,reps,seconds,exDone,total};
 }
 
 // REST TIMER
@@ -529,18 +620,19 @@ function renderToday(){
   const planned=active.reduce((n,id)=>n+(day.exercises[id]?.sets.length||0),0);
 
   let html=`<div class="today-banner">
-    <div class="today-h">${formatDateKR(TODAY)}</div>
+    <div class="routine-kicker">YOUR ROUTINE</div>
+    <div class="today-h">Today’s workout</div>
     <div class="today-sub">${active.length} exercises · Saved when you log a set</div>
   </div>
   <div class="summary">
     <div class="chip"><div class="chip-val g">${stats.exDone}/${stats.total}</div><div class="chip-lbl">Exercises done</div></div>
     <div class="chip"><div class="chip-val">${stats.sets}</div><div class="chip-lbl">Sets logged</div></div>
-    <div class="chip"><div class="chip-val">${stats.reps.toLocaleString()}</div><div class="chip-lbl">Total reps</div></div>
+    <div class="chip"><div class="chip-val">${stats.reps.toLocaleString()}</div><div class="chip-lbl">Total reps${stats.seconds?` · ${stats.seconds}s timed`:''}</div></div>
   </div><div class="progress-track" role="progressbar" aria-label="Today’s set progress" aria-valuenow="${stats.sets}" aria-valuemin="0" aria-valuemax="${planned}"><div class="progress-fill" style="width:${planned?stats.sets/planned*100:0}%"></div></div>
   <p class="hint">${stats.sets} / ${planned} sets logged · Adjust reps and tap Save.</p>`;
 
   if(allDone){
-    html+=`<div class="complete-banner"><div class="complete-emoji">🎉</div><div class="complete-h">Workout complete!</div><div class="complete-sub">${stats.reps} reps · ${stats.sets} sets logged</div></div>`;
+    html+=`<div class="complete-banner"><div class="complete-emoji">🎉</div><div class="complete-h">Workout complete!</div><div class="complete-sub">${stats.reps} reps${stats.seconds?` · ${stats.seconds}s timed`:''} · ${stats.sets} sets logged</div></div>`;
   }
 
   html+=`<div class="settings-row">
@@ -575,7 +667,7 @@ function renderToday(){
     /* LEFT CELL */
     const leftHtml=`<div class="ex-left">
       <div class="ex-name-row">
-        <span class="ex-ico">${ex.ico}</span>
+        <span class="ex-ico" aria-hidden="true">${exerciseIcon()}</span>
         <span class="ex-name">${ex.name}</span>
       </div>
       <div class="ex-meta">
@@ -594,7 +686,7 @@ function renderToday(){
       if(s.done){
         rightHtml+=`<span class="saved-set"><button class="chip-done" data-id="${id}" data-idx="${i}" aria-label="Edit ${ex.name} set ${i+1}, ${s.reps}${unit}">${i+1} · ${s.reps}<span class="chip-sub">${unit}</span></button><button class="set-undo" data-undo="${id}" data-idx="${i}" aria-label="Undo ${ex.name} set ${i+1}">Undo</button></span>`;
       } else if(i!==nextIdx){
-        rightHtml+=`<span class="dot-pending"></span>`;
+        rightHtml+=`<span class="set-pending" aria-label="Set ${i+1} not logged">${i+1}</span>`;
       }
     });
     rightHtml+=`</div>`;
@@ -629,14 +721,7 @@ function renderToday(){
 
   html+=`</div></div>`; /* close table */
 
-  /* Exercise toggle */
-  html+=`<div class="ex-toggle-section">
-    <div class="ex-toggle-title">Choose today’s exercises</div>
-    <div class="ex-toggle-grid">`;
-  EXERCISES.forEach(ex=>{
-    html+=`<button class="ex-toggle-chip${active.includes(ex.id)?' on':''}" data-ex="${ex.id}" aria-pressed="${active.includes(ex.id)}">${ex.ico} ${ex.name}</button>`;
-  });
-  html+=`</div></div><div style="height:20px"></div>`;
+  html+=`<p class="hint">Customize your routine using the Settings button above.</p><div style="height:12px"></div>`;
 
   document.getElementById('today-content').innerHTML=html;
   bindTodayEvents();
@@ -680,7 +765,7 @@ function bindTodayEvents(){
         DATA.days[TODAY].endTime=Date.now();
       const saved=saveData(DATA);
       renderToday();updateHeader();
-      if(saved)showToast(`Set ${idx+1} · ${reps} reps ${isEditing?'updated':'saved'}`,()=>{
+      if(saved)showToast(`Set ${idx+1} · ${reps}${EX_MAP[id].isTime?'s':' reps'} ${isEditing?'updated':'saved'}`,()=>{
         ex.sets[idx]=before.set;ex.nextReps=before.nextReps;DATA.days[TODAY].endTime=before.endTime;
         editingSet=null;endRest();saveData(DATA);renderToday();updateHeader();showToast(isEditing?'Edit undone.':'Set save undone.');
       });
@@ -707,16 +792,6 @@ function bindTodayEvents(){
       const ex=DATA.days[TODAY].exercises[id];
       ex.sets.push({reps:ex.target,done:false});
       saveData(DATA);renderToday();
-    };
-  });
-  document.querySelectorAll('.ex-toggle-chip').forEach(chip=>{
-    chip.onclick=()=>{
-      const id=chip.dataset.ex;
-      const active=DATA.settings.active;
-      const idx=active.indexOf(id);
-      if(idx>=0){if(active.length<=1){showToast('Select at least one exercise.');return;}active.splice(idx,1);}
-      else active.push(id);
-      editingSet=null;saveData(DATA);ensureToday();renderToday();
     };
   });
 }
@@ -758,7 +833,7 @@ function renderHistory(){
         const ex=EX_MAP[id]||{name:exerciseName(id),ico:'',isTime:id==='plank'};
         const done=e.sets.filter(s=>s.done);
         const unit=ex.isTime?'s':' reps';
-        html+=`<div class="hd-ex-row"><span class="hd-ex-name">${ex.ico} ${ex.name}</span><span class="hd-ex-val">${done.map(s=>s.reps+unit).join(' · ')}</span></div>`;
+        html+=`<div class="hd-ex-row"><span class="hd-ex-name">${ex.name}</span><span class="hd-ex-val">${done.map(s=>s.reps+unit).join(' · ')}</span></div>`;
       });
       html+=`</div>`;
     }
@@ -782,14 +857,14 @@ function periodRange(anchor=statsAnchor,period=statsPeriod){
   return{start:dateKey(start),end:dateKey(end)};
 }
 function periodSummary(start,end){
-  const result={days:0,sets:0,reps:0,exercises:{}};
+  const result={days:0,sets:0,reps:0,seconds:0,exercises:{}};
   Object.entries(DATA.days).filter(([k])=>k>=start&&k<=end).forEach(([,day])=>{
     let worked=false;
     Object.entries(day.exercises||{}).forEach(([id,ex])=>{
       const done=ex.sets.filter(s=>s.done);if(!done.length)return;
       worked=true;
       const item=result.exercises[id]||(result.exercises[id]={sets:0,reps:0,max:0});
-      done.forEach(s=>{item.sets++;item.reps+=s.reps;item.max=Math.max(item.max,s.reps);result.sets++;if(id!=='plank')result.reps+=s.reps;});
+      done.forEach(s=>{item.sets++;item.reps+=s.reps;item.max=Math.max(item.max,s.reps);result.sets++;if(EX_MAP[id]?.isTime||id==='plank')result.seconds+=s.reps;else result.reps+=s.reps;});
     });
     if(worked)result.days++;
   });
@@ -808,10 +883,10 @@ function exportRecords(){
 }
 function cumulativeStats(){
   let html='<details class="cumulative-details"><summary>All-time bests & muscle groups</summary><div class="pr-card">';
-  EXERCISES.forEach(ex=>{const pr=getPR(ex.id);html+='<div class="pr-row"><span class="pr-name">'+ex.name+'</span><span class="pr-val">'+(pr===null?'No record':pr+' reps')+'</span></div>';});
+  EXERCISES.filter(ex=>DATA.settings.active.includes(ex.id)||getPR(ex.id)!==null).forEach(ex=>{const pr=getPR(ex.id);html+='<div class="pr-row"><span class="pr-name">'+ex.name+'</span><span class="pr-val">'+(pr===null?'No record':pr+(ex.isTime?'s':' reps'))+'</span></div>';});
   const counts={};
   Object.values(DATA.days).forEach(day=>Object.entries(day.exercises||{}).forEach(([id,e])=>{
-    const ex=EX_MAP[id];if(!ex)return;
+    const ex=EX_MAP[id];if(!ex||ex.isTime)return;
     const reps=e.sets.filter(s=>s.done).reduce((n,s)=>n+s.reps,0);
     ex.muscles.forEach(m=>{counts[m]=(counts[m]||0)+reps;});
   }));
@@ -846,14 +921,16 @@ function renderStats(){
     '<div class="kpi-grid"><div class="kpi"><div class="kpi-val ac">'+summary.reps.toLocaleString()+'</div><div class="kpi-lbl">Total reps</div></div><div class="kpi"><div class="kpi-val">'+summary.sets+'</div><div class="kpi-lbl">Sets logged</div></div><div class="kpi"><div class="kpi-val">'+summary.days+'</div><div class="kpi-lbl">Workout days</div></div><div class="kpi"><div class="kpi-val">'+Object.keys(summary.exercises).length+'</div><div class="kpi-lbl">Exercises logged</div></div></div>'+
     '<p class="hint" style="margin:0 0 14px">'+(diff>0?'+':'')+diff.toLocaleString()+' reps vs. previous '+statsPeriod+(range.end>=TODAY?' · Current period is in progress.':'')+'</p>';
   if(buckets.length)html+='<div class="chart-card"><div class="chart-title">'+(statsPeriod==='month'?'By date range':'Daily')+' reps</div><div class="bar-chart">'+buckets.map(x=>'<div class="bc-col"><div class="bc-value">'+x.reps+'</div><div class="bc-bar '+(x.current?'today-bar':'past-bar')+'" style="height:'+(x.reps?Math.max(4,Math.round(x.reps/max*82)):0)+'px"></div><div class="bc-lbl">'+x.label+'</div></div>').join('')+'</div></div>';
-  html+='<div class="chart-card"><div class="chart-title">Exercise breakdown</div><table class="stats-table"><thead><tr><th scope="col">Exercise</th><th scope="col">Sets</th><th scope="col">Total reps</th><th scope="col">Best</th></tr></thead><tbody>';
-  const ids=[...new Set([...EXERCISES.map(ex=>ex.id),...Object.keys(summary.exercises)])];
+  html+='<div class="chart-card"><div class="chart-title">Exercise breakdown</div><table class="stats-table"><thead><tr><th scope="col">Exercise</th><th scope="col">Sets</th><th scope="col">Total</th><th scope="col">Best</th></tr></thead><tbody>';
+  const ids=[...new Set([...DATA.settings.active,...Object.keys(summary.exercises)])];
   ids.forEach(id=>{
     const item=summary.exercises[id]||{sets:0,reps:0,max:0};
     html+='<tr><td>'+exerciseName(id)+'</td><td>'+item.sets+'</td><td>'+item.reps.toLocaleString()+(id==='plank'?'s':'')+'</td><td>'+item.max+(id==='plank'?'s':'')+'</td></tr>';
   });
   const all=periodSummary('0000-01-01',TODAY);
-  html+='</tbody></table></div><p class="hint" style="margin:0 0 14px">All time: '+all.days+' days · '+all.sets+' sets · '+all.reps.toLocaleString()+' reps<br>Current streak: '+getStreak()+' days · Best is the highest rep count in a single set.</p>'+cumulativeStats()+'<button class="backup-btn" id="export-records">Export all records</button><p class="hint" style="margin:8px 0 0">Saved in this browser. Records do not automatically sync across devices.</p></div>';
+  html+='</tbody></table></div>';
+  if(summary.seconds)html+='<p class="hint" style="margin:0 0 14px">Timed exercises this period: '+summary.seconds+'s</p>';
+  html+='<p class="hint" style="margin:0 0 14px">All time: '+all.days+' days · '+all.sets+' sets · '+all.reps.toLocaleString()+' reps'+(all.seconds?' · '+all.seconds+'s timed':'')+'<br>Current streak: '+getStreak()+' days · Best is the highest count in a single set.</p>'+cumulativeStats()+'<button class="backup-btn" id="export-records">Export all records</button><p class="hint" style="margin:8px 0 0">Saved in this browser. Records do not automatically sync across devices.</p></div>';
   document.getElementById('stats-content').innerHTML=html;
   document.querySelectorAll('[data-period]').forEach(btn=>btn.onclick=()=>{statsPeriod=btn.dataset.period;statsAnchor=TODAY;renderStats();});
   document.getElementById('period-prev').onclick=()=>shiftPeriod(-1);

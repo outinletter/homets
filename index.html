@@ -313,13 +313,117 @@ button:disabled{opacity:.35;cursor:default}
 .settings-buttons{display:flex;gap:8px}
 .settings-buttons button{flex:1;min-height:34px;border-radius:8px;font-size:13px;border:1px solid var(--bdr2);background:var(--sf2);color:var(--t1)}
 .settings-buttons .apply{background:var(--ac);border-color:var(--ac);color:var(--bg);font-weight:700}
+/* Workout log layout inspired by the reference app screens. */
+:root{--bg:#F5F7FA;--sf:#FFFFFF;--sf2:#F0F3F8;--sf3:#E3E9F2;--bdr:#E8EDF4;--bdr2:#D7DFEB;--ac:#2368F5;--acd:#EBF2FF;--acb:#D3E2FF;--t1:#16233B;--t2:#66758D;--t3:#7C8BA1;--r:16px;--rs:12px}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0C121C;--sf:#151E2C;--sf2:#1D293B;--sf3:#2B3950;--bdr:#233047;--bdr2:#34455F;--ac:#70A1FF;--acd:#213354;--acb:#34517D;--t1:#EDF3FF;--t2:#9CACBF;--t3:#8293AD}}
+:root[data-theme=dark]{--bg:#0C121C;--sf:#151E2C;--sf2:#1D293B;--sf3:#2B3950;--bdr:#233047;--bdr2:#34455F;--ac:#70A1FF;--acd:#213354;--acb:#34517D;--t1:#EDF3FF;--t2:#9CACBF;--t3:#8293AD}
+:root[data-theme=light]{--bg:#F5F7FA;--sf:#FFFFFF;--sf2:#F0F3F8;--sf3:#E3E9F2;--bdr:#E8EDF4;--bdr2:#D7DFEB;--ac:#2368F5;--acd:#EBF2FF;--acb:#D3E2FF;--t1:#16233B;--t2:#66758D;--t3:#7C8BA1}
+.hdr{padding:calc(var(--st) + 16px) 20px 12px;border:0;background:var(--bg)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:32px;height:32px;border-radius:10px;background:var(--ac);color:var(--sf);display:grid;place-items:center}
+.brand-mark svg{width:22px;height:22px}
+.hdr-date{font-size:10px;margin-top:3px;letter-spacing:.3px}
+.hdr-title{font-size:16px;letter-spacing:1.5px;line-height:1}
+.hdr-right{gap:6px}
+.streak{border:0;background:transparent;padding:4px;color:var(--t2);font-size:11px}
+.icon-btn{background:var(--sf);border:1px solid var(--bdr);border-radius:10px}
+.today-banner{padding:8px 16px 0}
+.session-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 18px;border-radius:18px;background:linear-gradient(120deg,#142542,#213A60);color:#fff;position:relative;overflow:hidden}
+.routine-kicker{font-size:9px;letter-spacing:1.5px;color:#A8C6FF;margin:0 0 8px;display:flex;align-items:center;gap:6px}
+.routine-kicker::before{content:'';width:5px;height:5px;border-radius:50%;background:#8EB9FF}
+.today-h{font-size:25px;line-height:1.1;font-weight:600;letter-spacing:-.5px;color:#fff}
+.today-sub{font-size:11px;color:#B9C8DF;margin-top:9px;line-height:1.4}
+.progress-ring{width:74px;height:74px;flex-shrink:0;border-radius:50%;padding:4px;background:conic-gradient(#79A9FF var(--progress),#ffffff18 0);transform:rotate(-90deg)}
+.progress-ring>div{width:100%;height:100%;background:#1D3455;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(90deg)}
+.progress-ring b{font-size:22px;line-height:1.1;font-weight:600;font-variant-numeric:tabular-nums}
+.progress-ring small{font-size:7px;letter-spacing:1px;color:#B9C8DF;margin-top:3px}
+.summary{margin:0 16px;padding:17px 0 14px;border-bottom:1px solid var(--bdr);gap:0}
+.chip{background:transparent;border:0;border-radius:0;padding:0 8px}
+.chip+.chip{border-left:1px solid var(--bdr2)}
+.chip-val{font-size:23px;font-weight:600}
+.chip-val.g{color:var(--t1)}
+.chip-lbl{font-size:10px;margin-top:5px;letter-spacing:0}
+.workout-instruction{font-size:11px;padding:12px 16px 0;margin-bottom:0}
+.settings-row{padding:13px 16px 12px}
+.settings-label{font-size:12px;color:var(--t1);font-weight:600}
+.settings-label small{font-size:10px;color:var(--t2);margin-top:3px}
+.sets-stepper{gap:10px}
+.ss-btn{background:var(--sf);border:1px solid var(--bdr);border-radius:8px}
+.ex-table-wrap{padding:0 16px}
+.ex-table{background:none;border:0;border-radius:0;overflow:visible}
+.ex-table-head{background:none;border:0;padding:0 0 9px;justify-content:space-between}
+.th-left{width:auto;color:var(--t2);font-size:10px;letter-spacing:1px}
+.th-right{flex:none;color:var(--t2);font-size:10px;text-transform:none;letter-spacing:0;font-weight:400}
+.th-div{display:none}
+.ex-row{display:block;background:var(--sf);border:1px solid var(--bdr);border-radius:14px;margin-bottom:10px;min-height:0;box-shadow:0 3px 10px #14254203}
+.ex-row:last-child{border-bottom:1px solid var(--bdr)}
+.ex-row.row-done{background:var(--sf);border-color:var(--acb)}
+.ex-left{width:auto;border:0;padding:14px 14px 10px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+.exercise-heading{display:flex;align-items:center;gap:10px;min-width:0}
+.ex-ico{width:30px;height:30px;flex-shrink:0;margin:0;border-radius:9px;background:var(--acd);color:var(--ac);display:grid;place-items:center}
+.ex-name{font-size:14px;line-height:1.3;font-weight:600;display:block}
+.exercise-category{font-size:10px;color:var(--t2);display:block;margin-top:3px}
+.target-pill{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;font-size:17px;font-weight:600;color:var(--t1);line-height:1}
+.target-pill small{font-size:8px;letter-spacing:1px;font-weight:400;color:var(--t2);margin-top:5px}
+.ex-right{padding:0 14px 10px;gap:8px}
+.set-chips:empty{display:none}
+.saved-set{background:var(--acd);border:0;border-radius:6px}
+.chip-done{font-size:11px;font-weight:600;min-height:26px;padding:3px 7px}
+.set-undo{font-size:9px;min-height:26px;padding:3px 7px;color:var(--ac)}
+.set-active{grid-template-columns:minmax(58px,1fr) 28px 46px 28px 40px;gap:5px;align-items:center;background:var(--sf2);padding:7px;border-radius:9px}
+.set-label{grid-column:auto;font-size:10px;font-weight:500;min-width:0;color:var(--t2)}
+.stp-btn{background:var(--sf);border:1px solid var(--bdr);border-radius:6px;font-size:14px}
+.stp-num{border:0;background:transparent;color:var(--t1);font-size:20px;font-weight:600}
+.ok-btn{border:0;background:var(--ac);color:#fff;font-size:10px;font-weight:600}
+.edit-actions{grid-column:1/-1}
+.row-actions{gap:12px;min-height:28px}
+.add-set-link,.input-cancel{font-size:10px;min-height:28px}
+.add-set-link{color:var(--ac)}
+.previous-note{font-size:9px;margin:0 0 0 auto;color:var(--t2)}
+.row-done-mark{padding:6px 0;color:var(--ac)}
+.tab-bar{height:calc(58px + var(--sb));padding:5px 8px calc(5px + var(--sb));left:12px;right:12px;bottom:8px;border:1px solid var(--bdr);border-radius:16px;background:var(--sf);box-shadow:0 4px 24px #14254212}
+.tab-btn{border-radius:10px;flex-direction:row;gap:7px;padding:0;color:var(--t2)}
+.tab-btn.active{background:var(--acd);color:var(--ac)}
+.tab-btn svg{width:18px;height:18px}
+.tab-btn span{font-size:11px;letter-spacing:0;font-weight:600}
+.scroll-area{padding-bottom:calc(86px + var(--sb))}
+.rest-overlay{bottom:calc(78px + var(--sb))}
+.rest-card{border-radius:14px;box-shadow:0 4px 24px #14254220}
+.rest-skip{color:#fff;font-weight:600}
+.history-item,.chart-card,.kpi{border-radius:14px}
+.history-date{background:var(--acd)}
+.hd-day{color:var(--ac);font-weight:600}
+.history-exercises{font-weight:600}
+.period-tabs{padding:4px;border-radius:10px;background:var(--sf3)}
+.period-tabs button[aria-pressed=true]{color:var(--t1);box-shadow:0 2px 5px #00000008}
+.kpi-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{padding:12px 10px}
+.kpi:first-child{grid-column:1/-1;background:linear-gradient(120deg,#142542,#213A60);border:0;padding:22px}
+.kpi:first-child .kpi-val{color:#fff;font-size:44px;font-weight:600}
+.kpi:first-child .kpi-lbl{color:#B9C8DF;font-size:12px}
+.kpi-val{font-size:22px;font-weight:600}
+.kpi-lbl{font-size:10px}
+.chart-title,.section-hdr{letter-spacing:.8px;font-size:10px}
+.settings-dialog{inset:auto 0 0;margin:0 auto;width:100%;border-radius:22px 22px 0 0;border-bottom:0;max-height:90dvh}
+.settings-shell{max-height:90dvh}
+.settings-head{padding:22px 20px 16px}
+.settings-head h2{font-size:24px;font-weight:600}
+.library-tools{padding:14px 20px}
+.library-search{height:36px;border:0;background:var(--sf2);border-radius:10px}
+.library-filters button{border-radius:7px;padding:4px 9px}
+.library-list{padding:0 20px}
+.library-item{padding:13px 0}
+.library-item strong{font-size:14px}
+.settings-footer{padding:14px 20px calc(16px + var(--sb))}
+.settings-buttons button{border:0;border-radius:10px}
+.settings-buttons .apply{color:#fff}
 </style>
 
 <div id="app">
   <header class="hdr">
-    <div>
-      <div class="hdr-date" id="hdr-date"></div>
-      <div class="hdr-title">Workout Log</div>
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 12h10M4 7h3v10H4zM17 7h3v10h-3zM2 10v4M22 10v4"/></svg></span>
+      <div><div class="hdr-title">HOMETS</div><div class="hdr-date" id="hdr-date"></div></div>
     </div>
     <div class="hdr-right">
       <div class="streak" id="hdr-streak">
@@ -341,15 +445,15 @@ button:disabled{opacity:.35;cursor:default}
 
   <nav class="tab-bar">
     <button class="tab-btn active" data-tab="today">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.72L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5V2.05z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 12h10M4 7h3v10H4zM17 7h3v10h-3zM2 10v4M22 10v4"/></svg>
       <span>Workout</span>
     </button>
     <button class="tab-btn" data-tab="history">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zm0-13H5V5h14v1zM7 10h5v5H7z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 11h16M8 15h3M13 15h3"/></svg>
       <span>History</span>
     </button>
     <button class="tab-btn" data-tab="stats">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4v16h16M8 16v-4M12 16V8M16 16V5"/></svg>
       <span>Stats</span>
     </button>
   </nav>
@@ -619,24 +723,25 @@ function renderToday(){
   const active=DATA.settings.active;
   const planned=active.reduce((n,id)=>n+(day.exercises[id]?.sets.length||0),0);
 
-  let html=`<div class="today-banner">
-    <div class="routine-kicker">YOUR ROUTINE</div>
+  const progress=planned?Math.round(stats.sets/planned*100):0;
+  let html=`<div class="today-banner"><div class="session-hero">
+    <div><div class="routine-kicker">${allDone?'SESSION COMPLETE':stats.sets?'SESSION IN PROGRESS':'READY TO TRAIN'}</div>
     <div class="today-h">Today’s workout</div>
-    <div class="today-sub">${active.length} exercises · Saved when you log a set</div>
-  </div>
+    <div class="today-sub">${active.length} exercises · ${planned} planned sets</div></div>
+    <div class="progress-ring" style="--progress:${progress}%" role="progressbar" aria-label="Today’s set progress" aria-valuenow="${stats.sets}" aria-valuemin="0" aria-valuemax="${planned}"><div><b>${progress}%</b><small>COMPLETE</small></div></div>
+  </div></div>
   <div class="summary">
     <div class="chip"><div class="chip-val g">${stats.exDone}/${stats.total}</div><div class="chip-lbl">Exercises done</div></div>
     <div class="chip"><div class="chip-val">${stats.sets}</div><div class="chip-lbl">Sets logged</div></div>
     <div class="chip"><div class="chip-val">${stats.reps.toLocaleString()}</div><div class="chip-lbl">Total reps${stats.seconds?` · ${stats.seconds}s timed`:''}</div></div>
-  </div><div class="progress-track" role="progressbar" aria-label="Today’s set progress" aria-valuenow="${stats.sets}" aria-valuemin="0" aria-valuemax="${planned}"><div class="progress-fill" style="width:${planned?stats.sets/planned*100:0}%"></div></div>
-  <p class="hint">${stats.sets} / ${planned} sets logged · Adjust reps and tap Save.</p>`;
+  </div><p class="hint workout-instruction">Adjust reps, tap Save. Your records are saved automatically.</p>`;
 
   if(allDone){
     html+=`<div class="complete-banner"><div class="complete-emoji">🎉</div><div class="complete-h">Workout complete!</div><div class="complete-sub">${stats.reps} reps${stats.seconds?` · ${stats.seconds}s timed`:''} · ${stats.sets} sets logged</div></div>`;
   }
 
   html+=`<div class="settings-row">
-    <div class="settings-label">Today’s sets<small>Logged sets stay saved.</small></div>
+    <div class="settings-label">Sets per exercise<small>Logged sets stay saved.</small></div>
     <div class="sets-stepper">
       <button class="ss-btn" id="sets-minus" aria-label="Decrease today’s sets" ${DATA.settings.sets<=1?'disabled':''}>−</button>
       <div class="ss-val" id="sets-val">${DATA.settings.sets}</div>
@@ -647,9 +752,9 @@ function renderToday(){
   /* ── TABLE ── */
   html+=`<div class="ex-table-wrap"><div class="ex-table">
     <div class="ex-table-head">
-      <div class="th-left">Exercise</div>
+      <div class="th-left">EXERCISE LOG</div>
       <div class="th-div"></div>
-      <div class="th-right">Set log</div>
+      <div class="th-right">${active.length} exercises</div>
     </div>`;
 
   active.forEach(id=>{
@@ -666,15 +771,11 @@ function renderToday(){
 
     /* LEFT CELL */
     const leftHtml=`<div class="ex-left">
-      <div class="ex-name-row">
+      <div class="exercise-heading">
         <span class="ex-ico" aria-hidden="true">${exerciseIcon()}</span>
-        <span class="ex-name">${ex.name}</span>
+        <div><span class="ex-name">${ex.name}</span><span class="exercise-category">${exerciseGroup(ex)} · ${ex.tags[0]}</span></div>
       </div>
-      <div class="ex-meta">
-        ${ex.tags.map(t=>`<span class="ex-tag">${t}</span>`).join('')}
-        <span class="ex-tgt">Target ${exData.target}${unit}</span>
-      </div>
-      ${previous?`<div class="previous-note">Last best ${previous.max}${unit}<br>${formatDateKR(previous.date)}</div>`:''}
+      <div class="target-pill" aria-label="Target ${exData.target}${unit}">${exData.target}<small>${ex.isTime?'SECONDS':'REP TARGET'}</small></div>
     </div>`;
 
     /* RIGHT CELL */
@@ -685,8 +786,6 @@ function renderToday(){
     exData.sets.forEach((s,i)=>{
       if(s.done){
         rightHtml+=`<span class="saved-set"><button class="chip-done" data-id="${id}" data-idx="${i}" aria-label="Edit ${ex.name} set ${i+1}, ${s.reps}${unit}">${i+1} · ${s.reps}<span class="chip-sub">${unit}</span></button><button class="set-undo" data-undo="${id}" data-idx="${i}" aria-label="Undo ${ex.name} set ${i+1}">Undo</button></span>`;
-      } else if(i!==nextIdx){
-        rightHtml+=`<span class="set-pending" aria-label="Set ${i+1} not logged">${i+1}</span>`;
       }
     });
     rightHtml+=`</div>`;
@@ -699,9 +798,9 @@ function renderToday(){
       </div>`;
     } else if(inputIdx!==-1){
       rightHtml+=`<div class="set-active">
-        <div class="set-label">${isEditing?'Editing · ':''}Set ${inputIdx+1} / ${exData.sets.length} · ${unit.trim()}</div>
+        <div class="set-label">${isEditing?'Edit':'Set'} ${inputIdx+1} / ${exData.sets.length}</div>
         <button class="stp-btn" data-id="${id}" data-action="minus" aria-label="${ex.name} decrease reps">−</button>
-        <input class="stp-num" id="reps-${id}" data-id="${id}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${inputReps}" aria-label="${ex.name} reps">
+        <input class="stp-num" id="reps-${id}" data-id="${id}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${inputReps}" aria-label="${ex.name} ${ex.isTime?'seconds':'reps'}">
         <button class="stp-btn" data-id="${id}" data-action="plus" aria-label="${ex.name} increase reps">+</button>
         <button class="ok-btn" data-id="${id}" aria-label="${ex.name} ${isEditing?'Save edit':'Log set'}">Save</button>
         ${isEditing?`<div class="edit-actions"><button data-cancel="${id}">Cancel edit</button></div>`:''}
@@ -712,7 +811,7 @@ function renderToday(){
     rightHtml+=`<div class="row-actions"><button class="add-set-link" data-id="${id}" aria-label="${ex.name} Add set">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add set
-    </button>${!isEditing&&nextIdx!==-1?`<button class="input-cancel" data-reset="${id}" aria-label="${ex.name} Reset input">Reset input</button>`:''}</div>`;
+    </button>${!isEditing&&nextIdx!==-1?`<button class="input-cancel" data-reset="${id}" aria-label="${ex.name} Reset input">Reset</button>`:''}${previous?`<span class="previous-note" title="${formatDateKR(previous.date)}">Last best ${previous.max}${unit}</span>`:''}</div>`;
 
     rightHtml+=`</div>`;
 

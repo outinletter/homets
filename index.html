@@ -1,4 +1,7 @@
-<title>홈트 트레이너</title>
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<title>운동 기록</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 :root {
@@ -215,13 +218,69 @@ button{font-family:inherit;cursor:pointer}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* 운동 중 한 손 입력과 작은 화면을 위한 컨트롤 */
+button,input,select{font:inherit;touch-action:manipulation}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.icon-btn,.ss-btn,.stp-btn{min-width:44px;height:44px}
+.settings-row{gap:8px;flex-wrap:wrap}
+.settings-label{font-size:12px}
+.settings-label small{display:block;color:var(--t2);font-weight:400;margin-top:4px}
+.ex-row{align-items:stretch}
+.ex-left{width:112px;padding:12px 8px 12px 10px}
+.th-left{width:98px}
+.ex-name-row{align-items:flex-start}
+.ex-name{line-height:1.5;word-break:keep-all}
+.ex-tag{color:var(--t2)}
+.th-left,.th-right,.bc-lbl{color:var(--t2)}
+.ex-tgt,.previous-note{font-size:11px;line-height:1.5}
+.previous-note{color:var(--t2);margin-top:4px}
+.ex-right{min-width:0;padding:10px;gap:8px}
+.set-active{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:6px}
+.set-label{grid-column:1/-1;font-size:11px}
+.stp-num{width:100%;min-width:0;height:44px;border:1px solid var(--bdr2);border-radius:8px;background:var(--sf2);color:var(--t1);font-size:18px;appearance:textfield}
+.stp-num::-webkit-inner-spin-button{appearance:none}
+.ok-btn{grid-column:1/-1;min-height:44px;font-size:13px}
+.edit-actions{grid-column:1/-1;display:flex;gap:6px}
+.edit-actions button{flex:1;min-height:44px;border:1px solid var(--bdr2);border-radius:8px;background:var(--sf2);color:var(--t2);font-size:11px}
+.chip-done{min-height:44px;padding:6px 10px}
+.add-set-link{min-height:44px;color:var(--t2)}
+.ex-toggle-chip{min-height:44px}
+.hint{font-size:12px;color:var(--t2);line-height:1.6;margin:0 16px 12px}
+.progress-track{height:5px;background:var(--sf3);margin:0 16px 10px;border-radius:5px;overflow:hidden}
+.progress-fill{height:100%;background:var(--ac)}
+.rest-overlay{position:absolute;inset:auto 12px calc(68px + var(--sb));padding:0;background:none;backdrop-filter:none;display:block;z-index:25}
+.rest-card{display:grid;grid-template-columns:1fr auto;gap:8px;max-width:none;border-radius:14px;padding:12px 14px;text-align:left;box-shadow:0 4px 20px #0003}
+.rest-ttl{margin:0;font-size:11px}
+.rest-num{font-size:28px;margin:0;grid-column:2;grid-row:1/3}
+.rest-track{grid-column:1;margin:0;align-self:center}
+.rest-btns{grid-column:1/-1;gap:8px}
+.rest-add,.rest-skip{padding:8px;min-height:44px;border-radius:8px}
+.resting .scroll-area{padding-bottom:calc(210px + var(--sb))}
+.period-tabs{display:flex;gap:4px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
+.period-tabs button{flex:1;min-height:44px;border:0;background:none;border-radius:8px;color:var(--t2);font-weight:700}
+.period-tabs button[aria-pressed=true]{background:var(--sf);color:var(--ac)}
+.period-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:12px}
+.period-nav button{min-width:44px;height:44px;border:1px solid var(--bdr);border-radius:8px;background:var(--sf);color:var(--t1)}
+button:disabled{opacity:.35;cursor:default}
+.stats-table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.stats-table th,.stats-table td{padding:12px 4px;border-bottom:1px solid var(--bdr);text-align:right}
+.stats-table th:first-child,.stats-table td:first-child{text-align:left;width:48%}
+.stats-table th{color:var(--t2);font-size:11px}
+.stats-table td{line-height:1.5}
+.bar-chart{height:128px}
+.bc-value{font-size:10px;color:var(--t2);font-variant-numeric:tabular-nums}
+.history-item{width:100%;text-align:left;font:inherit;color:inherit}
+.backup-btn{width:100%;min-height:44px;background:var(--sf);border:1px solid var(--bdr2);border-radius:10px;color:var(--t2);font-size:13px}
+.cumulative-details{margin-bottom:14px}
+.cumulative-details summary{min-height:44px;padding:12px 0;color:var(--t2);font-size:13px;cursor:pointer}
+.toast{white-space:normal;width:max-content;max-width:calc(100% - 32px);text-align:center}
 </style>
 
 <div id="app">
   <header class="hdr">
     <div>
       <div class="hdr-date" id="hdr-date"></div>
-      <div class="hdr-title">홈트 트레이너</div>
+      <div class="hdr-title">운동 기록</div>
     </div>
     <div class="hdr-right">
       <div class="streak" id="hdr-streak">
@@ -253,7 +312,7 @@ button{font-family:inherit;cursor:pointer}
     </button>
   </nav>
 
-  <div id="rest-overlay" style="display:none" class="rest-overlay" role="dialog" aria-modal="true">
+  <div id="rest-overlay" style="display:none" class="rest-overlay" role="region" aria-label="휴식 타이머">
     <div class="rest-card">
       <div class="rest-ttl">휴식 시간</div>
       <div class="rest-num" id="rest-num">60</div>
@@ -278,6 +337,7 @@ const EXERCISES = [
 ];
 const EX_MAP = Object.fromEntries(EXERCISES.map(e=>[e.id,e]));
 const DEFAULT_ACTIVE = EXERCISES.map(e=>e.id);
+function exerciseName(id){return EX_MAP[id]?.name||({pushup:'푸시업',squat:'스쿼트',lunge:'런지',plank:'플랭크',burpee:'버피',mountain:'마운틴 클라이머',dip:'트라이셉 딥',legraise:'레그레이즈',crunch:'크런치',bridge:'힙 브릿지',jumpjack:'점핑잭',inchworm:'인치웜'}[id])||'이전 운동';}
 
 function dateKey(d=new Date()){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function prevDayKey(k){const d=new Date(k+'T00:00');d.setDate(d.getDate()-1);return dateKey(d)}
@@ -285,7 +345,7 @@ function formatDateKR(k){const d=new Date(k+'T00:00');const days=['일','월','�
 function formatMonthDay(k){const d=new Date(k+'T00:00');const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return{m:m[d.getMonth()],d:d.getDate()}}
 
 function loadData(){try{return JSON.parse(localStorage.getItem('homefit_v2')||'{}')}catch{return{}}}
-function saveData(d){localStorage.setItem('homefit_v2',JSON.stringify(d))}
+function saveData(d){try{localStorage.setItem('homefit_v2',JSON.stringify(d));return true;}catch{showToast('저장하지 못했어요. 브라우저 저장 공간을 확인해주세요.');return false;}}
 
 let DATA=loadData();
 if(!DATA.days) DATA.days={};
@@ -293,6 +353,25 @@ if(!DATA.settings) DATA.settings={sets:3,restTime:60,active:[...DEFAULT_ACTIVE]}
 if(!DATA.settings.active) DATA.settings.active=[...DEFAULT_ACTIVE];
 if(DATA.settings.active.some(id=>!EX_MAP[id])){DATA.settings.active=[...DEFAULT_ACTIVE];saveData(DATA);}
 const TODAY=dateKey();
+let editingSet=null;
+
+function previousRecord(id){
+  for(const k of Object.keys(DATA.days).filter(k=>k<TODAY).sort().reverse()){
+    const done=DATA.days[k].exercises?.[id]?.sets.filter(s=>s.done)||[];
+    if(done.length)return{date:k,max:Math.max(...done.map(s=>s.reps))};
+  }
+  return null;
+}
+function adjustSets(delta){
+  const count=Math.min(10,Math.max(1,DATA.settings.sets+delta));
+  DATA.settings.sets=count;
+  DATA.settings.active.forEach(id=>{
+    const ex=DATA.days[TODAY].exercises[id];
+    while(ex.sets.length<count)ex.sets.push({reps:ex.target,done:false});
+    while(ex.sets.length>count){const i=ex.sets.findLastIndex(s=>!s.done);if(i<0)break;ex.sets.splice(i,1);}
+  });
+  editingSet=null;saveData(DATA);renderToday();
+}
 
 function ensureToday(){
   if(!DATA.days[TODAY]){
@@ -311,6 +390,7 @@ function ensureToday(){
     saveData(DATA);
   } else {
     const day=DATA.days[TODAY];
+    let changed=false;
     DATA.settings.active.forEach(id=>{
       if(!day.exercises[id]){
         const ex=EX_MAP[id];if(!ex)return;
@@ -318,8 +398,10 @@ function ensureToday(){
         let target=ex.def;
         if(prev?.exercises?.[id]){const ps=prev.exercises[id].sets.filter(s=>s.done);if(ps.length>0)target=Math.max(...ps.map(s=>s.reps));}
         day.exercises[id]={sets:Array.from({length:DATA.settings.sets},()=>({reps:target,done:false})),target,nextReps:target};
+        changed=true;
       }
     });
+    if(changed)saveData(DATA);
   }
 }
 
@@ -345,7 +427,8 @@ function getTodayStats(){
   const day=DATA.days[TODAY];
   if(!day)return{sets:0,reps:0,exDone:0,total:0};
   let sets=0,reps=0,exDone=0,total=0;
-  Object.entries(day.exercises).forEach(([,ex])=>{
+  DATA.settings.active.forEach(id=>{
+    const ex=day.exercises[id];if(!ex)return;
     total++;const done=ex.sets.filter(s=>s.done);
     sets+=done.length;reps+=done.reduce((a,s)=>a+s.reps,0);
     if(done.length===ex.sets.length&&ex.sets.length>0)exDone++;
@@ -360,31 +443,33 @@ function startRest(duration){
   const overlay=document.getElementById('rest-overlay');
   const numEl=document.getElementById('rest-num');
   const progEl=document.getElementById('rest-prog');
-  overlay.style.display='flex';
-  let remaining=duration,total=duration;
+  overlay.style.display='block';
+  document.body.classList.add('resting');
+  let deadline=Date.now()+duration*1000,total=duration;
   function tick(){
+    const remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));
     numEl.textContent=remaining;
     numEl.className='rest-num'+(remaining<=10?' urgent':'');
     progEl.style.width=`${(remaining/total)*100}%`;
     progEl.className='rest-prog'+(remaining<=10?' urgent':'');
     if(remaining<=0){endRest();return;}
-    remaining--;
   }
   tick();
   restState={iv:setInterval(tick,1000)};
-  document.getElementById('rest-add-btn').onclick=()=>{remaining+=30;total=Math.max(total,remaining);};
+  document.getElementById('rest-add-btn').onclick=()=>{deadline+=30000;total+=30;tick();};
   document.getElementById('rest-skip-btn').onclick=endRest;
 }
 function endRest(){
   if(restState){clearInterval(restState.iv);restState=null;}
   document.getElementById('rest-overlay').style.display='none';
+  document.body.classList.remove('resting');
 }
 
 // TABS
 let currentTab='today';
 function switchTab(tab){
   currentTab=tab;
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(`view-${tab}`).classList.add('active');
   if(tab==='today') renderToday();
@@ -404,12 +489,12 @@ function applyTheme(t){
 document.getElementById('theme-btn').onclick=()=>{
   const cur=document.documentElement.getAttribute('data-theme');
   const isDark=cur==='dark'||(!cur&&window.matchMedia('(prefers-color-scheme:dark)').matches);
-  applyTheme(isDark?'light':'dark');
+  DATA.settings.theme=isDark?'light':'dark';applyTheme(DATA.settings.theme);saveData(DATA);
 };
 
 function showToast(msg){
   const t=document.createElement('div');
-  t.className='toast';t.textContent=msg;
+  t.className='toast';t.setAttribute('role','status');t.textContent=msg;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),2000);
 }
@@ -423,27 +508,29 @@ function renderToday(){
   const stats=getTodayStats();
   const allDone=stats.exDone===stats.total&&stats.total>0;
   const active=DATA.settings.active;
+  const planned=active.reduce((n,id)=>n+(day.exercises[id]?.sets.length||0),0);
 
   let html=`<div class="today-banner">
     <div class="today-h">${formatDateKR(TODAY)}</div>
-    <div class="today-sub">목표 <strong>${active.length}종</strong> 운동</div>
+    <div class="today-sub">${active.length}종 운동 · 세트 완료 시 자동 저장</div>
   </div>
   <div class="summary">
     <div class="chip"><div class="chip-val g">${stats.exDone}/${stats.total}</div><div class="chip-lbl">완료 운동</div></div>
     <div class="chip"><div class="chip-val">${stats.sets}</div><div class="chip-lbl">완료 세트</div></div>
     <div class="chip"><div class="chip-val">${stats.reps.toLocaleString()}</div><div class="chip-lbl">총 횟수</div></div>
-  </div>`;
+  </div><div class="progress-track" role="progressbar" aria-label="오늘 세트 진행률" aria-valuenow="${stats.sets}" aria-valuemin="0" aria-valuemax="${planned}"><div class="progress-fill" style="width:${planned?stats.sets/planned*100:0}%"></div></div>
+  <p class="hint">${stats.sets} / ${planned}세트 완료 · 횟수를 조절하고 ‘세트 저장’을 누르세요.</p>`;
 
   if(allDone){
     html+=`<div class="complete-banner"><div class="complete-emoji">🎉</div><div class="complete-h">오늘 운동 완료!</div><div class="complete-sub">총 ${stats.reps}회 · ${stats.sets}세트 달성</div></div>`;
   }
 
   html+=`<div class="settings-row">
-    <div class="settings-label">기본 세트 수</div>
+    <div class="settings-label">오늘 세트 수<small>완료 기록은 유지합니다.</small></div>
     <div class="sets-stepper">
-      <button class="ss-btn" id="sets-minus">−</button>
+      <button class="ss-btn" id="sets-minus" aria-label="오늘 세트 수 줄이기" ${DATA.settings.sets<=1?'disabled':''}>−</button>
       <div class="ss-val" id="sets-val">${DATA.settings.sets}</div>
-      <button class="ss-btn" id="sets-plus">+</button>
+      <button class="ss-btn" id="sets-plus" aria-label="오늘 세트 수 늘리기" ${DATA.settings.sets>=10?'disabled':''}>+</button>
     </div>
   </div>`;
 
@@ -462,6 +549,10 @@ function renderToday(){
     const cardDone=doneSets.length===exData.sets.length&&exData.sets.length>0;
     const unit=ex.isTime?'초':'회';
     const nextIdx=exData.sets.findIndex(s=>!s.done);
+    const previous=previousRecord(id);
+    const isEditing=editingSet?.id===id;
+    const inputIdx=isEditing?editingSet.idx:nextIdx;
+    const inputReps=isEditing?exData.sets[inputIdx].reps:(exData.nextReps||exData.target);
 
     /* LEFT CELL */
     const leftHtml=`<div class="ex-left">
@@ -473,6 +564,7 @@ function renderToday(){
         ${ex.tags.map(t=>`<span class="ex-tag">${t}</span>`).join('')}
         <span class="ex-tgt">목표 ${exData.target}${unit}</span>
       </div>
+      ${previous?`<div class="previous-note">지난 기록 ${previous.max}${unit}<br>${formatDateKR(previous.date)}</div>`:''}
     </div>`;
 
     /* RIGHT CELL */
@@ -482,7 +574,7 @@ function renderToday(){
     rightHtml+=`<div class="set-chips">`;
     exData.sets.forEach((s,i)=>{
       if(s.done){
-        rightHtml+=`<button class="chip-done" data-id="${id}" data-idx="${i}" title="탭해서 수정">${s.reps}<span class="chip-sub">${unit}</span></button>`;
+        rightHtml+=`<button class="chip-done" data-id="${id}" data-idx="${i}" aria-label="${ex.name} ${i+1}세트 ${s.reps}${unit} 수정">${i+1} · ${s.reps}<span class="chip-sub">${unit}</span></button>`;
       } else if(i!==nextIdx){
         rightHtml+=`<span class="dot-pending"></span>`;
       }
@@ -490,24 +582,24 @@ function renderToday(){
     rightHtml+=`</div>`;
 
     /* Active set stepper or done mark */
-    if(cardDone){
+    if(cardDone&&!isEditing){
       rightHtml+=`<div class="row-done-mark">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         완료 · 최고 ${Math.max(...doneSets.map(s=>s.reps))}${unit}
       </div>`;
-    } else if(nextIdx!==-1){
+    } else if(inputIdx!==-1){
       rightHtml+=`<div class="set-active">
-        <div class="set-label">세트${nextIdx+1}</div>
-        <button class="stp-btn" data-id="${id}" data-action="minus">−</button>
-        <div class="stp-num" id="reps-${id}">${exData.nextReps||exData.target}</div>
-        <span class="stp-unit">${unit}</span>
-        <button class="stp-btn" data-id="${id}" data-action="plus">+</button>
-        <button class="ok-btn" data-id="${id}">완료</button>
+        <div class="set-label">${isEditing?'수정 중 · ':''}${inputIdx+1} / ${exData.sets.length}세트 · ${unit}</div>
+        <button class="stp-btn" data-id="${id}" data-action="minus" aria-label="${ex.name} 횟수 줄이기">−</button>
+        <input class="stp-num" id="reps-${id}" data-id="${id}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${inputReps}" aria-label="${ex.name} 반복 횟수">
+        <button class="stp-btn" data-id="${id}" data-action="plus" aria-label="${ex.name} 횟수 늘리기">+</button>
+        <button class="ok-btn" data-id="${id}">${isEditing?'수정 저장':'세트 저장'}</button>
+        ${isEditing?`<div class="edit-actions"><button data-cancel="${id}">수정 취소</button><button data-undo="${id}" data-idx="${inputIdx}">완료 취소</button></div>`:''}
       </div>`;
     }
 
     /* Add set link */
-    rightHtml+=`<button class="add-set-link" data-id="${id}">
+    rightHtml+=`<button class="add-set-link" data-id="${id}" aria-label="${ex.name} 세트 추가">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       세트 추가
     </button>`;
@@ -521,10 +613,10 @@ function renderToday(){
 
   /* Exercise toggle */
   html+=`<div class="ex-toggle-section">
-    <div class="ex-toggle-title">운동 선택</div>
+    <div class="ex-toggle-title">오늘 할 운동 선택</div>
     <div class="ex-toggle-grid">`;
   EXERCISES.forEach(ex=>{
-    html+=`<button class="ex-toggle-chip${active.includes(ex.id)?' on':''}" data-ex="${ex.id}">${ex.ico} ${ex.name}</button>`;
+    html+=`<button class="ex-toggle-chip${active.includes(ex.id)?' on':''}" data-ex="${ex.id}" aria-pressed="${active.includes(ex.id)}">${ex.ico} ${ex.name}</button>`;
   });
   html+=`</div></div><div style="height:20px"></div>`;
 
@@ -533,49 +625,57 @@ function renderToday(){
 }
 
 function bindTodayEvents(){
-  document.getElementById('sets-minus').onclick=()=>{
-    if(DATA.settings.sets>1){DATA.settings.sets--;saveData(DATA);renderToday();}
-  };
-  document.getElementById('sets-plus').onclick=()=>{
-    if(DATA.settings.sets<10){DATA.settings.sets++;saveData(DATA);renderToday();}
-  };
+  document.getElementById('sets-minus').onclick=()=>adjustSets(-1);
+  document.getElementById('sets-plus').onclick=()=>adjustSets(1);
   document.querySelectorAll('.stp-btn').forEach(btn=>{
     btn.onclick=()=>{
       const id=btn.dataset.id,action=btn.dataset.action;
       const ex=DATA.days[TODAY].exercises[id];
-      const cur=ex.nextReps||ex.target;
+      const input=document.getElementById(`reps-${id}`);
+      const cur=Number(input.value)||ex.target;
       const step=EX_MAP[id].isTime?5:1;
-      ex.nextReps=action==='plus'?cur+step:Math.max(EX_MAP[id].isTime?5:1,cur-step);
-      saveData(DATA);
-      document.getElementById(`reps-${id}`).textContent=ex.nextReps;
+      input.value=Math.min(999,Math.max(1,action==='plus'?cur+step:cur-step));
+      if(editingSet?.id!==id){ex.nextReps=Number(input.value);saveData(DATA);}
     };
+  });
+  document.querySelectorAll('.stp-num').forEach(input=>{
+    input.onchange=()=>{
+      const n=Number(input.value);
+      if(Number.isInteger(n)&&n>=1&&n<=999&&editingSet?.id!==input.dataset.id){DATA.days[TODAY].exercises[input.dataset.id].nextReps=n;saveData(DATA);}
+    };
+    input.onkeydown=event=>{if(event.key==='Enter')document.querySelector(`.ok-btn[data-id="${input.dataset.id}"]`).click();};
   });
   document.querySelectorAll('.ok-btn').forEach(btn=>{
     btn.onclick=()=>{
       const id=btn.dataset.id;
       const ex=DATA.days[TODAY].exercises[id];
-      const idx=ex.sets.findIndex(s=>!s.done);if(idx===-1)return;
-      const reps=ex.nextReps||ex.target;
+      const isEditing=editingSet?.id===id;
+      const idx=isEditing?editingSet.idx:ex.sets.findIndex(s=>!s.done);if(idx===-1)return;
+      const input=document.getElementById(`reps-${id}`);
+      const reps=Number(input.value);
+      if(!Number.isInteger(reps)||reps<1||reps>999){showToast('횟수는 1~999 사이의 정수로 입력해주세요.');input.focus();return;}
       ex.sets[idx]={reps,done:true};
-      ex.nextReps=reps;
-      if(Object.values(DATA.days[TODAY].exercises).every(e=>e.sets.every(s=>s.done)))
+      if(!isEditing)ex.nextReps=reps;
+      editingSet=null;
+      if(DATA.settings.active.every(id=>DATA.days[TODAY].exercises[id].sets.every(s=>s.done)))
         DATA.days[TODAY].endTime=Date.now();
-      saveData(DATA);
+      const saved=saveData(DATA);
       renderToday();updateHeader();
-      const allDone=ex.sets.every(s=>s.done);
-      if(!allDone) startRest(DATA.settings.restTime||60);
-      else showToast(`${EX_MAP[id].name} 완료! 🎯`);
+      if(saved)showToast(`${idx+1}세트 ${reps}회 ${isEditing?'수정':'저장'} 완료`);
+      if(!isEditing&&!ex.sets.every(s=>s.done))startRest(DATA.settings.restTime||60);
     };
   });
   document.querySelectorAll('.chip-done').forEach(chip=>{
     chip.onclick=()=>{
       const id=chip.dataset.id,idx=parseInt(chip.dataset.idx);
-      const ex=DATA.days[TODAY].exercises[id];
-      const unit=EX_MAP[id].isTime?'초':'회';
-      const val=prompt(`세트 ${idx+1} 횟수 수정 (${unit}):`,ex.sets[idx].reps);
-      if(val===null)return;const n=parseInt(val);if(isNaN(n)||n<1)return;
-      ex.sets[idx].reps=n;saveData(DATA);renderToday();
+      editingSet={id,idx};renderToday();
     };
+  });
+  document.querySelectorAll('[data-cancel]').forEach(btn=>btn.onclick=()=>{editingSet=null;renderToday();});
+  document.querySelectorAll('[data-undo]').forEach(btn=>btn.onclick=()=>{
+    const ex=DATA.days[TODAY].exercises[btn.dataset.undo];
+    const set=ex.sets[Number(btn.dataset.idx)];set.done=false;ex.nextReps=set.reps;
+    DATA.days[TODAY].endTime=null;editingSet=null;endRest();saveData(DATA);renderToday();updateHeader();showToast('세트 완료를 취소했어요.');
   });
   document.querySelectorAll('.add-set-link').forEach(btn=>{
     btn.onclick=()=>{
@@ -592,7 +692,7 @@ function bindTodayEvents(){
       const idx=active.indexOf(id);
       if(idx>=0){if(active.length<=1){showToast('최소 1개 운동이 필요해요');return;}active.splice(idx,1);}
       else active.push(id);
-      saveData(DATA);ensureToday();renderToday();
+      editingSet=null;saveData(DATA);ensureToday();renderToday();
     };
   });
 }
@@ -601,7 +701,7 @@ function bindTodayEvents(){
 let expandedDay=null;
 function renderHistory(){
   const days=Object.entries(DATA.days)
-    .filter(([k])=>k!==TODAY||Object.values(DATA.days[k].exercises||{}).some(e=>e.sets.some(s=>s.done)))
+    .filter(([,day])=>Object.values(day.exercises||{}).some(e=>e.sets.some(s=>s.done)))
     .sort(([a],[b])=>b.localeCompare(a));
   if(!days.length){
     document.getElementById('history-content').innerHTML=`<div class="history-wrap"><div class="empty-msg">아직 운동 기록이 없어요.<br>오늘 첫 운동을 시작해보세요! 💪</div></div>`;
@@ -610,29 +710,31 @@ function renderHistory(){
   let html=`<div class="history-wrap"><div class="section-hdr">운동 기록</div>`;
   days.forEach(([k,day])=>{
     const exs=Object.entries(day.exercises||{});
-    const totalReps=exs.reduce((a,[,e])=>a+e.sets.filter(s=>s.done).reduce((b,s)=>b+s.reps,0),0);
+    const totalReps=exs.reduce((a,[id,e])=>a+(id==='plank'?0:e.sets.filter(s=>s.done).reduce((b,s)=>b+s.reps,0)),0);
+    const totalSeconds=exs.filter(([id])=>id==='plank').reduce((a,[,e])=>a+e.sets.filter(s=>s.done).reduce((b,s)=>b+s.reps,0),0);
     const totalSets=exs.reduce((a,[,e])=>a+e.sets.filter(s=>s.done).length,0);
-    const exNames=exs.filter(([,e])=>e.sets.some(s=>s.done)).map(([id])=>EX_MAP[id]?.name).filter(Boolean);
+    const exNames=exs.filter(([,e])=>e.sets.some(s=>s.done)).map(([id])=>exerciseName(id));
     const {m,d}=formatMonthDay(k);const isExp=expandedDay===k;
-    html+=`<div class="history-item" data-day="${k}" style="${isExp?'border-radius:var(--rs) var(--rs) 0 0;border-bottom-color:transparent':''}">
+    html+=`<button class="history-item" data-day="${k}" aria-expanded="${isExp}" style="${isExp?'border-radius:var(--rs) var(--rs) 0 0;border-bottom-color:transparent':''}">
       <div class="history-date"><div class="hd-month">${m}</div><div class="hd-day">${d}</div></div>
       <div class="history-info">
         <div class="history-exercises">${exNames.join(', ')||'기록 없음'}</div>
         <div class="history-meta">
           <span class="hm">세트 <strong>${totalSets}</strong></span>
           <span class="hm">총 <strong>${totalReps.toLocaleString()}</strong>회</span>
+          ${totalSeconds?`<span class="hm">시간 운동 <strong>${totalSeconds}</strong>초</span>`:''}
           <span class="hm">${exNames.length}종 운동</span>
         </div>
       </div>
       <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="${isExp?'18 15 12 9 6 15':'6 9 12 15 18 9'}"/></svg></div>
-    </div>`;
+    </button>`;
     if(isExp){
       html+=`<div class="history-detail">`;
       exs.filter(([,e])=>e.sets.some(s=>s.done)).forEach(([id,e])=>{
-        const ex=EX_MAP[id];if(!ex)return;
+        const ex=EX_MAP[id]||{name:exerciseName(id),ico:'',isTime:id==='plank'};
         const done=e.sets.filter(s=>s.done);
         const unit=ex.isTime?'초':'회';
-        html+=`<div class="hd-ex-row"><span class="hd-ex-name">${ex.ico} ${ex.name}</span><span class="hd-ex-val">${done.length}세트 · 최대 ${Math.max(...done.map(s=>s.reps))}${unit}</span></div>`;
+        html+=`<div class="hd-ex-row"><span class="hd-ex-name">${ex.ico} ${ex.name}</span><span class="hd-ex-val">${done.map(s=>s.reps+unit).join(' · ')}</span></div>`;
       });
       html+=`</div>`;
     }
@@ -645,82 +747,94 @@ function renderHistory(){
 }
 
 /* ─── STATS ─── */
+let statsPeriod='week',statsAnchor=TODAY;
+function periodRange(anchor=statsAnchor,period=statsPeriod){
+  const start=new Date(anchor+'T00:00');
+  if(period==='week')start.setDate(start.getDate()-((start.getDay()+6)%7));
+  if(period==='month')start.setDate(1);
+  const end=new Date(start);
+  if(period==='week')end.setDate(end.getDate()+6);
+  if(period==='month')end.setMonth(end.getMonth()+1,0);
+  return{start:dateKey(start),end:dateKey(end)};
+}
+function periodSummary(start,end){
+  const result={days:0,sets:0,reps:0,exercises:{}};
+  Object.entries(DATA.days).filter(([k])=>k>=start&&k<=end).forEach(([,day])=>{
+    let worked=false;
+    Object.entries(day.exercises||{}).forEach(([id,ex])=>{
+      const done=ex.sets.filter(s=>s.done);if(!done.length)return;
+      worked=true;
+      const item=result.exercises[id]||(result.exercises[id]={sets:0,reps:0,max:0});
+      done.forEach(s=>{item.sets++;item.reps+=s.reps;item.max=Math.max(item.max,s.reps);result.sets++;if(id!=='plank')result.reps+=s.reps;});
+    });
+    if(worked)result.days++;
+  });
+  return result;
+}
+function shiftPeriod(direction){
+  const d=new Date(periodRange().start+'T00:00');
+  if(statsPeriod==='month')d.setMonth(d.getMonth()+direction);
+  else d.setDate(d.getDate()+direction*(statsPeriod==='week'?7:1));
+  statsAnchor=dateKey(d);renderStats();
+}
+function exportRecords(){
+  const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...DATA},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='workout-records-'+TODAY+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function cumulativeStats(){
+  let html='<details class="cumulative-details"><summary>누적 개인 최고 · 근육별 기록</summary><div class="pr-card">';
+  EXERCISES.forEach(ex=>{const pr=getPR(ex.id);html+='<div class="pr-row"><span class="pr-name">'+ex.name+'</span><span class="pr-val">'+(pr===null?'기록 없음':pr+'회')+'</span></div>';});
+  const counts={};
+  Object.values(DATA.days).forEach(day=>Object.entries(day.exercises||{}).forEach(([id,e])=>{
+    const ex=EX_MAP[id];if(!ex)return;
+    const reps=e.sets.filter(s=>s.done).reduce((n,s)=>n+s.reps,0);
+    ex.muscles.forEach(m=>{counts[m]=(counts[m]||0)+reps;});
+  }));
+  const max=Math.max(...Object.values(counts),1);
+  html+='</div><div class="muscle-card"><div class="chart-title">근육별 누적 반복 수 · 운동별 중복 집계</div>';
+  Object.entries(counts).sort(([,a],[,b])=>b-a).forEach(([name,reps])=>{html+='<div class="muscle-row"><div class="muscle-hdr"><span class="muscle-name">'+name+'</span><span class="muscle-pct">'+reps.toLocaleString()+'회</span></div><div class="muscle-track"><div class="muscle-bar" style="width:'+reps/max*100+'%"></div></div></div>';});
+  return html+'</div></details>';
+}
 function renderStats(){
-  const streak=getStreak();
-  const last7=[];
-  for(let i=6;i>=0;i--){
-    const d=new Date(TODAY+'T00:00');d.setDate(d.getDate()-i);
-    const k=dateKey(d);
-    const day=DATA.days[k];
-    const reps=day?Object.values(day.exercises||{}).reduce((a,e)=>a+e.sets.filter(s=>s.done).reduce((b,s)=>b+s.reps,0),0):0;
-    const days=['일','월','화','수','목','금','토'];
-    last7.push({k,reps,lbl:days[d.getDay()],isToday:k===TODAY});
+  const range=periodRange();
+  const summary=periodSummary(range.start,range.end);
+  const prev=new Date(range.start+'T00:00');prev.setDate(prev.getDate()-1);
+  const previousRange=periodRange(dateKey(prev));
+  const previous=periodSummary(previousRange.start,previousRange.end);
+  const diff=summary.reps-previous.reps;
+  const label=statsPeriod==='month'?range.start.slice(0,7).replace('-','년 ')+'월':statsPeriod==='day'?formatDateKR(range.start):formatDateKR(range.start)+' ~ '+formatDateKR(range.end);
+  const buckets=[];
+  if(statsPeriod!=='day'){
+    const d=new Date(range.start+'T00:00');
+    while(dateKey(d)<=range.end){
+      const start=dateKey(d),end=new Date(d);
+      if(statsPeriod==='month')end.setDate(Math.min(end.getDate()+6,new Date(end.getFullYear(),end.getMonth()+1,0).getDate()));
+      const endKey=dateKey(end);
+      buckets.push({label:statsPeriod==='month'?d.getDate()+'~'+end.getDate():d.getMonth()+1+'/'+d.getDate(),reps:periodSummary(start,endKey).reps,current:start<=TODAY&&endKey>=TODAY});
+      d.setDate(end.getDate()+1);
+    }
   }
-  const thisMonth=new Date(TODAY+'T00:00');
-  const monthStart=new Date(thisMonth.getFullYear(),thisMonth.getMonth()-5,1);
-  const last6Months=Array.from({length:6},(_,i)=>{
-    const d=new Date(monthStart.getFullYear(),monthStart.getMonth()+i,1);
-    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const reps=Object.entries(DATA.days).filter(([k])=>k.startsWith(key)).reduce((sum,[,day])=>sum+Object.values(day.exercises||{}).reduce((n,e)=>n+e.sets.filter(s=>s.done).reduce((a,s)=>a+s.reps,0),0),0);
-    return{key,reps,label:`${d.getMonth()+1}월`,isCurrent:key===TODAY.slice(0,7)};
+  const max=Math.max(...buckets.map(x=>x.reps),1);
+  let html='<div class="stats-wrap"><div class="period-tabs" role="group" aria-label="통계 기간">'+
+    [['day','하루'],['week','일주일'],['month','한달']].map(([value,name])=>'<button data-period="'+value+'" aria-pressed="'+(statsPeriod===value)+'">'+name+'</button>').join('')+
+    '</div><div class="period-nav"><button id="period-prev" aria-label="이전 기간">‹</button><strong>'+label+'</strong><button id="period-next" aria-label="다음 기간" '+(range.end>=TODAY?'disabled':'')+'>›</button></div>'+
+    '<div class="kpi-grid"><div class="kpi"><div class="kpi-val ac">'+summary.reps.toLocaleString()+'</div><div class="kpi-lbl">총 반복 횟수</div></div><div class="kpi"><div class="kpi-val">'+summary.sets+'</div><div class="kpi-lbl">완료 세트</div></div><div class="kpi"><div class="kpi-val">'+summary.days+'</div><div class="kpi-lbl">운동한 날</div></div><div class="kpi"><div class="kpi-val">'+Object.keys(summary.exercises).length+'</div><div class="kpi-lbl">기록한 운동 종류</div></div></div>'+
+    '<p class="hint" style="margin:0 0 14px">이전 '+({day:'하루',week:'일주일',month:'한달'}[statsPeriod])+' 대비 '+(diff>0?'+':'')+diff.toLocaleString()+'회'+(range.end>=TODAY?' · 현재 기간은 진행 중인 기록입니다.':'')+'</p>';
+  if(buckets.length)html+='<div class="chart-card"><div class="chart-title">'+(statsPeriod==='month'?'날짜 구간별':'날짜별')+' 반복 횟수</div><div class="bar-chart">'+buckets.map(x=>'<div class="bc-col"><div class="bc-value">'+x.reps+'</div><div class="bc-bar '+(x.current?'today-bar':'past-bar')+'" style="height:'+(x.reps?Math.max(4,Math.round(x.reps/max*82)):0)+'px"></div><div class="bc-lbl">'+x.label+'</div></div>').join('')+'</div></div>';
+  html+='<div class="chart-card"><div class="chart-title">운동별 기록</div><table class="stats-table"><thead><tr><th scope="col">운동</th><th scope="col">세트</th><th scope="col">총 횟수</th><th scope="col">최고</th></tr></thead><tbody>';
+  const ids=[...new Set([...EXERCISES.map(ex=>ex.id),...Object.keys(summary.exercises)])];
+  ids.forEach(id=>{
+    const item=summary.exercises[id]||{sets:0,reps:0,max:0};
+    html+='<tr><td>'+exerciseName(id)+'</td><td>'+item.sets+'</td><td>'+item.reps.toLocaleString()+(id==='plank'?'초':'')+'</td><td>'+item.max+(id==='plank'?'초':'')+'</td></tr>';
   });
-  const maxReps=Math.max(...last7.map(x=>x.reps),1);
-  const totalDays=Object.keys(DATA.days).filter(k=>Object.values(DATA.days[k].exercises||{}).some(e=>e.sets.some(s=>s.done))).length;
-  const totalRepsAll=Object.values(DATA.days).reduce((a,day)=>a+Object.values(day.exercises||{}).reduce((b,e)=>b+e.sets.filter(s=>s.done).reduce((c,s)=>c+s.reps,0),0),0);
-  const muscleCounts={};
-  Object.values(DATA.days).forEach(day=>{
-    Object.entries(day.exercises||{}).forEach(([id,e])=>{
-      if(!e.sets.some(s=>s.done))return;
-      const ex=EX_MAP[id];if(!ex)return;
-      ex.muscles.forEach(m=>{muscleCounts[m]=(muscleCounts[m]||0)+e.sets.filter(s=>s.done).reduce((a,s)=>a+s.reps,0);});
-    });
-  });
-  const maxMuscle=Math.max(...Object.values(muscleCounts),1);
-  const muscleEntries=Object.entries(muscleCounts).sort(([,a],[,b])=>b-a).slice(0,6);
-  const prEntries=DATA.settings.active.map(id=>{const ex=EX_MAP[id];return ex?{id,name:ex.name,ico:ex.ico,pr:getPR(id),def:ex.def,isTime:ex.isTime}:null;}).filter(Boolean);
-
-  let html=`<div class="stats-wrap">
-    <div class="section-hdr">나의 기록</div>
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-val ac">${streak}</div><div class="kpi-lbl">연속 운동일 🔥</div></div>
-      <div class="kpi"><div class="kpi-val">${totalDays}</div><div class="kpi-lbl">총 운동일</div></div>
-      <div class="kpi"><div class="kpi-val">${totalRepsAll.toLocaleString()}</div><div class="kpi-lbl">누적 총 횟수</div></div>
-      <div class="kpi"><div class="kpi-val">${DATA.settings.active.length}</div><div class="kpi-lbl">활성 운동 종류</div></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">주간 총 횟수</div>
-      <div class="bar-chart">`;
-  last7.forEach(({reps,lbl,isToday})=>{
-    const h=reps>0?Math.max(Math.round((reps/maxReps)*76),4):0;
-    html+=`<div class="bc-col"><div class="bc-bar ${isToday?'today-bar':'past-bar'}" style="height:${h}px"></div><div class="bc-lbl">${lbl}</div></div>`;
-  });
-  const maxMonthReps=Math.max(...last6Months.map(x=>x.reps),1);
-  html+=`</div></div>
-    <div class="chart-card">
-      <div class="chart-title">월간 총 횟수 · 최근 6개월</div>
-      <div class="bar-chart">`;
-  last6Months.forEach(({reps,label,isCurrent})=>{
-    const h=reps>0?Math.max(Math.round((reps/maxMonthReps)*76),4):0;
-    html+=`<div class="bc-col"><div class="bc-bar ${isCurrent?'today-bar':'past-bar'}" style="height:${h}px" title="${label} ${reps.toLocaleString()}회"></div><div class="bc-lbl">${label}</div></div>`;
-  });
-  html+=`</div></div>
-    <div class="section-hdr">개인 기록 (PR)</div>
-    <div class="pr-card">`;
-  prEntries.forEach(({name,ico,pr,def,isTime})=>{
-    const unit=isTime?'초':'회';
-    html+=`<div class="pr-row"><div class="pr-ico">${ico}</div><div class="pr-name">${name}</div>${pr!==null?`<div class="pr-val">${pr}<span class="pr-unit">${unit}</span></div>`:`<div class="pr-val pr-default">${def}<span class="pr-unit">${unit} 기본</span></div>`}</div>`;
-  });
-  html+=`</div>`;
-  if(muscleEntries.length){
-    html+=`<div class="section-hdr">근육 그룹 누적</div><div class="muscle-card">`;
-    muscleEntries.forEach(([name,val])=>{
-      const pct=Math.round((val/maxMuscle)*100);
-      html+=`<div class="muscle-row"><div class="muscle-hdr"><span class="muscle-name">${name}</span><span class="muscle-pct">${pct}%</span></div><div class="muscle-track"><div class="muscle-bar" style="width:${pct}%"></div></div></div>`;
-    });
-    html+=`</div>`;
-  }
-  html+=`<div style="height:8px"></div></div>`;
+  const all=periodSummary('0000-01-01',TODAY);
+  html+='</tbody></table></div><p class="hint" style="margin:0 0 14px">누적 '+all.days+'일 · '+all.sets+'세트 · '+all.reps.toLocaleString()+'회<br>연속 운동 '+getStreak()+'일 · 세트 최고는 한 세트에서 수행한 횟수입니다.</p>'+cumulativeStats()+'<button class="backup-btn" id="export-records">전체 기록 파일로 백업</button><p class="hint" style="margin:8px 0 0">이 기기의 브라우저에 저장됩니다. 다른 기기와 자동 동기화되지 않습니다.</p></div>';
   document.getElementById('stats-content').innerHTML=html;
+  document.querySelectorAll('[data-period]').forEach(btn=>btn.onclick=()=>{statsPeriod=btn.dataset.period;statsAnchor=TODAY;renderStats();});
+  document.getElementById('period-prev').onclick=()=>shiftPeriod(-1);
+  document.getElementById('period-next').onclick=()=>shiftPeriod(1);
+  document.getElementById('export-records').onclick=exportRecords;
 }
 
 function updateHeader(){
@@ -731,6 +845,7 @@ function updateHeader(){
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab));
-applyTheme(null);updateHeader();ensureToday();renderToday();
+applyTheme(DATA.settings.theme||null);updateHeader();ensureToday();renderToday();
 setInterval(()=>{if(dateKey()!==TODAY)location.reload();},60000);
 </script>
+</html>

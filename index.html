@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <title>Workout Log</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#F5F7FA" id="app-theme-color">
+<meta name="theme-color" content="#F5F8F7" id="app-theme-color">
 <meta name="application-name" content="HOMETS">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="HOMETS">
@@ -322,10 +322,10 @@ button:disabled{opacity:.35;cursor:default}
 .settings-buttons button{flex:1;min-height:34px;border-radius:8px;font-size:13px;border:1px solid var(--bdr2);background:var(--sf2);color:var(--t1)}
 .settings-buttons .apply{background:var(--ac);border-color:var(--ac);color:var(--bg);font-weight:700}
 /* Workout log layout inspired by the reference app screens. */
-:root{--bg:#F5F7FA;--sf:#FFFFFF;--sf2:#F0F3F8;--sf3:#E3E9F2;--bdr:#E8EDF4;--bdr2:#D7DFEB;--ac:#2368F5;--acd:#EBF2FF;--acb:#D3E2FF;--t1:#16233B;--t2:#66758D;--t3:#7C8BA1;--r:16px;--rs:12px}
+:root{--bg:#F5F8F7;--sf:#FFFFFF;--sf2:#F0F1FA;--sf3:#E3E8F5;--bdr:#E4EAE9;--bdr2:#D5DFE3;--ac:#526DB0;--acd:#EEF0FA;--acb:#D9DFF3;--t1:#25394B;--t2:#5D7181;--t3:#728292;--r:16px;--rs:12px}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0C121C;--sf:#151E2C;--sf2:#1D293B;--sf3:#2B3950;--bdr:#233047;--bdr2:#34455F;--ac:#70A1FF;--acd:#213354;--acb:#34517D;--t1:#EDF3FF;--t2:#9CACBF;--t3:#8293AD}}
 :root[data-theme=dark]{--bg:#0C121C;--sf:#151E2C;--sf2:#1D293B;--sf3:#2B3950;--bdr:#233047;--bdr2:#34455F;--ac:#70A1FF;--acd:#213354;--acb:#34517D;--t1:#EDF3FF;--t2:#9CACBF;--t3:#8293AD}
-:root[data-theme=light]{--bg:#F5F7FA;--sf:#FFFFFF;--sf2:#F0F3F8;--sf3:#E3E9F2;--bdr:#E8EDF4;--bdr2:#D7DFEB;--ac:#2368F5;--acd:#EBF2FF;--acb:#D3E2FF;--t1:#16233B;--t2:#66758D;--t3:#7C8BA1}
+:root[data-theme=light]{--bg:#F5F8F7;--sf:#FFFFFF;--sf2:#F0F1FA;--sf3:#E3E8F5;--bdr:#E4EAE9;--bdr2:#D5DFE3;--ac:#526DB0;--acd:#EEF0FA;--acb:#D9DFF3;--t1:#25394B;--t2:#5D7181;--t3:#728292}
 .hdr{padding:calc(var(--st) + 16px) 20px 12px;border:0;background:var(--bg)}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-mark{width:32px;height:32px;border-radius:10px;background:var(--ac);color:var(--sf);display:grid;place-items:center}
@@ -426,6 +426,14 @@ button:disabled{opacity:.35;cursor:default}
 .settings-footer{padding:14px 20px calc(16px + var(--sb))}
 .settings-buttons button{border:0;border-radius:10px}
 .settings-buttons .apply{color:#fff}
+/* Soft mint and lavender surfaces for the light theme. */
+:root[data-theme=light] .session-hero,:root[data-theme=light] .kpi:first-child{background:linear-gradient(120deg,#E3F2EB,#E9E7F8);color:var(--t1)}
+:root[data-theme=light] .today-h,:root[data-theme=light] .kpi:first-child .kpi-val{color:var(--t1)}
+:root[data-theme=light] .today-sub,:root[data-theme=light] .progress-ring small,:root[data-theme=light] .kpi:first-child .kpi-lbl{color:var(--t2)}
+:root[data-theme=light] .routine-kicker{color:var(--ac)}
+:root[data-theme=light] .routine-kicker::before{background:var(--ac)}
+:root[data-theme=light] .progress-ring{background:conic-gradient(#8EA8D6 var(--progress),#FFFFFF80 0)}
+:root[data-theme=light] .progress-ring>div{background:#F6F8FC}
 </style>
 
 <div id="app">
@@ -484,26 +492,26 @@ button:disabled{opacity:.35;cursor:default}
     <header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
     <div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
     <div id="library-list" class="library-list"></div>
-    <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
+    <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><p><a href="https://outinletter.github.io/privacy-policy/" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
   </div>
 </dialog>
 
 <script>
 const EXERCISES = [
-  {id:'shoulderpress',name:'Shoulder Press',ico:'🏋️',tags:['Shoulders'],def:12,muscles:['Shoulders','Triceps']},
+  {id:'shoulderpress',name:'Shoulder Press',ico:'🏋️',tags:['Shoulders'],def:10,muscles:['Shoulders','Triceps']},
   {id:'latpulldown',name:'Lat Pulldown',ico:'💪',tags:['Back'],def:12,muscles:['Back','Biceps']},
-  {id:'reardelt',name:'Rear Delt Machine',ico:'🔄',tags:['Shoulders','Back'],def:12,muscles:['Shoulders','Back']},
+  {id:'reardelt',name:'Rear Delt Machine',ico:'🔄',tags:['Shoulders','Back'],def:15,muscles:['Shoulders','Back']},
   {id:'legextension',name:'Seated Leg Extension',ico:'🦵',tags:['Quads'],def:12,muscles:['Thighs']},
   {id:'legcurl',name:'Leg Curl',ico:'🦿',tags:['Hamstrings'],def:12,muscles:['Thighs','Hamstrings']},
-  {id:'legpress',name:'Leg Press',ico:'🦵',tags:['Lower body'],def:12,muscles:['Thighs','Glutes']},
+  {id:'legpress',name:'Leg Press',ico:'🦵',tags:['Lower body'],def:10,muscles:['Thighs','Glutes']},
   {id:'armcurl',name:'Arm Curl Machine',ico:'💪',tags:['Biceps'],def:12,muscles:['Biceps']},
   {id:'pushup',name:'Push-ups',group:'Bodyweight',tags:['Chest'],def:10,muscles:['Chest','Triceps']},
   {id:'squat',name:'Squats',group:'Bodyweight',tags:['Legs'],def:15,muscles:['Thighs','Glutes']},
   {id:'lunge',name:'Lunges',group:'Bodyweight',tags:['Legs'],def:12,muscles:['Thighs','Glutes']},
   {id:'plank',name:'Plank',group:'Bodyweight',tags:['Core'],def:30,isTime:true,muscles:['Core']},
-  {id:'burpee',name:'Burpees',group:'Bodyweight',tags:['Full body'],def:10,muscles:['Full body']},
+  {id:'burpee',name:'Burpees',group:'Bodyweight',tags:['Full body'],def:8,muscles:['Full body']},
   {id:'mountain',name:'Mountain Climbers',group:'Bodyweight',tags:['Core'],def:20,muscles:['Core']},
-  {id:'dip',name:'Triceps Dips',group:'Bodyweight',tags:['Triceps'],def:10,muscles:['Triceps','Chest']},
+  {id:'dip',name:'Triceps Dips',group:'Bodyweight',tags:['Triceps'],def:8,muscles:['Triceps','Chest']},
   {id:'legraise',name:'Leg Raises',group:'Bodyweight',tags:['Core'],def:12,muscles:['Core']},
   {id:'crunch',name:'Crunches',group:'Bodyweight',tags:['Core'],def:15,muscles:['Core']},
   {id:'bridge',name:'Glute Bridge',group:'Bodyweight',tags:['Glutes'],def:15,muscles:['Glutes','Hamstrings']},
@@ -512,7 +520,7 @@ const EXERCISES = [
   {id:'benchpress',name:'Bench Press',group:'Free weights',tags:['Chest'],def:10,muscles:['Chest','Triceps']},
   {id:'dumbbellrow',name:'Dumbbell Row',group:'Free weights',tags:['Back'],def:12,muscles:['Back','Biceps']},
   {id:'deadlift',name:'Deadlift',group:'Free weights',tags:['Posterior chain'],def:8,muscles:['Back','Hamstrings','Glutes']},
-  {id:'lateralraise',name:'Lateral Raises',group:'Free weights',tags:['Shoulders'],def:12,muscles:['Shoulders']},
+  {id:'lateralraise',name:'Lateral Raises',group:'Free weights',tags:['Shoulders'],def:15,muscles:['Shoulders']},
   {id:'calfraise',name:'Calf Raises',group:'Bodyweight',tags:['Calves'],def:15,muscles:['Calves']},
 ];
 const EX_MAP = Object.fromEntries(EXERCISES.map(e=>[e.id,e]));
@@ -526,22 +534,49 @@ function prevDayKey(k){const d=new Date(k+'T00:00');d.setDate(d.getDate()-1);ret
 function formatDateKR(k){return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',weekday:'short'}).format(new Date(k+'T00:00'));}
 function formatMonthDay(k){const d=new Date(k+'T00:00');const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return{m:m[d.getMonth()],d:d.getDate()}}
 
-function loadData(){try{return JSON.parse(localStorage.getItem('homefit_v2')||'{}')}catch{return{}}}
-function saveData(d){try{localStorage.setItem('homefit_v2',JSON.stringify(d));return true;}catch{showToast('Could not save. Check your browser storage.');return false;}}
+function loadData(){
+  try{
+    const d=JSON.parse(localStorage.getItem('homefit_v2')||'{}');
+    if(!d||typeof d!=='object'||Array.isArray(d))return{};
+    if(!d.days||typeof d.days!=='object'||Array.isArray(d.days))d.days={};
+    for(const [key,day] of Object.entries(d.days)){
+      if((!/^\d{4}-\d{2}-\d{2}$/.test(key)||!Number.isFinite(new Date(key+'T00:00').getTime())||dateKey(new Date(key+'T00:00'))!==key)||!day||!day.exercises||typeof day.exercises!=='object'||Array.isArray(day.exercises)){delete d.days[key];continue;}
+      for(const [id,ex] of Object.entries(day.exercises)){
+        if(!ex||!Array.isArray(ex.sets)){delete day.exercises[id];continue;}
+        ex.sets=ex.sets.filter(set=>set&&Number.isInteger(set.reps)&&set.reps>=1&&set.reps<=999&&typeof set.done==='boolean');
+        if(!Number.isInteger(ex.target)||ex.target<1||ex.target>999)ex.target=EX_MAP[id]?.def||12;
+        if(!Number.isInteger(ex.nextReps)||ex.nextReps<1||ex.nextReps>999)ex.nextReps=ex.target;
+      }
+    }
+    if(!d.settings||typeof d.settings!=='object'||Array.isArray(d.settings))d.settings={};
+    if(!Number.isInteger(d.settings.sets)||d.settings.sets<1||d.settings.sets>10)d.settings.sets=3;
+    if(!Number.isFinite(d.settings.restTime)||d.settings.restTime<=0)d.settings.restTime=60;
+    if(!Array.isArray(d.settings.active)||!d.settings.active.length)d.settings.active=[...DEFAULT_ACTIVE];
+    d.settings.active=[...new Set(d.settings.active.filter(id=>Object.hasOwn(EX_MAP,id)))];
+    if(!d.settings.active.length)d.settings.active=[...DEFAULT_ACTIVE];
+    if(!d.settings.reps||typeof d.settings.reps!=='object'||Array.isArray(d.settings.reps))d.settings.reps={};
+    for(const [id,value] of Object.entries(d.settings.reps)){
+      if(!Object.hasOwn(EX_MAP,id)||!Number.isInteger(value)||value<1||value>999)delete d.settings.reps[id];
+    }
+    return d;
+  }catch{return{}}
+}
+function saveData(d){try{const next=JSON.stringify(d);localStorage.setItem('homefit_v2',next);savedSnapshot=next;return true;}catch{DATA=JSON.parse(savedSnapshot);showToast('Could not save. Check your browser storage.');return false;}}
 
 let DATA=loadData();
 if(!DATA.days) DATA.days={};
 if(!DATA.settings) DATA.settings={sets:3,restTime:60,active:[...DEFAULT_ACTIVE]};
 if(!DATA.settings.active) DATA.settings.active=[...DEFAULT_ACTIVE];
-if(DATA.settings.active.some(id=>!EX_MAP[id])){DATA.settings.active=[...DEFAULT_ACTIVE];saveData(DATA);}
-const TODAY=dateKey();
+if(!DATA.settings.reps) DATA.settings.reps={};
+let savedSnapshot=JSON.stringify(DATA);
+let TODAY=dateKey();
 let editingSet=null;
 let routineDraft=new Set(),libraryFilter='All';
 function renderExerciseLibrary(){
   const query=document.getElementById('exercise-search').value.trim().toLowerCase();
   const items=EXERCISES.filter(ex=>(libraryFilter==='All'||exerciseGroup(ex)===libraryFilter)&&[ex.name,...ex.tags,exerciseGroup(ex)].join(' ').toLowerCase().includes(query));
   document.getElementById('library-filters').innerHTML=['All','Machines','Bodyweight','Free weights'].map(group=>`<button data-group="${group}" aria-pressed="${libraryFilter===group}">${group}</button>`).join('');
-  document.getElementById('library-list').innerHTML=items.length?items.map(ex=>`<label class="library-item"><input type="checkbox" data-ex="${ex.id}" ${routineDraft.has(ex.id)?'checked':''}><span class="ex-ico">${exerciseIcon()}</span><span><strong>${ex.name}</strong><small>${exerciseGroup(ex)} · ${ex.tags.join(' / ')} · ${ex.def}${ex.isTime?'s':' reps'} per set</small></span></label>`).join(''):'<p class="empty-msg">No exercises found. Try another search.</p>';
+  document.getElementById('library-list').innerHTML=items.length?items.map(ex=>`<label class="library-item"><input type="checkbox" data-ex="${ex.id}" ${routineDraft.has(ex.id)?'checked':''}><span class="ex-ico">${exerciseIcon()}</span><span><strong>${ex.name}</strong><small>${exerciseGroup(ex)} · ${ex.tags.join(' / ')} · ${preferredReps(ex.id)}${ex.isTime?'s':' reps'} per set</small></span></label>`).join(''):'<p class="empty-msg">No exercises found. Try another search.</p>';
   document.querySelectorAll('[data-group]').forEach(btn=>btn.onclick=()=>{libraryFilter=btn.dataset.group;renderExerciseLibrary();});
   document.querySelectorAll('.library-item input').forEach(input=>input.onchange=()=>{
     if(input.checked)routineDraft.add(input.dataset.ex);else routineDraft.delete(input.dataset.ex);
@@ -561,10 +596,10 @@ document.getElementById('exercise-search').oninput=renderExerciseLibrary;
 document.getElementById('settings-close').onclick=document.getElementById('settings-cancel').onclick=()=>document.getElementById('settings-dialog').close();
 document.getElementById('settings-apply').onclick=()=>{
   if(!routineDraft.size)return;
-  const previous=DATA.settings.active;DATA.settings.active=[...routineDraft];
-  if(!saveData(DATA)){DATA.settings.active=previous;return;}
+  DATA.settings.active=[...routineDraft];
   editingSet=null;ensureToday();
-  if(!DATA.settings.active.every(id=>DATA.days[TODAY].exercises[id].sets.every(s=>s.done))){DATA.days[TODAY].endTime=null;saveData(DATA);}
+  if(!DATA.settings.active.every(id=>DATA.days[TODAY].exercises[id].sets.every(s=>s.done)))DATA.days[TODAY].endTime=null;
+  if(!saveData(DATA)){switchTab(currentTab);return;}
   document.getElementById('settings-dialog').close();switchTab(currentTab);showToast('Routine updated.');
 };
 
@@ -583,38 +618,44 @@ function adjustSets(delta){
     while(ex.sets.length<count)ex.sets.push({reps:ex.target,done:false});
     while(ex.sets.length>count){const i=ex.sets.findLastIndex(s=>!s.done);if(i<0)break;ex.sets.splice(i,1);}
   });
+  if(DATA.settings.active.some(id=>DATA.days[TODAY].exercises[id].sets.some(s=>!s.done)))DATA.days[TODAY].endTime=null;
   editingSet=null;saveData(DATA);renderToday();
+}
+
+function preferredReps(id){
+  const saved=DATA.settings.reps[id];
+  if(Number.isInteger(saved)&&saved>=1&&saved<=999)return saved;
+  for(const key of Object.keys(DATA.days).filter(key=>key<=TODAY).sort().reverse()){
+    const ex=DATA.days[key].exercises?.[id];if(!ex)continue;
+    const latest=ex.sets.findLast(set=>set.done);
+    if(latest)return latest.reps;
+    if(Number.isInteger(ex.nextReps)&&ex.nextReps>=1&&ex.nextReps<=999)return ex.nextReps;
+  }
+  return EX_MAP[id].def;
+}
+function rememberReps(id,value){
+  DATA.settings.reps[id]=value;
+  DATA.days[TODAY].exercises[id].nextReps=value;
 }
 
 function ensureToday(){
   if(!DATA.days[TODAY]){
-    const prev=DATA.days[prevDayKey(TODAY)];
     const exData={};
     DATA.settings.active.forEach(id=>{
       const ex=EX_MAP[id];if(!ex)return;
-      let target=ex.def;
-      if(prev?.exercises?.[id]){
-        const ps=prev.exercises[id].sets.filter(s=>s.done);
-        if(ps.length>0) target=Math.max(...ps.map(s=>s.reps));
-      }
+      const target=preferredReps(id);
       exData[id]={sets:Array.from({length:DATA.settings.sets},()=>({reps:target,done:false})),target,nextReps:target};
     });
     DATA.days[TODAY]={exercises:exData,startTime:Date.now(),endTime:null};
-    saveData(DATA);
   } else {
     const day=DATA.days[TODAY];
-    let changed=false;
     DATA.settings.active.forEach(id=>{
       if(!day.exercises[id]){
         const ex=EX_MAP[id];if(!ex)return;
-        const prev=DATA.days[prevDayKey(TODAY)];
-        let target=ex.def;
-        if(prev?.exercises?.[id]){const ps=prev.exercises[id].sets.filter(s=>s.done);if(ps.length>0)target=Math.max(...ps.map(s=>s.reps));}
+        const target=preferredReps(id);
         day.exercises[id]={sets:Array.from({length:DATA.settings.sets},()=>({reps:target,done:false})),target,nextReps:target};
-        changed=true;
       }
     });
-    if(changed)saveData(DATA);
   }
 }
 
@@ -696,7 +737,7 @@ function applyTheme(t){
   if(t) document.documentElement.setAttribute('data-theme',t);
   else document.documentElement.removeAttribute('data-theme');
   const isDark=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);
-  document.getElementById('app-theme-color').content=isDark?'#0C121C':'#F5F7FA';
+  document.getElementById('app-theme-color').content=isDark?'#0C121C':'#F5F8F7';
   document.getElementById('theme-ico').innerHTML=isDark
     ?'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
     :'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
@@ -704,7 +745,7 @@ function applyTheme(t){
 document.getElementById('theme-btn').onclick=()=>{
   const cur=document.documentElement.getAttribute('data-theme');
   const isDark=cur==='dark'||(!cur&&window.matchMedia('(prefers-color-scheme:dark)').matches);
-  DATA.settings.theme=isDark?'light':'dark';applyTheme(DATA.settings.theme);saveData(DATA);
+  DATA.settings.theme=isDark?'light':'dark';saveData(DATA);applyTheme(DATA.settings.theme);
 };
 
 function showToast(msg,undo){
@@ -719,7 +760,7 @@ function cancelCompletedSet(id,idx){
   const ex=DATA.days[TODAY].exercises[id],set=ex.sets[idx];
   if(!set?.done)return;
   set.done=false;ex.nextReps=set.reps;DATA.days[TODAY].endTime=null;
-  editingSet=null;endRest();saveData(DATA);renderToday();updateHeader();showToast('Set save undone.');
+  editingSet=null;endRest();const saved=saveData(DATA);renderToday();updateHeader();if(saved)showToast('Set save undone.');
 }
 
 /* ═══════════════════════════════════
@@ -744,7 +785,7 @@ function renderToday(){
     <div class="chip"><div class="chip-val g">${stats.exDone}/${stats.total}</div><div class="chip-lbl">Exercises done</div></div>
     <div class="chip"><div class="chip-val">${stats.sets}</div><div class="chip-lbl">Sets logged</div></div>
     <div class="chip"><div class="chip-val">${stats.reps.toLocaleString()}</div><div class="chip-lbl">Total reps${stats.seconds?` · ${stats.seconds}s timed`:''}</div></div>
-  </div><p class="hint workout-instruction">Adjust reps, tap Save. Your records are saved automatically.</p>`;
+  </div><p class="hint workout-instruction">Adjust reps, tap Save. Each exercise remembers your latest input or saved reps.</p>`;
 
   if(allDone){
     html+=`<div class="complete-banner"><div class="complete-emoji">🎉</div><div class="complete-h">Workout complete!</div><div class="complete-sub">${stats.reps} reps${stats.seconds?` · ${stats.seconds}s timed`:''} · ${stats.sets} sets logged</div></div>`;
@@ -847,13 +888,13 @@ function bindTodayEvents(){
       const cur=Number(input.value)||ex.target;
       const step=EX_MAP[id].isTime?5:1;
       input.value=Math.min(999,Math.max(1,action==='plus'?cur+step:cur-step));
-      if(editingSet?.id!==id){ex.nextReps=Number(input.value);saveData(DATA);}
+      if(editingSet?.id!==id){rememberReps(id,Number(input.value));if(!saveData(DATA))renderToday();}
     };
   });
   document.querySelectorAll('.stp-num').forEach(input=>{
     input.onchange=()=>{
       const n=Number(input.value);
-      if(Number.isInteger(n)&&n>=1&&n<=999&&editingSet?.id!==input.dataset.id){DATA.days[TODAY].exercises[input.dataset.id].nextReps=n;saveData(DATA);}
+      if(Number.isInteger(n)&&n>=1&&n<=999&&editingSet?.id!==input.dataset.id){rememberReps(input.dataset.id,n);if(!saveData(DATA))renderToday();}
     };
     input.onkeydown=event=>{if(event.key==='Enter')document.querySelector(`.ok-btn[data-id="${input.dataset.id}"]`).click();};
   });
@@ -866,17 +907,21 @@ function bindTodayEvents(){
       const input=document.getElementById(`reps-${id}`);
       const reps=Number(input.value);
       if(!Number.isInteger(reps)||reps<1||reps>999){showToast('Enter a whole number from 1 to 999.');input.focus();return;}
-      const before={set:{...ex.sets[idx]},nextReps:ex.nextReps,endTime:DATA.days[TODAY].endTime};
+      const before={set:{...ex.sets[idx]},nextReps:ex.nextReps,preferred:DATA.settings.reps[id],endTime:DATA.days[TODAY].endTime};
       ex.sets[idx]={reps,done:true};
-      if(!isEditing)ex.nextReps=reps;
+      rememberReps(id,reps);
       editingSet=null;
       if(DATA.settings.active.every(id=>DATA.days[TODAY].exercises[id].sets.every(s=>s.done)))
         DATA.days[TODAY].endTime=Date.now();
       const saved=saveData(DATA);
       renderToday();updateHeader();
+      if(!saved)return;
       if(saved)showToast(`Set ${idx+1} · ${reps}${EX_MAP[id].isTime?'s':' reps'} ${isEditing?'updated':'saved'}`,()=>{
-        ex.sets[idx]=before.set;ex.nextReps=before.nextReps;DATA.days[TODAY].endTime=before.endTime;
-        editingSet=null;endRest();saveData(DATA);renderToday();updateHeader();showToast(isEditing?'Edit undone.':'Set save undone.');
+        const current=DATA.days[TODAY].exercises[id];if(!current?.sets[idx])return;
+        current.sets[idx]=before.set;current.nextReps=before.nextReps;
+        if(before.preferred===undefined)delete DATA.settings.reps[id];else DATA.settings.reps[id]=before.preferred;
+        DATA.days[TODAY].endTime=before.endTime;
+        editingSet=null;endRest();const saved=saveData(DATA);renderToday();updateHeader();if(saved)showToast(isEditing?'Edit undone.':'Set save undone.');
       });
       if(!isEditing&&!ex.sets.every(s=>s.done))startRest(DATA.settings.restTime||60);
     };
@@ -892,14 +937,14 @@ function bindTodayEvents(){
     cancelCompletedSet(btn.dataset.undo,Number(btn.dataset.idx));
   });
   document.querySelectorAll('[data-reset]').forEach(btn=>btn.onclick=()=>{
-    const ex=DATA.days[TODAY].exercises[btn.dataset.reset];ex.nextReps=ex.target;
-    saveData(DATA);renderToday();showToast('Input reset to your target.');
+    const ex=DATA.days[TODAY].exercises[btn.dataset.reset];rememberReps(btn.dataset.reset,ex.target);
+    const saved=saveData(DATA);renderToday();if(saved)showToast('Input reset to your target.');
   });
   document.querySelectorAll('.add-set-link').forEach(btn=>{
     btn.onclick=()=>{
       const id=btn.dataset.id;
       const ex=DATA.days[TODAY].exercises[id];
-      ex.sets.push({reps:ex.target,done:false});
+      ex.sets.push({reps:ex.target,done:false});DATA.days[TODAY].endTime=null;
       saveData(DATA);renderToday();
     };
   });
@@ -1054,7 +1099,17 @@ function updateHeader(){
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab));
-applyTheme(DATA.settings.theme||null);updateHeader();ensureToday();renderToday();
-setInterval(()=>{if(dateKey()!==TODAY)location.reload();},60000);
+applyTheme(DATA.settings.theme||'light');updateHeader();ensureToday();renderToday();
+function syncToday(){
+  const today=dateKey();if(today===TODAY)return false;
+  document.querySelectorAll('.toast').forEach(el=>el.remove());
+  statsAnchor=today;TODAY=today;editingSet=null;endRest();ensureToday();updateHeader();switchTab(currentTab);return true;
+}
+for(const type of ['click','change','keydown'])document.addEventListener(type,event=>{
+  if(syncToday()){event.preventDefault();event.stopImmediatePropagation();}
+},true);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncToday();});
+window.addEventListener('focus',syncToday);
+setInterval(syncToday,60000);
 </script>
 </html>

@@ -436,6 +436,21 @@ button:disabled{opacity:.35;cursor:default}
 :root[data-theme=light] .routine-kicker::before{background:var(--ac)}
 :root[data-theme=light] .progress-ring{background:conic-gradient(#8EA8D6 var(--progress),#FFFFFF80 0)}
 :root[data-theme=light] .progress-ring>div{background:#F6F8FC}
+/* Readable instructions and controls on compact phone screens. */
+.settings-footer p,.settings-head p,.hint{font-size:14px;line-height:1.65}
+#backup-dialog .settings-footer p{font-size:16px;color:var(--t1);overflow-wrap:anywhere}
+#backup-dialog label{display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px;font-weight:600}
+#cloud-enabled{width:22px;height:22px;flex-shrink:0;accent-color:var(--ac)}
+#cloud-status{padding:12px;border-radius:10px;background:var(--sf2);border:1px solid var(--bdr2)}
+.backup-btn,.settings-buttons button{min-height:44px;font-size:15px;padding:10px 12px}
+.backup-btn{color:var(--t1);font-weight:600;margin-bottom:10px}
+.backup-btn:disabled{color:var(--t2);background:var(--sf2);border-style:dashed}
+.hdr-date,.today-sub,.chip-lbl,.settings-label small,.exercise-category,.target-pill small,.previous-note,.progress-ring small{font-size:12px;line-height:1.5;letter-spacing:0}
+.tab-btn span,.set-label,.set-undo,.add-set-link,.input-cancel,.chart-title,.section-hdr,.kpi-lbl,.library-item small{font-size:13px;line-height:1.4}
+.set-label{grid-column:1/-1}
+.add-set-link,.input-cancel,.set-undo,.ok-btn,.edit-actions button{min-height:44px}
+.ok-btn{font-size:13px}
+.row-actions{flex-wrap:wrap}
 </style>
 
 <div id="app">

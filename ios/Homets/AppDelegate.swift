@@ -16,18 +16,22 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
     private var webView: WKWebView!
     private var exportURL: URL?
+    private let backup = RecordBackup()
     override func viewDidLoad() {
         super.viewDidLoad()
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.userContentController.add(self, name: "exportRecords")
+        configuration.userContentController.add(self, name: "backupRecords")
         configuration.userContentController.addUserScript(WKUserScript(source: """
             window.exportRecords = function() {
-                window.webkit.messageHandlers.exportRecords.postMessage(JSON.stringify({version:2,exportedAt:new Date().toISOString(),...DATA},null,2));
+                window.webkit.messageHandlers.exportRecords.postMessage(backupJSON());
             };
             """, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self
+        backup.controller = self
+        backup.webView = webView
         webView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(webView)
         NSLayoutConstraint.activate([
@@ -54,7 +58,12 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         showError("Could not open your workout screen. Please restart HOMETS.")
     }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        webView.evaluateJavaScript("prepareCloud();refreshBackup();", completionHandler: nil)
+    }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "backupRecords", message.frameInfo.isMainFrame, message.frameInfo.request.url?.isFileURL == true,
+           let body = message.body as? [String: Any] { backup.handle(body); return }
         guard message.name == "exportRecords", message.frameInfo.isMainFrame,
               message.frameInfo.request.url?.isFileURL == true,
               let text = message.body as? String, let data = text.data(using: .utf8),
@@ -69,7 +78,8 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
             let share = UIActivityViewController(activityItems: [url], applicationActivities: nil)
             share.popoverPresentationController?.sourceView = view
             share.popoverPresentationController?.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
-            share.completionWithItemsHandler = { [weak self] _, _, _, _ in
+            share.completionWithItemsHandler = { [weak self] _, completed, _, _ in
+                if completed { self?.webView.evaluateJavaScript("backupExported();", completionHandler: nil) }
                 try? FileManager.default.removeItem(at: directory)
                 self?.exportURL = nil
             }

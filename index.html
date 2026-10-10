@@ -320,6 +320,7 @@ button:disabled{opacity:.35;cursor:default}
 .settings-count{font-size:12px;color:var(--t2);margin-bottom:10px}
 .settings-footer p{font-size:11px;line-height:1.5;color:var(--t2);margin-bottom:10px}
 .settings-buttons{display:flex;gap:8px}
+#backup-dialog [hidden]{display:none!important}
 .settings-buttons button{flex:1;min-height:34px;border-radius:8px;font-size:13px;border:1px solid var(--bdr2);background:var(--sf2);color:var(--t1)}
 .settings-buttons .apply{background:var(--ac);border-color:var(--ac);color:var(--bg);font-weight:700}
 /* Workout log layout inspired by the reference app screens. */
@@ -493,13 +494,28 @@ button:disabled{opacity:.35;cursor:default}
     <header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
     <div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
     <div id="library-list" class="library-list"></div>
-    <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><p><a href="https://outinletter.github.io/privacy-policy/" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
+    <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><button class="backup-btn" id="open-backup">Backup & restore</button><p><a href="https://outinletter.github.io/privacy-policy/homets.html" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
   </div>
 </dialog>
 
 <dialog id="reset-dialog" class="settings-dialog" aria-labelledby="reset-title">
   <header class="settings-head"><h2 id="reset-title">Reset exercise records?</h2></header>
   <footer class="settings-footer"><p id="reset-description"></p><p>Only today's records for this exercise are cleared. Past workouts and preferred reps stay saved.</p><div class="settings-buttons"><button id="reset-cancel">Cancel</button><button class="apply" id="reset-confirm">Reset records</button></div></footer>
+</dialog>
+
+<dialog id="backup-dialog" class="settings-dialog" aria-labelledby="backup-title">
+  <header class="settings-head"><h2 id="backup-title">Backup & restore</h2><button class="icon-btn" id="backup-close" aria-label="Close backup">×</button></header>
+  <div class="settings-footer">
+    <p id="backup-summary" aria-live="polite"></p><p id="backup-date"></p>
+    <button class="backup-btn" id="backup-export">Export JSON backup</button>
+    <button class="backup-btn" id="backup-import">Import JSON backup</button><input id="backup-file" type="file" accept=".json,application/json" hidden>
+    <p>Keep your backup in Files or iCloud Drive to restore it on another device.</p>
+    <label><input id="cloud-enabled" type="checkbox"> iCloud automatic sync</label>
+    <p>Uses the Apple ID in iOS Settings. No HOMETS account is needed. Enable on each device. The latest change for each exercise wins when devices edit the same exercise.</p>
+    <p id="cloud-status" role="status"></p><button class="backup-btn" id="cloud-retry">Sync now</button>
+    <p id="restore-summary" role="status"></p><div id="restore-actions" class="settings-buttons" hidden><button id="restore-cancel">Cancel</button><button class="apply" id="restore-confirm">Replace records</button></div>
+    <button class="backup-btn" id="restore-previous" hidden>Restore pre-import backup</button>
+  </div>
 </dialog>
 
 <script>
@@ -540,9 +556,9 @@ function prevDayKey(k){const d=new Date(k+'T00:00');d.setDate(d.getDate()-1);ret
 function formatDateKR(k){return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',weekday:'short'}).format(new Date(k+'T00:00'));}
 function formatMonthDay(k){const d=new Date(k+'T00:00');const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return{m:m[d.getMonth()],d:d.getDate()}}
 
-function loadData(){
+function loadData(raw){
   try{
-    const d=JSON.parse(localStorage.getItem('homefit_v2')||'{}');
+    const d=JSON.parse(raw??localStorage.getItem('homefit_v2')??'{}');
     if(!d||typeof d!=='object'||Array.isArray(d))return{};
     if(!d.days||typeof d.days!=='object'||Array.isArray(d.days))d.days={};
     for(const [key,day] of Object.entries(d.days)){
@@ -567,7 +583,7 @@ function loadData(){
     return d;
   }catch{return{}}
 }
-function saveData(d){try{const next=JSON.stringify(d);localStorage.setItem('homefit_v2',next);savedSnapshot=next;return true;}catch{DATA=JSON.parse(savedSnapshot);showToast('Could not save. Check your browser storage.');return false;}}
+function saveData(d,remote=false){try{if(!remote)stampChanges(d,JSON.parse(savedSnapshot));const next=JSON.stringify(d);localStorage.setItem('homefit_v2',next);savedSnapshot=next;queueCloudBackup();return true;}catch{DATA=JSON.parse(savedSnapshot);showToast('Could not save. Check your browser storage.');return false;}}
 
 let DATA=loadData();
 if(!DATA.days) DATA.days={};
@@ -1058,9 +1074,9 @@ function shiftPeriod(direction){
   statsAnchor=dateKey(d);renderStats();
 }
 function exportRecords(){
-  const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...DATA},null,2)],{type:'application/json'});
+  const blob=new Blob([backupJSON()],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='workout-records-'+TODAY+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  a.href=url;a.download='workout-records-'+TODAY+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);backupExported();
 }
 function cumulativeStats(){
   let html='<details class="cumulative-details"><summary>All-time bests & muscle groups</summary><div class="pr-card">';
@@ -1111,13 +1127,130 @@ function renderStats(){
   const all=periodSummary('0000-01-01',TODAY);
   html+='</tbody></table></div>';
   if(summary.seconds)html+='<p class="hint" style="margin:0 0 14px">Timed exercises this period: '+summary.seconds+'s</p>';
-  html+='<p class="hint" style="margin:0 0 14px">All time: '+all.days+' days · '+all.sets+' sets · '+all.reps.toLocaleString()+' reps'+(all.seconds?' · '+all.seconds+'s timed':'')+'<br>Current streak: '+getStreak()+' days · Best is the highest count in a single set.</p>'+cumulativeStats()+'<button class="backup-btn" id="export-records">Export all records</button><p class="hint" style="margin:8px 0 0">Saved in this browser. Records do not automatically sync across devices.</p></div>';
+  html+='<p class="hint" style="margin:0 0 14px">All time: '+all.days+' days · '+all.sets+' sets · '+all.reps.toLocaleString()+' reps'+(all.seconds?' · '+all.seconds+'s timed':'')+'<br>Current streak: '+getStreak()+' days · Best is the highest count in a single set.</p>'+cumulativeStats()+'<button class="backup-btn" id="export-records">Backup & restore</button><p class="hint" style="margin:8px 0 0">Export or import records, or enable iCloud sync in the iOS app.</p></div>';
   document.getElementById('stats-content').innerHTML=html;
   document.querySelectorAll('[data-period]').forEach(btn=>btn.onclick=()=>{statsPeriod=btn.dataset.period;statsAnchor=TODAY;renderStats();});
   document.getElementById('period-prev').onclick=()=>shiftPeriod(-1);
   document.getElementById('period-next').onclick=()=>shiftPeriod(1);
-  document.getElementById('export-records').onclick=exportRecords;
+  document.getElementById('export-records').onclick=openBackup;
 }
+
+const backupMetaKey='homets_backup_meta';
+let backupMeta={};try{backupMeta=JSON.parse(localStorage.getItem(backupMetaKey)||'{}')||{};}catch{}
+let pendingRestore=null,cloudTimer=null,cloudMessage='iCloud sync is available in the iOS app.';
+function nativeBackup(op,extra={}){window.webkit?.messageHandlers?.backupRecords?.postMessage({op,...extra});}
+function backupJSON(){return JSON.stringify({...DATA,version:3,exportedAt:new Date().toISOString()});}
+function saveBackupMeta(){try{localStorage.setItem(backupMetaKey,JSON.stringify(backupMeta));}catch{showToast('Could not save backup preferences.');}}
+function recordCount(data){return Object.values(data.days).reduce((n,day)=>n+Object.values(day.exercises).reduce((m,ex)=>m+ex.sets.filter(set=>set.done).length,0),0);}
+function nextRevision(data){
+  const meta=data._sync||{},times=[meta.settings,...Object.values(meta.deletedDays||{}),...Object.values(meta.days||{}).flatMap(Object.values)].map(value=>Number((value||'').split('-')[0])||0);
+  return String(Math.max(Date.now(),...times)+1).padStart(13,'0')+'-'+Math.random().toString(36).slice(2);
+}
+function stampChanges(data,previous){
+  const rev=nextRevision(data);
+  if(!data._sync)data._sync={days:{},deletedDays:{},settings:''};
+  const meta=data._sync;meta.days??={};meta.deletedDays??={};
+  for(const [date,day] of Object.entries(data.days)){
+    meta.days[date]??={};
+    for(const [id,ex] of Object.entries(day.exercises))if(!meta.days[date][id]||JSON.stringify(ex)!==JSON.stringify(previous.days?.[date]?.exercises?.[id]))meta.days[date][id]=rev;
+  }
+  for(const date of Object.keys(previous.days||{}))if(!data.days[date])meta.deletedDays[date]=rev;
+  if(!meta.settings||JSON.stringify(data.settings)!==JSON.stringify(previous.settings))meta.settings=rev;
+}
+function queueCloudBackup(){
+  if(!backupMeta.cloudEnabled||!window.webkit?.messageHandlers?.backupRecords)return;
+  clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>nativeBackup('sync',{text:backupJSON()}),800);
+}
+function validateBackup(text){
+  if(typeof text!=='string'||text.length>10*1024*1024)throw Error('Choose a JSON backup smaller than 10 MB.');
+  const data=JSON.parse(text),object=value=>value&&typeof value==='object'&&!Array.isArray(value);
+  const safeKey=key=>/^[a-zA-Z0-9_-]+$/.test(key)&&!['__proto__','prototype','constructor'].includes(key);
+  if(!object(data)||![2,3].includes(data.version)||!object(data.days)||!object(data.settings))throw Error('This is not a supported HOMETS backup.');
+  let sets=0;
+  for(const [date,day] of Object.entries(data.days)){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(new Date(date+'T00:00').getTime())||dateKey(new Date(date+'T00:00'))!==date||!object(day)||!object(day.exercises))throw Error('The backup contains an invalid workout date.');
+    for(const [id,ex] of Object.entries(day.exercises)){
+      if(!safeKey(id)||!object(ex)||!Array.isArray(ex.sets)||ex.sets.length>1000||!Number.isInteger(ex.target)||ex.target<1||ex.target>999)throw Error('The backup contains an invalid exercise.');
+      for(const set of ex.sets){if(!object(set)||typeof set.done!=='boolean'||!Number.isInteger(set.reps)||set.reps<1||set.reps>999)throw Error('The backup contains an invalid set.');if(++sets>100000)throw Error('The backup contains too many sets.');}
+    }
+  }
+  if(!Array.isArray(data.settings.active)||!data.settings.active.length||!data.settings.active.every(safeKey))throw Error('The backup routine is invalid.');
+  if(data._sync){
+    if(!object(data._sync)||!object(data._sync.days)||!object(data._sync.deletedDays)||typeof data._sync.settings!=='string')throw Error('The backup sync information is invalid.');
+    const revision=value=>typeof value==='string'&&/^(\d{13}-[a-z0-9]+)?$/.test(value);
+    if(!revision(data._sync.settings))throw Error('The backup revision is invalid.');
+    for(const [date,items] of Object.entries(data._sync.days)){if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!object(items)||!Object.entries(items).every(([id,r])=>safeKey(id)&&revision(r)))throw Error('The backup revision is invalid.');}
+    for(const [date,r] of Object.entries(data._sync.deletedDays))if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!revision(r))throw Error('The backup deletion is invalid.');
+  }
+  return loadData(JSON.stringify(data));
+}
+function refreshBackup(){
+  document.getElementById('backup-summary').textContent=`${Object.values(DATA.days).filter(day=>Object.values(day.exercises).some(ex=>ex.sets.some(set=>set.done))).length} workout days · ${recordCount(DATA)} saved sets`;
+  document.getElementById('backup-date').textContent='Last exported backup: '+(backupMeta.exportedAt?new Date(backupMeta.exportedAt).toLocaleString():'Never');
+  document.getElementById('cloud-enabled').checked=!!backupMeta.cloudEnabled;
+  document.getElementById('cloud-enabled').disabled=!window.webkit?.messageHandlers?.backupRecords;
+  document.getElementById('cloud-retry').disabled=!backupMeta.cloudEnabled;
+  document.getElementById('cloud-status').textContent=cloudMessage;
+  document.getElementById('restore-previous').hidden=!localStorage.getItem('homets_pre_import');
+}
+function openBackup(){document.getElementById('settings-dialog').close();refreshBackup();document.getElementById('backup-dialog').showModal();}
+function backupExported(){backupMeta.exportedAt=new Date().toISOString();saveBackupMeta();refreshBackup();}
+function receiveBackup(text){
+  try{pendingRestore=validateBackup(text);document.getElementById('restore-summary').textContent=`Replace all current records (${recordCount(DATA)} saved sets) with this backup (${recordCount(pendingRestore)} saved sets)? Routine and preferred reps will also be restored. A pre-import backup will be kept on this device.`;document.getElementById('restore-actions').hidden=false;}
+  catch(error){pendingRestore=null;document.getElementById('restore-actions').hidden=true;showToast(error instanceof SyntaxError?'The file is not valid JSON.':error.message);}
+}
+function confirmRestore(){
+  if(!pendingRestore)return;
+  try{localStorage.setItem('homets_pre_import',backupJSON());}catch{showToast('Not enough storage for a safety backup. No records changed.');return;}
+  const previous=DATA;DATA=pendingRestore;DATA._sync=JSON.parse(JSON.stringify(previous._sync||{days:{},deletedDays:{},settings:''}));
+  // A confirmed replacement must supersede older iCloud versions, even when importing an old file.
+  stampChanges(DATA,{days:previous.days,settings:{}});
+  const deletedRev=nextRevision(DATA);
+  for(const date of Object.keys(previous.days))DATA._sync.deletedDays[date]=deletedRev;
+  const rev=nextRevision(DATA);DATA._sync.settings=rev;
+  for(const [date,day] of Object.entries(DATA.days))for(const id of Object.keys(day.exercises))DATA._sync.days[date][id]=rev;
+  if(!saveData(DATA,true)){refreshBackup();return;}
+  pendingRestore=null;document.getElementById('restore-actions').hidden=true;document.getElementById('restore-summary').textContent='Records restored. Your pre-import backup is available below.';
+  editingSet=null;endRest();ensureToday();applyTheme(DATA.settings.theme||'light');updateHeader();switchTab(currentTab);refreshBackup();showToast('Backup restored.');
+}
+function receiveCloud(text){
+  if(!backupMeta.cloudEnabled)return;
+  try{
+    const incoming=validateBackup(text);if(!incoming._sync)return;
+    const local=JSON.parse(JSON.stringify(DATA)),meta=local._sync||{days:{},deletedDays:{},settings:''};local._sync=meta;
+    for(const [date,remoteDay] of Object.entries(incoming.days)){
+      for(const [id,exercise] of Object.entries(remoteDay.exercises)){
+        const remoteRev=incoming._sync.days[date]?.[id]||'';
+        if(remoteRev&&(remoteRev>(meta.days[date]?.[id]||''))&&remoteRev>(meta.deletedDays[date]||'')){
+          local.days[date]??={exercises:{},startTime:remoteDay.startTime,endTime:null};local.days[date].exercises[id]=exercise;
+          meta.days[date]??={};meta.days[date][id]=remoteRev;
+        }
+      }
+    }
+    for(const [date,rev] of Object.entries(incoming._sync.deletedDays)){
+      if(rev>(meta.deletedDays[date]||'')){meta.deletedDays[date]=rev;
+        for(const id of Object.keys(local.days[date]?.exercises||{}))if(rev>(meta.days[date]?.[id]||''))delete local.days[date].exercises[id];
+        if(local.days[date]&&!Object.keys(local.days[date].exercises).length)delete local.days[date];
+      }
+    }
+    if(incoming._sync.settings>meta.settings){local.settings=incoming.settings;meta.settings=incoming._sync.settings;}
+    for(const day of Object.values(local.days))if(Object.values(day.exercises).some(ex=>ex.sets.some(set=>!set.done)))day.endTime=null;
+    if(JSON.stringify(local)!==savedSnapshot){DATA=local;if(!saveData(DATA,true))return;editingSet=null;endRest();ensureToday();applyTheme(DATA.settings.theme||'light');updateHeader();switchTab(currentTab);refreshBackup();}
+  }catch{cloudStatus('An iCloud backup could not be read. Local records remain available.');}
+}
+function cloudStatus(message){cloudMessage=message;refreshBackup();}
+function cloudAccountChanged(){backupMeta.cloudEnabled=false;saveBackupMeta();clearTimeout(cloudTimer);cloudStatus('Apple ID changed. Review your local records, then enable iCloud sync again.');}
+function prepareCloud(){if(backupMeta.cloudEnabled){stampChanges(DATA,JSON.parse(savedSnapshot));saveData(DATA,true);}nativeBackup('configure',{enabled:!!backupMeta.cloudEnabled});}
+document.getElementById('open-backup').onclick=openBackup;
+document.getElementById('backup-close').onclick=()=>document.getElementById('backup-dialog').close();
+document.getElementById('backup-export').onclick=()=>exportRecords();
+document.getElementById('backup-import').onclick=()=>window.webkit?.messageHandlers?.backupRecords?nativeBackup('import'):document.getElementById('backup-file').click();
+document.getElementById('backup-file').onchange=async event=>{const file=event.target.files[0];event.target.value='';if(!file)return;if(file.size>10*1024*1024){showToast('Choose a JSON backup smaller than 10 MB.');return;}try{receiveBackup(await file.text());}catch{showToast('Could not read the backup file.');}};
+document.getElementById('restore-confirm').onclick=confirmRestore;
+document.getElementById('restore-cancel').onclick=()=>{pendingRestore=null;document.getElementById('restore-actions').hidden=true;document.getElementById('restore-summary').textContent='Import cancelled. Records unchanged.';};
+document.getElementById('restore-previous').onclick=()=>receiveBackup(localStorage.getItem('homets_pre_import'));
+document.getElementById('cloud-enabled').onchange=event=>{backupMeta.cloudEnabled=event.target.checked;saveBackupMeta();clearTimeout(cloudTimer);prepareCloud();refreshBackup();};
+document.getElementById('cloud-retry').onclick=()=>nativeBackup('configure',{enabled:true});
 
 function updateHeader(){
   const d=new Date();

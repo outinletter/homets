@@ -1152,10 +1152,15 @@ function stampChanges(data,previous){
   const meta=data._sync;meta.days??={};meta.deletedDays??={};
   for(const [date,day] of Object.entries(data.days)){
     meta.days[date]??={};
-    for(const [id,ex] of Object.entries(day.exercises))if(!meta.days[date][id]||JSON.stringify(ex)!==JSON.stringify(previous.days?.[date]?.exercises?.[id]))meta.days[date][id]=rev;
+    for(const [id,ex] of Object.entries(day.exercises)){
+      const before=previous.days?.[date]?.exercises?.[id],changed=before&&JSON.stringify(ex)!==JSON.stringify(before);
+      const untouched=!before&&!ex.sets.some(set=>set.done)&&ex.sets.length===data.settings.sets&&ex.nextReps===ex.target&&data.settings.reps[id]===previous.settings?.reps?.[id];
+      if(!meta.days[date][id]||changed)meta.days[date][id]=untouched?'0000000000000-initial':rev;
+    }
   }
   for(const date of Object.keys(previous.days||{}))if(!data.days[date])meta.deletedDays[date]=rev;
-  if(!meta.settings||JSON.stringify(data.settings)!==JSON.stringify(previous.settings))meta.settings=rev;
+  if(!meta.settings)meta.settings='0000000000000-initial';
+  if(JSON.stringify(data.settings)!==JSON.stringify(previous.settings))meta.settings=rev;
 }
 function queueCloudBackup(){
   if(!backupMeta.cloudEnabled||!window.webkit?.messageHandlers?.backupRecords)return;

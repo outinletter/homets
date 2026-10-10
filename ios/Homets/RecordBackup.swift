@@ -68,7 +68,10 @@ final class RecordBackup: NSObject, UIDocumentPickerDelegate {
                 self.gathering = true
                 self.query.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
                 self.query.predicate = NSPredicate(format: "%K LIKE %@", NSMetadataItemFSNameKey, "homets-*.json")
-                self.query.start()
+                if !self.query.start() {
+                    self.gathering = false
+                    self.call("cloudStatus", "Could not start iCloud sync. Check iCloud Drive in iOS Settings, then tap Sync now.")
+                }
             }
         }
     }

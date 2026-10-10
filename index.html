@@ -1194,7 +1194,8 @@ function refreshBackup(){
   document.getElementById('backup-date').textContent='Last exported backup: '+(backupMeta.exportedAt?new Date(backupMeta.exportedAt).toLocaleString():'Never');
   document.getElementById('cloud-enabled').checked=!!backupMeta.cloudEnabled;
   document.getElementById('cloud-enabled').disabled=!window.webkit?.messageHandlers?.backupRecords;
-  document.getElementById('cloud-retry').disabled=!backupMeta.cloudEnabled;
+  document.getElementById('cloud-retry').disabled=!window.webkit?.messageHandlers?.backupRecords;
+  document.getElementById('cloud-retry').textContent=backupMeta.cloudEnabled?'Sync now':'Enable iCloud & sync';
   document.getElementById('cloud-status').textContent=cloudMessage;
   document.getElementById('restore-previous').hidden=!localStorage.getItem('homets_pre_import');
 }
@@ -1245,7 +1246,7 @@ function receiveCloud(text){
 }
 function cloudStatus(message){cloudMessage=message;refreshBackup();}
 function cloudAccountChanged(){backupMeta.cloudEnabled=false;saveBackupMeta();clearTimeout(cloudTimer);cloudStatus('Apple ID changed. Review your local records, then enable iCloud sync again.');}
-function prepareCloud(){if(backupMeta.cloudEnabled){stampChanges(DATA,JSON.parse(savedSnapshot));saveData(DATA,true);}nativeBackup('configure',{enabled:!!backupMeta.cloudEnabled});}
+function prepareCloud(){cloudStatus(window.webkit?.messageHandlers?.backupRecords?(backupMeta.cloudEnabled?'Connecting to iCloud…':'iCloud sync is off. Local records remain saved.'):'iCloud sync requires the iOS app.');if(backupMeta.cloudEnabled){stampChanges(DATA,JSON.parse(savedSnapshot));saveData(DATA,true);}nativeBackup('configure',{enabled:!!backupMeta.cloudEnabled});}
 document.getElementById('open-backup').onclick=openBackup;
 document.getElementById('backup-close').onclick=()=>document.getElementById('backup-dialog').close();
 document.getElementById('backup-export').onclick=()=>exportRecords();
@@ -1255,7 +1256,7 @@ document.getElementById('restore-confirm').onclick=confirmRestore;
 document.getElementById('restore-cancel').onclick=()=>{pendingRestore=null;document.getElementById('restore-actions').hidden=true;document.getElementById('restore-summary').textContent='Import cancelled. Records unchanged.';};
 document.getElementById('restore-previous').onclick=()=>receiveBackup(localStorage.getItem('homets_pre_import'));
 document.getElementById('cloud-enabled').onchange=event=>{backupMeta.cloudEnabled=event.target.checked;saveBackupMeta();clearTimeout(cloudTimer);prepareCloud();refreshBackup();};
-document.getElementById('cloud-retry').onclick=()=>nativeBackup('configure',{enabled:true});
+document.getElementById('cloud-retry').onclick=()=>{backupMeta.cloudEnabled=true;saveBackupMeta();clearTimeout(cloudTimer);prepareCloud();};
 
 function updateHeader(){
   const d=new Date();

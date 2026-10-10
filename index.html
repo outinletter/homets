@@ -140,7 +140,8 @@ button{font-family:inherit;cursor:pointer}
 .row-done-mark svg{width:14px;height:14px}
 
 /* Add set */
-.add-set-link{background:none;border:none;color:var(--t3);font-size:11px;display:flex;align-items:center;gap:3px;padding:0;line-height:1}
+.add-set-link{min-height:44px;background:none;border:none;color:var(--t3);font-size:11px;display:flex;align-items:center;gap:3px;padding:0;line-height:1}
+.add-set-link:disabled{opacity:.4;cursor:default}
 .add-set-link:hover{color:var(--t2)}
 .add-set-link svg{width:11px;height:11px}
 
@@ -494,6 +495,11 @@ button:disabled{opacity:.35;cursor:default}
     <div id="library-list" class="library-list"></div>
     <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><p><a href="https://outinletter.github.io/privacy-policy/" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
   </div>
+</dialog>
+
+<dialog id="reset-dialog" class="settings-dialog" aria-labelledby="reset-title">
+  <header class="settings-head"><h2 id="reset-title">Reset exercise records?</h2></header>
+  <footer class="settings-footer"><p id="reset-description"></p><p>Only today's records for this exercise are cleared. Past workouts and preferred reps stay saved.</p><div class="settings-buttons"><button id="reset-cancel">Cancel</button><button class="apply" id="reset-confirm">Reset records</button></div></footer>
 </dialog>
 
 <script>
@@ -859,10 +865,10 @@ function renderToday(){
     }
 
     /* Add set link */
-    rightHtml+=`<div class="row-actions"><button class="add-set-link" data-id="${id}" aria-label="${ex.name} Add set">
+    rightHtml+=`<div class="row-actions"><button class="add-set-link" data-id="${id}" aria-label="${ex.name} Add set" ${exData.sets.length>=10?'disabled':''}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add set
-    </button>${!isEditing&&nextIdx!==-1?`<button class="input-cancel" data-reset="${id}" aria-label="${ex.name} Reset input">Reset</button>`:''}${previous?`<span class="previous-note" title="${formatDateKR(previous.date)}">Last best ${previous.max}${unit}</span>`:''}</div>`;
+    </button><button class="add-set-link" data-remove="${id}" aria-label="${ex.name} Remove unlogged set" ${exData.sets.length<=1||nextIdx===-1?'disabled':''}>− Remove set</button><span class="previous-note">${doneSets.length} / ${exData.sets.length} saved</span>${doneSets.length?`<button class="input-cancel" data-reset-records="${id}">Reset records</button>`:''}${!isEditing&&nextIdx!==-1?`<button class="input-cancel" data-reset="${id}" aria-label="${ex.name} Reset input">Reset reps</button>`:''}${previous?`<span class="previous-note" title="${formatDateKR(previous.date)}">Last best ${previous.max}${unit}</span>`:''}</div>`;
 
     rightHtml+=`</div>`;
 
@@ -940,13 +946,34 @@ function bindTodayEvents(){
     const ex=DATA.days[TODAY].exercises[btn.dataset.reset];rememberReps(btn.dataset.reset,ex.target);
     const saved=saveData(DATA);renderToday();if(saved)showToast('Input reset to your target.');
   });
-  document.querySelectorAll('.add-set-link').forEach(btn=>{
-    btn.onclick=()=>{
-      const id=btn.dataset.id;
-      const ex=DATA.days[TODAY].exercises[id];
-      ex.sets.push({reps:ex.target,done:false});DATA.days[TODAY].endTime=null;
-      saveData(DATA);renderToday();
-    };
+  document.querySelectorAll('.add-set-link[data-id]').forEach(btn=>btn.onclick=()=>changeExerciseSets(btn.dataset.id,1));
+  document.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=()=>changeExerciseSets(btn.dataset.remove,-1));
+  document.querySelectorAll('[data-reset-records]').forEach(btn=>btn.onclick=()=>{
+    const id=btn.dataset.resetRecords,date=TODAY,dialog=document.getElementById('reset-dialog');
+    document.getElementById('reset-description').textContent=EX_MAP[id].name;
+    document.getElementById('reset-cancel').onclick=()=>dialog.close();
+    document.getElementById('reset-confirm').onclick=()=>{dialog.close();if(TODAY===date)resetExerciseRecords(id);};
+    dialog.showModal();
+  });
+}
+
+function changeExerciseSets(id,delta){
+  const day=DATA.days[TODAY],ex=day.exercises[id];
+  if(delta>0){if(ex.sets.length>=10)return;ex.sets.push({reps:ex.nextReps||ex.target,done:false});}
+  else{const idx=ex.sets.findLastIndex(set=>!set.done);if(ex.sets.length<=1||idx<0)return;ex.sets.splice(idx,1);}
+  day.endTime=DATA.settings.active.every(key=>day.exercises[key].sets.every(set=>set.done))?(day.endTime||Date.now()):null;
+  editingSet=null;const saved=saveData(DATA);renderToday();updateHeader();
+  if(saved)showToast(delta>0?'Set added.':'Unlogged set removed. Saved records stay unchanged.');
+}
+function resetExerciseRecords(id){
+  const date=TODAY,day=DATA.days[date],ex=day.exercises[id];
+  const before=ex.sets.map(set=>({...set})),endTime=day.endTime;
+  ex.sets=ex.sets.map(()=>({reps:ex.nextReps||ex.target,done:false}));day.endTime=null;
+  editingSet=null;const saved=saveData(DATA);if(saved)endRest();renderToday();updateHeader();
+  if(saved)showToast("Today's exercise records reset.",()=>{
+    if(TODAY!==date)return;
+    DATA.days[date].exercises[id].sets=before;DATA.days[date].endTime=endTime;
+    const restored=saveData(DATA);renderToday();updateHeader();if(restored)showToast('Reset undone.');
   });
 }
 

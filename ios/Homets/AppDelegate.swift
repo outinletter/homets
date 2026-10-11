@@ -59,7 +59,7 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
         showError("Could not open your workout screen. Please restart HOMETS.")
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webView.evaluateJavaScript("prepareCloud();refreshBackup();", completionHandler: nil)
+        webView.evaluateJavaScript("refreshBackup();", completionHandler: nil)
     }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "backupRecords", message.frameInfo.isMainFrame, message.frameInfo.request.url?.isFileURL == true,

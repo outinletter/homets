@@ -140,7 +140,8 @@ button{font-family:inherit;cursor:pointer}
 .row-done-mark svg{width:14px;height:14px}
 
 /* Add set */
-.add-set-link{background:none;border:none;color:var(--t3);font-size:11px;display:flex;align-items:center;gap:3px;padding:0;line-height:1}
+.add-set-link{min-height:44px;background:none;border:none;color:var(--t3);font-size:11px;display:flex;align-items:center;gap:3px;padding:0;line-height:1}
+.add-set-link:disabled{opacity:.4;cursor:default}
 .add-set-link:hover{color:var(--t2)}
 .add-set-link svg{width:11px;height:11px}
 
@@ -319,6 +320,7 @@ button:disabled{opacity:.35;cursor:default}
 .settings-count{font-size:12px;color:var(--t2);margin-bottom:10px}
 .settings-footer p{font-size:11px;line-height:1.5;color:var(--t2);margin-bottom:10px}
 .settings-buttons{display:flex;gap:8px}
+#backup-dialog [hidden]{display:none!important}
 .settings-buttons button{flex:1;min-height:34px;border-radius:8px;font-size:13px;border:1px solid var(--bdr2);background:var(--sf2);color:var(--t1)}
 .settings-buttons .apply{background:var(--ac);border-color:var(--ac);color:var(--bg);font-weight:700}
 /* Workout log layout inspired by the reference app screens. */
@@ -434,6 +436,28 @@ button:disabled{opacity:.35;cursor:default}
 :root[data-theme=light] .routine-kicker::before{background:var(--ac)}
 :root[data-theme=light] .progress-ring{background:conic-gradient(#8EA8D6 var(--progress),#FFFFFF80 0)}
 :root[data-theme=light] .progress-ring>div{background:#F6F8FC}
+/* Readable instructions and controls on compact phone screens. */
+.settings-footer p,.settings-head p,.hint{font-size:14px;line-height:1.65}
+#backup-dialog .settings-footer p{font-size:16px;color:var(--t1);overflow-wrap:anywhere}
+#backup-dialog label{display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px;font-weight:600}
+.backup-btn,.settings-buttons button{min-height:44px;font-size:15px;padding:10px 12px}
+.backup-btn{color:var(--t1);font-weight:600;margin-bottom:10px}
+.backup-btn:disabled{color:var(--t2);background:var(--sf2);border-style:dashed}
+.hdr-date,.today-sub,.chip-lbl,.settings-label small,.exercise-category,.target-pill small,.previous-note,.progress-ring small{font-size:12px;line-height:1.5;letter-spacing:0}
+.tab-btn span,.set-label,.set-undo,.add-set-link,.input-cancel,.chart-title,.section-hdr,.kpi-lbl,.library-item small{font-size:13px;line-height:1.4}
+.set-label{grid-column:1/-1}
+.set-active{grid-template-columns:44px minmax(0,1fr) 44px 80px;gap:8px;padding:12px;border-radius:12px}
+.set-active .set-label{grid-column:1/-1;margin-bottom:2px}
+.set-active .stp-num{width:100%;min-width:0;height:44px;padding:0;border-radius:8px;background:var(--sf);font-size:22px;line-height:44px}
+.set-active>button,.set-active>input{box-sizing:border-box;min-width:0}
+.set-active .stp-btn{border-radius:10px;font-size:22px;font-weight:600}
+.set-active .ok-btn{height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;letter-spacing:0}
+@media(max-width:350px){.set-active{grid-template-columns:44px minmax(0,1fr) 44px 64px;gap:6px;padding:10px}}
+.set-active .stp-btn{width:44px;min-width:44px;height:44px}
+.set-active .ok-btn{white-space:nowrap;width:100%;padding:10px 12px}
+.add-set-link,.input-cancel,.set-undo,.ok-btn,.edit-actions button{min-height:44px}
+.ok-btn{font-size:13px}
+.row-actions{flex-wrap:wrap}
 </style>
 
 <div id="app">
@@ -492,7 +516,24 @@ button:disabled{opacity:.35;cursor:default}
     <header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
     <div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
     <div id="library-list" class="library-list"></div>
-    <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><p><a href="https://outinletter.github.io/privacy-policy/" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
+    <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><button class="backup-btn" id="open-backup">Backup & restore</button><p><a href="https://outinletter.github.io/privacy-policy/homets.html" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
+  </div>
+</dialog>
+
+<dialog id="reset-dialog" class="settings-dialog" aria-labelledby="reset-title">
+  <header class="settings-head"><h2 id="reset-title">Reset exercise records?</h2></header>
+  <footer class="settings-footer"><p id="reset-description"></p><p>Only today's records for this exercise are cleared. Past workouts and preferred reps stay saved.</p><div class="settings-buttons"><button id="reset-cancel">Cancel</button><button class="apply" id="reset-confirm">Reset records</button></div></footer>
+</dialog>
+
+<dialog id="backup-dialog" class="settings-dialog" aria-labelledby="backup-title">
+  <header class="settings-head"><h2 id="backup-title">Backup & restore</h2><button class="icon-btn" id="backup-close" aria-label="Close backup">×</button></header>
+  <div class="settings-footer">
+    <p id="backup-summary" aria-live="polite"></p><p id="backup-date"></p>
+    <button class="backup-btn" id="backup-export">Export JSON backup</button>
+    <button class="backup-btn" id="backup-import">Import JSON backup</button><input id="backup-file" type="file" accept=".json,application/json" hidden>
+    <p>Keep your backup in Files or iCloud Drive to restore it on another device.</p>
+    <p id="restore-summary" role="status"></p><div id="restore-actions" class="settings-buttons" hidden><button id="restore-cancel">Cancel</button><button class="apply" id="restore-confirm">Replace records</button></div>
+    <button class="backup-btn" id="restore-previous" hidden>Restore pre-import backup</button>
   </div>
 </dialog>
 
@@ -534,9 +575,9 @@ function prevDayKey(k){const d=new Date(k+'T00:00');d.setDate(d.getDate()-1);ret
 function formatDateKR(k){return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',weekday:'short'}).format(new Date(k+'T00:00'));}
 function formatMonthDay(k){const d=new Date(k+'T00:00');const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return{m:m[d.getMonth()],d:d.getDate()}}
 
-function loadData(){
+function loadData(raw){
   try{
-    const d=JSON.parse(localStorage.getItem('homefit_v2')||'{}');
+    const d=JSON.parse(raw??localStorage.getItem('homefit_v2')??'{}');
     if(!d||typeof d!=='object'||Array.isArray(d))return{};
     if(!d.days||typeof d.days!=='object'||Array.isArray(d.days))d.days={};
     for(const [key,day] of Object.entries(d.days)){
@@ -859,10 +900,10 @@ function renderToday(){
     }
 
     /* Add set link */
-    rightHtml+=`<div class="row-actions"><button class="add-set-link" data-id="${id}" aria-label="${ex.name} Add set">
+    rightHtml+=`<div class="row-actions"><button class="add-set-link" data-id="${id}" aria-label="${ex.name} Add set" ${exData.sets.length>=10?'disabled':''}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add set
-    </button>${!isEditing&&nextIdx!==-1?`<button class="input-cancel" data-reset="${id}" aria-label="${ex.name} Reset input">Reset</button>`:''}${previous?`<span class="previous-note" title="${formatDateKR(previous.date)}">Last best ${previous.max}${unit}</span>`:''}</div>`;
+    </button><button class="add-set-link" data-remove="${id}" aria-label="${ex.name} Remove unlogged set" ${exData.sets.length<=1||nextIdx===-1?'disabled':''}>− Remove set</button><span class="previous-note">${doneSets.length} / ${exData.sets.length} saved</span>${doneSets.length?`<button class="input-cancel" data-reset-records="${id}">Reset records</button>`:''}${!isEditing&&nextIdx!==-1?`<button class="input-cancel" data-reset="${id}" aria-label="${ex.name} Reset input">Reset reps</button>`:''}${previous?`<span class="previous-note" title="${formatDateKR(previous.date)}">Last best ${previous.max}${unit}</span>`:''}</div>`;
 
     rightHtml+=`</div>`;
 
@@ -940,13 +981,34 @@ function bindTodayEvents(){
     const ex=DATA.days[TODAY].exercises[btn.dataset.reset];rememberReps(btn.dataset.reset,ex.target);
     const saved=saveData(DATA);renderToday();if(saved)showToast('Input reset to your target.');
   });
-  document.querySelectorAll('.add-set-link').forEach(btn=>{
-    btn.onclick=()=>{
-      const id=btn.dataset.id;
-      const ex=DATA.days[TODAY].exercises[id];
-      ex.sets.push({reps:ex.target,done:false});DATA.days[TODAY].endTime=null;
-      saveData(DATA);renderToday();
-    };
+  document.querySelectorAll('.add-set-link[data-id]').forEach(btn=>btn.onclick=()=>changeExerciseSets(btn.dataset.id,1));
+  document.querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=()=>changeExerciseSets(btn.dataset.remove,-1));
+  document.querySelectorAll('[data-reset-records]').forEach(btn=>btn.onclick=()=>{
+    const id=btn.dataset.resetRecords,date=TODAY,dialog=document.getElementById('reset-dialog');
+    document.getElementById('reset-description').textContent=EX_MAP[id].name;
+    document.getElementById('reset-cancel').onclick=()=>dialog.close();
+    document.getElementById('reset-confirm').onclick=()=>{dialog.close();if(TODAY===date)resetExerciseRecords(id);};
+    dialog.showModal();
+  });
+}
+
+function changeExerciseSets(id,delta){
+  const day=DATA.days[TODAY],ex=day.exercises[id];
+  if(delta>0){if(ex.sets.length>=10)return;ex.sets.push({reps:ex.nextReps||ex.target,done:false});}
+  else{const idx=ex.sets.findLastIndex(set=>!set.done);if(ex.sets.length<=1||idx<0)return;ex.sets.splice(idx,1);}
+  day.endTime=DATA.settings.active.every(key=>day.exercises[key].sets.every(set=>set.done))?(day.endTime||Date.now()):null;
+  editingSet=null;const saved=saveData(DATA);renderToday();updateHeader();
+  if(saved)showToast(delta>0?'Set added.':'Unlogged set removed. Saved records stay unchanged.');
+}
+function resetExerciseRecords(id){
+  const date=TODAY,day=DATA.days[date],ex=day.exercises[id];
+  const before=ex.sets.map(set=>({...set})),endTime=day.endTime;
+  ex.sets=ex.sets.map(()=>({reps:ex.nextReps||ex.target,done:false}));day.endTime=null;
+  editingSet=null;const saved=saveData(DATA);if(saved)endRest();renderToday();updateHeader();
+  if(saved)showToast("Today's exercise records reset.",()=>{
+    if(TODAY!==date)return;
+    DATA.days[date].exercises[id].sets=before;DATA.days[date].endTime=endTime;
+    const restored=saveData(DATA);renderToday();updateHeader();if(restored)showToast('Reset undone.');
   });
 }
 
@@ -1031,9 +1093,9 @@ function shiftPeriod(direction){
   statsAnchor=dateKey(d);renderStats();
 }
 function exportRecords(){
-  const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...DATA},null,2)],{type:'application/json'});
+  const blob=new Blob([backupJSON()],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='workout-records-'+TODAY+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  a.href=url;a.download='workout-records-'+TODAY+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);backupExported();
 }
 function cumulativeStats(){
   let html='<details class="cumulative-details"><summary>All-time bests & muscle groups</summary><div class="pr-card">';
@@ -1084,13 +1146,71 @@ function renderStats(){
   const all=periodSummary('0000-01-01',TODAY);
   html+='</tbody></table></div>';
   if(summary.seconds)html+='<p class="hint" style="margin:0 0 14px">Timed exercises this period: '+summary.seconds+'s</p>';
-  html+='<p class="hint" style="margin:0 0 14px">All time: '+all.days+' days · '+all.sets+' sets · '+all.reps.toLocaleString()+' reps'+(all.seconds?' · '+all.seconds+'s timed':'')+'<br>Current streak: '+getStreak()+' days · Best is the highest count in a single set.</p>'+cumulativeStats()+'<button class="backup-btn" id="export-records">Export all records</button><p class="hint" style="margin:8px 0 0">Saved in this browser. Records do not automatically sync across devices.</p></div>';
+  html+='<p class="hint" style="margin:0 0 14px">All time: '+all.days+' days · '+all.sets+' sets · '+all.reps.toLocaleString()+' reps'+(all.seconds?' · '+all.seconds+'s timed':'')+'<br>Current streak: '+getStreak()+' days · Best is the highest count in a single set.</p>'+cumulativeStats()+'<button class="backup-btn" id="export-records">Backup & restore</button><p class="hint" style="margin:8px 0 0">Export or import records, and restore them on another device.</p></div>';
   document.getElementById('stats-content').innerHTML=html;
   document.querySelectorAll('[data-period]').forEach(btn=>btn.onclick=()=>{statsPeriod=btn.dataset.period;statsAnchor=TODAY;renderStats();});
   document.getElementById('period-prev').onclick=()=>shiftPeriod(-1);
   document.getElementById('period-next').onclick=()=>shiftPeriod(1);
-  document.getElementById('export-records').onclick=exportRecords;
+  document.getElementById('export-records').onclick=openBackup;
 }
+
+const backupMetaKey='homets_backup_meta';
+let backupMeta={};try{backupMeta=JSON.parse(localStorage.getItem(backupMetaKey)||'{}')||{};}catch{}
+let pendingRestore=null;
+function nativeBackup(op,extra={}){window.webkit?.messageHandlers?.backupRecords?.postMessage({op,...extra});}
+function backupJSON(){return JSON.stringify({...DATA,version:3,exportedAt:new Date().toISOString()});}
+function saveBackupMeta(){try{localStorage.setItem(backupMetaKey,JSON.stringify(backupMeta));}catch{showToast('Could not save backup preferences.');}}
+function recordCount(data){return Object.values(data.days).reduce((n,day)=>n+Object.values(day.exercises).reduce((m,ex)=>m+ex.sets.filter(set=>set.done).length,0),0);}
+function validateBackup(text){
+  if(typeof text!=='string'||text.length>10*1024*1024)throw Error('Choose a JSON backup smaller than 10 MB.');
+  const data=JSON.parse(text),object=value=>value&&typeof value==='object'&&!Array.isArray(value);
+  const safeKey=key=>/^[a-zA-Z0-9_-]+$/.test(key)&&!['__proto__','prototype','constructor'].includes(key);
+  if(!object(data)||![2,3].includes(data.version)||!object(data.days)||!object(data.settings))throw Error('This is not a supported HOMETS backup.');
+  let sets=0;
+  for(const [date,day] of Object.entries(data.days)){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(new Date(date+'T00:00').getTime())||dateKey(new Date(date+'T00:00'))!==date||!object(day)||!object(day.exercises))throw Error('The backup contains an invalid workout date.');
+    for(const [id,ex] of Object.entries(day.exercises)){
+      if(!safeKey(id)||!object(ex)||!Array.isArray(ex.sets)||ex.sets.length>1000||!Number.isInteger(ex.target)||ex.target<1||ex.target>999)throw Error('The backup contains an invalid exercise.');
+      for(const set of ex.sets){if(!object(set)||typeof set.done!=='boolean'||!Number.isInteger(set.reps)||set.reps<1||set.reps>999)throw Error('The backup contains an invalid set.');if(++sets>100000)throw Error('The backup contains too many sets.');}
+    }
+  }
+  if(!Array.isArray(data.settings.active)||!data.settings.active.length||!data.settings.active.every(safeKey))throw Error('The backup routine is invalid.');
+  if(data._sync){
+    if(!object(data._sync)||!object(data._sync.days)||!object(data._sync.deletedDays)||typeof data._sync.settings!=='string')throw Error('The backup sync information is invalid.');
+    const revision=value=>typeof value==='string'&&/^(\d{13}-[a-z0-9]+)?$/.test(value);
+    if(!revision(data._sync.settings))throw Error('The backup revision is invalid.');
+    for(const [date,items] of Object.entries(data._sync.days)){if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!object(items)||!Object.entries(items).every(([id,r])=>safeKey(id)&&revision(r)))throw Error('The backup revision is invalid.');}
+    for(const [date,r] of Object.entries(data._sync.deletedDays))if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!revision(r))throw Error('The backup deletion is invalid.');
+  }
+  return loadData(JSON.stringify(data));
+}
+function refreshBackup(){
+  document.getElementById('backup-summary').textContent=`${Object.values(DATA.days).filter(day=>Object.values(day.exercises).some(ex=>ex.sets.some(set=>set.done))).length} workout days · ${recordCount(DATA)} saved sets`;
+  document.getElementById('backup-date').textContent='Last exported backup: '+(backupMeta.exportedAt?new Date(backupMeta.exportedAt).toLocaleString():'Never');
+  document.getElementById('restore-previous').hidden=!localStorage.getItem('homets_pre_import');
+}
+function openBackup(){document.getElementById('settings-dialog').close();refreshBackup();document.getElementById('backup-dialog').showModal();}
+function backupExported(){backupMeta.exportedAt=new Date().toISOString();saveBackupMeta();refreshBackup();}
+function receiveBackup(text){
+  try{pendingRestore=validateBackup(text);document.getElementById('restore-summary').textContent=`Replace all current records (${recordCount(DATA)} saved sets) with this backup (${recordCount(pendingRestore)} saved sets)? Routine and preferred reps will also be restored. A pre-import backup will be kept on this device.`;document.getElementById('restore-actions').hidden=false;}
+  catch(error){pendingRestore=null;document.getElementById('restore-actions').hidden=true;showToast(error instanceof SyntaxError?'The file is not valid JSON.':error.message);}
+}
+function confirmRestore(){
+  if(!pendingRestore)return;
+  try{localStorage.setItem('homets_pre_import',backupJSON());}catch{showToast('Not enough storage for a safety backup. No records changed.');return;}
+  DATA=pendingRestore;delete DATA._sync;
+  if(!saveData(DATA)){refreshBackup();return;}
+  pendingRestore=null;document.getElementById('restore-actions').hidden=true;document.getElementById('restore-summary').textContent='Records restored. Your pre-import backup is available below.';
+  editingSet=null;endRest();ensureToday();applyTheme(DATA.settings.theme||'light');updateHeader();switchTab(currentTab);refreshBackup();showToast('Backup restored.');
+}
+document.getElementById('open-backup').onclick=openBackup;
+document.getElementById('backup-close').onclick=()=>document.getElementById('backup-dialog').close();
+document.getElementById('backup-export').onclick=()=>exportRecords();
+document.getElementById('backup-import').onclick=()=>window.webkit?.messageHandlers?.backupRecords?nativeBackup('import'):document.getElementById('backup-file').click();
+document.getElementById('backup-file').onchange=async event=>{const file=event.target.files[0];event.target.value='';if(!file)return;if(file.size>10*1024*1024){showToast('Choose a JSON backup smaller than 10 MB.');return;}try{receiveBackup(await file.text());}catch{showToast('Could not read the backup file.');}};
+document.getElementById('restore-confirm').onclick=confirmRestore;
+document.getElementById('restore-cancel').onclick=()=>{pendingRestore=null;document.getElementById('restore-actions').hidden=true;document.getElementById('restore-summary').textContent='Import cancelled. Records unchanged.';};
+document.getElementById('restore-previous').onclick=()=>receiveBackup(localStorage.getItem('homets_pre_import'));
 
 function updateHeader(){
   const d=new Date();

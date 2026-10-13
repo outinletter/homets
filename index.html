@@ -328,14 +328,15 @@ button:disabled{opacity:.35;cursor:default}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0C121C;--sf:#151E2C;--sf2:#1D293B;--sf3:#2B3950;--bdr:#233047;--bdr2:#34455F;--ac:#70A1FF;--acd:#213354;--acb:#34517D;--t1:#EDF3FF;--t2:#9CACBF;--t3:#8293AD}}
 :root[data-theme=dark]{--bg:#0C121C;--sf:#151E2C;--sf2:#1D293B;--sf3:#2B3950;--bdr:#233047;--bdr2:#34455F;--ac:#70A1FF;--acd:#213354;--acb:#34517D;--t1:#EDF3FF;--t2:#9CACBF;--t3:#8293AD}
 :root[data-theme=light]{--bg:#F5F8F7;--sf:#FFFFFF;--sf2:#F0F1FA;--sf3:#E3E8F5;--bdr:#E4EAE9;--bdr2:#D5DFE3;--ac:#526DB0;--acd:#EEF0FA;--acb:#D9DFF3;--t1:#25394B;--t2:#5D7181;--t3:#728292}
-.hdr{padding:calc(var(--st) + 16px) 20px 12px;border:0;background:var(--bg)}
-.brand{display:flex;align-items:center;gap:10px}
-.brand-mark{width:32px;height:32px;border-radius:10px;background:var(--ac);color:var(--sf);display:grid;place-items:center}
+.hdr{padding:calc(var(--st) + 16px) 20px 12px;border:0;background:var(--bg);flex-wrap:wrap;gap:8px}
+.brand{display:flex;align-items:center;gap:10px;width:100%;min-width:0}
+.brand-copy{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex:1;min-width:0}
+.brand-mark{width:44px;height:44px;flex-shrink:0;border-radius:10px;background:var(--ac);color:var(--sf);display:grid;place-items:center}
 .brand-mark svg{width:22px;height:22px}
 .brand-mark img{width:100%;height:100%;border-radius:10px;display:block}
-.hdr-date{font-size:10px;margin-top:3px;letter-spacing:.3px}
-.hdr-title{font-size:16px;letter-spacing:1.5px;line-height:1}
-.hdr-right{gap:6px}
+.hdr-date{font-size:13px;margin:0;letter-spacing:0;white-space:nowrap}
+.hdr-title{font-size:24px;letter-spacing:1px;line-height:1}
+.hdr-right{gap:6px;margin-left:auto}
 .streak{border:0;background:transparent;padding:4px;color:var(--t2);font-size:11px}
 .icon-btn{background:var(--sf);border:1px solid var(--bdr);border-radius:10px}
 .today-banner{padding:10px 16px 0}
@@ -462,15 +463,15 @@ button:disabled{opacity:.35;cursor:default}
 .history-exercises{font-size:15px}
 .settings-footer p,.settings-head p,.hint{font-size:15px}
 .set-label{grid-column:1/-1}
-.set-active{grid-template-columns:40px minmax(0,1fr) 40px 72px;gap:8px;padding:10px;border-radius:12px}
+.set-active{grid-template-columns:36px minmax(0,1fr) 36px 64px;gap:8px;padding:10px;border-radius:12px}
 .set-active .set-label{grid-column:1/-1;margin-bottom:2px}
-.set-active .stp-num{width:100%;min-width:0;height:40px;padding:0;border-radius:8px;background:var(--sf);font-size:20px;line-height:40px}
+.set-active .stp-num{width:100%;min-width:0;height:36px;padding:0;border-radius:8px;background:var(--sf);font-size:18px;line-height:36px}
 .set-active>button,.set-active>input{box-sizing:border-box;min-width:0}
-.set-active .stp-btn{border-radius:10px;font-size:20px;font-weight:600}
-.set-active .ok-btn{height:40px;min-height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;letter-spacing:0}
-@media(max-width:350px){.set-active{grid-template-columns:40px minmax(0,1fr) 40px 64px;gap:6px;padding:10px}}
-.set-active .stp-btn{width:40px;min-width:40px;height:40px}
-.set-active .ok-btn{white-space:nowrap;width:100%;padding:10px 12px}
+.set-active .stp-btn{border-radius:9px;font-size:18px;font-weight:600}
+.set-active .ok-btn{height:36px;min-height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;letter-spacing:0}
+@media(max-width:350px){.set-active{grid-template-columns:36px minmax(0,1fr) 36px 60px;gap:6px;padding:10px}}
+.set-active .stp-btn{width:36px;min-width:36px;height:36px}
+.set-active .ok-btn{white-space:nowrap;width:100%;padding:8px 10px;font-size:12px}
 .add-set-link,.input-cancel,.set-undo,.edit-actions button{min-height:44px}
 .ok-btn{font-size:13px}
 .row-actions{flex-wrap:wrap}
@@ -480,7 +481,7 @@ button:disabled{opacity:.35;cursor:default}
   <header class="hdr">
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="32" height="32"></span>
-      <div><div class="hdr-title">HOMETS</div><div class="hdr-date" id="hdr-date"></div></div>
+      <div class="brand-copy"><div class="hdr-title">HOMETS</div><div class="hdr-date" id="hdr-date"></div></div>
     </div>
     <div class="hdr-right">
       <div class="streak" id="hdr-streak">

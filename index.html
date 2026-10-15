@@ -533,6 +533,9 @@ button:disabled{opacity:.35;cursor:default}
 
 .hdr{padding-left:24px;padding-right:20px}
 @media(max-width:360px){.hdr-title{font-size:18px}.brand-mark{width:34px;height:34px}.hdr-date{font-size:10px!important}.hdr-right .icon-btn{width:28px;min-width:28px}.brand,.brand-copy{gap:5px}}
+
+/* Initial sheet focus must not look like selected or editable text. */
+#settings-title:focus,#settings-title:focus-visible{outline:none;box-shadow:none}
 </style>
 
 <div id="app">

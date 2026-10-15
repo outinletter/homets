@@ -588,7 +588,7 @@ button:disabled{opacity:.35;cursor:default}
 </div>
 <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
   <div class="settings-shell">
-    <div class="sheet-grab" aria-hidden="true"></div><header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
+    <div class="sheet-grab" aria-hidden="true"></div><header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div></header>
     <div class="device-preferences"><label><span>Language / 언어</span><select id="app-language" aria-label="Language / 언어"><option value="en">English</option><option value="ko">한국어</option></select></label><label><input type="checkbox" id="keep-awake"> Keep screen awake</label><label><input type="checkbox" id="timer-sound"> Rest timer sound</label><small>Hold an exercise heading to reorder. Targets use your latest 3 saved sets.</small></div><div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
     <div id="library-list" class="library-list"></div>
     <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><button class="backup-btn" id="open-backup">Backup & restore</button><p><a href="https://outinletter.github.io/privacy-policy/homets.html" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
@@ -746,7 +746,7 @@ document.getElementById('exercise-search').oninput=renderExerciseLibrary;
   sheet.addEventListener('pointerup',e=>{if(e.pointerType!=='touch')finish(false);});sheet.addEventListener('pointercancel',e=>{if(e.pointerType!=='touch')finish(true);});
   sheet.addEventListener('close',()=>{gesture=null;closing=false;sheet.getAnimations().forEach(a=>a.cancel());sheet.style.removeProperty('transform');sheet.style.removeProperty('transition');});
 })();
-document.getElementById('settings-close').onclick=document.getElementById('settings-cancel').onclick=()=>document.getElementById('settings-dialog').close();
+document.getElementById('settings-cancel').onclick=()=>document.getElementById('settings-dialog').close();
 document.getElementById('settings-apply').onclick=()=>{
   if(!routineDraft.size)return;
   DATA.settings.active=[...routineDraft];

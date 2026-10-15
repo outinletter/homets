@@ -521,6 +521,18 @@ button:disabled{opacity:.35;cursor:default}
 #settings-dialog .library-item{min-height:66px}.library-item>span:last-child{min-width:0}.library-item strong,.library-item small{white-space:normal;overflow:visible;overflow-wrap:anywhere}
 #settings-dialog .library-filters{flex-wrap:wrap;overflow:visible}
 #app-language{margin-left:auto;min-height:40px;border:1px solid var(--bdr2);border-radius:9px;padding:6px 12px;background:var(--sf);color:var(--t1);font-size:15px}
+
+.sheet-grab{height:23px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
+.sheet-grab::after{content:'';width:38px;height:5px;border-radius:9px;background:var(--bdr2)}
+#settings-dialog .settings-head{touch-action:none;user-select:none;-webkit-user-select:none}
+.stats-wrap .chart-card:has(.stats-table){overflow-x:visible;padding:14px 10px}
+.stats-wrap .stats-table{min-width:0;width:100%;table-layout:fixed}
+.stats-wrap .stats-table th,.stats-wrap .stats-table td{padding:11px 3px;font-variant-numeric:tabular-nums;vertical-align:middle}
+.stats-wrap .stats-table th:first-child,.stats-wrap .stats-table td:first-child{width:43%;white-space:normal;overflow-wrap:anywhere}
+.stats-wrap .stats-table th:not(:first-child),.stats-wrap .stats-table td:not(:first-child){width:19%;white-space:nowrap}
+
+.hdr{padding-left:24px;padding-right:20px}
+@media(max-width:360px){.hdr-title{font-size:18px}.brand-mark{width:34px;height:34px}.hdr-date{font-size:10px!important}.hdr-right .icon-btn{width:28px;min-width:28px}.brand,.brand-copy{gap:5px}}
 </style>
 
 <div id="app">
@@ -576,7 +588,7 @@ button:disabled{opacity:.35;cursor:default}
 </div>
 <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
   <div class="settings-shell">
-    <header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
+    <div class="sheet-grab" aria-hidden="true"></div><header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
     <div class="device-preferences"><label><span>Language / 언어</span><select id="app-language" aria-label="Language / 언어"><option value="en">English</option><option value="ko">한국어</option></select></label><label><input type="checkbox" id="keep-awake"> Keep screen awake</label><label><input type="checkbox" id="timer-sound"> Rest timer sound</label><small>Hold an exercise heading to reorder. Targets use your latest 3 saved sets.</small></div><div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
     <div id="library-list" class="library-list"></div>
     <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><button class="backup-btn" id="open-backup">Backup & restore</button><p><a href="https://outinletter.github.io/privacy-policy/homets.html" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
@@ -698,9 +710,42 @@ document.getElementById('settings-btn').onclick=()=>{
   document.getElementById('app-language').value=DATA.settings.language==='ko'?'ko':'en';
   document.getElementById('keep-awake').checked=!!DATA.settings.keepAwake;document.getElementById('timer-sound').checked=DATA.settings.timerSound!==false;
   routineDraft=new Set(DATA.settings.active);libraryFilter='All';document.getElementById('exercise-search').value='';
-  renderExerciseLibrary();document.getElementById('settings-dialog').showModal();
+  renderExerciseLibrary();document.getElementById('settings-dialog').showModal();document.getElementById('settings-dialog').scrollTop=0;
 };
 document.getElementById('exercise-search').oninput=renderExerciseLibrary;
+// Dismiss from the header, or by pulling down at the top of the sheet.
+(function setupSettingsDismiss(){
+  const sheet=document.getElementById('settings-dialog');let gesture=null,closing=false;
+  const excluded=target=>target.closest('input,select,textarea,button,a,summary,label');
+  const begin=(x,y,target)=>{if(!sheet.open||closing||sheet.scrollTop>0||excluded(target))return;gesture={x,y,dy:0,time:performance.now()};};
+  const move=(x,y,event)=>{
+    if(!gesture)return;
+    const dx=x-gesture.x,dy=y-gesture.y;
+    if(!gesture.dy&&(dy< -6||Math.abs(dx)>Math.max(10,Math.abs(dy)))){gesture=null;return;}
+    if(dy<=0&&!gesture.dy)return;
+    if(event.cancelable)event.preventDefault();
+    gesture.dy=Math.max(0,dy);sheet.style.transition='none';sheet.style.transform=`translate3d(0,${gesture.dy}px,0)`;
+  };
+  const finish=cancelled=>{
+    if(!gesture)return;
+    const {dy,time}=gesture;gesture=null;
+    if(!dy)return;
+    const dismiss=!cancelled&&(dy>=88||(dy>36&&dy/Math.max(1,performance.now()-time)>.6));
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(dismiss){
+      closing=true;
+      if(reduced){sheet.close();return;}
+      sheet.animate([{transform:sheet.style.transform},{transform:`translateY(${sheet.offsetHeight+40}px)`}],{duration:180,easing:'ease-in',fill:'forwards'}).finished.then(()=>sheet.close(),()=>sheet.close());
+    }else{sheet.style.transition=reduced?'none':'transform 180ms cubic-bezier(.2,.8,.2,1)';sheet.style.transform='translate3d(0,0,0)';}
+  };
+  sheet.addEventListener('touchstart',e=>{if(e.touches.length===1)begin(e.touches[0].clientX,e.touches[0].clientY,e.target);else finish(true);},{passive:true});
+  sheet.addEventListener('touchmove',e=>{if(e.touches.length===1)move(e.touches[0].clientX,e.touches[0].clientY,e);},{passive:false});
+  sheet.addEventListener('touchend',()=>finish(false));sheet.addEventListener('touchcancel',()=>finish(true));
+  sheet.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||e.button!==0||!e.target.closest('.settings-head,.sheet-grab'))return;begin(e.clientX,e.clientY,e.target);if(gesture)sheet.setPointerCapture(e.pointerId);});
+  sheet.addEventListener('pointermove',e=>{if(e.pointerType!=='touch')move(e.clientX,e.clientY,e);});
+  sheet.addEventListener('pointerup',e=>{if(e.pointerType!=='touch')finish(false);});sheet.addEventListener('pointercancel',e=>{if(e.pointerType!=='touch')finish(true);});
+  sheet.addEventListener('close',()=>{gesture=null;closing=false;sheet.getAnimations().forEach(a=>a.cancel());sheet.style.removeProperty('transform');sheet.style.removeProperty('transition');});
+})();
 document.getElementById('settings-close').onclick=document.getElementById('settings-cancel').onclick=()=>document.getElementById('settings-dialog').close();
 document.getElementById('settings-apply').onclick=()=>{
   if(!routineDraft.size)return;

@@ -18,10 +18,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler, UNUserNotificationCenterDelegate {
     private var webView: WKWebView!
     private var exportURL: URL?
+    private var timerSound: SystemSoundID = 0
     private var restNotificationToken = UUID()
     private let backup = RecordBackup()
     override func viewDidLoad() {
         super.viewDidLoad()
+        if let soundURL = Bundle.main.url(forResource: "timer-double-beep", withExtension: "wav") {
+            AudioServicesCreateSystemSoundID(soundURL as CFURL, &timerSound)
+        }
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.userContentController.add(self, name: "exportRecords")
@@ -71,7 +75,7 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
            message.frameInfo.request.url?.isFileURL == true, let body = message.body as? [String: Any] {
             switch body["op"] as? String {
             case "awake": UIApplication.shared.isIdleTimerDisabled = body["enabled"] as? Bool ?? false
-            case "sound": AudioServicesPlayAlertSound(1005)
+            case "sound": if timerSound != 0 { AudioServicesPlaySystemSound(timerSound) }
             case "cancelTimer":
                 restNotificationToken = UUID()
                 UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["homets-rest"])
@@ -89,7 +93,7 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
                         let content = UNMutableNotificationContent()
                         content.title = "HOMETS"
                         content.body = body["language"] as? String == "ko" ? "휴식이 끝났습니다. 다음 세트를 시작하세요." : "Rest complete. Ready for your next set?"
-                        content.sound = .default
+                        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "timer-double-beep.wav"))
                         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, deadline.timeIntervalSinceNow), repeats: false)
                         center.add(UNNotificationRequest(identifier: "homets-rest", content: content, trigger: trigger))
                     }
@@ -127,6 +131,7 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
         // The web timer plays the foreground alert; notifications cover background/locked operation.
         completionHandler([])
     }
+    deinit { if timerSound != 0 { AudioServicesDisposeSystemSoundID(timerSound) } }
     private func showError(_ message: String) {
         let alert = UIAlertController(title: "HOMETS", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))

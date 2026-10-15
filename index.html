@@ -540,6 +540,9 @@ button:disabled{opacity:.35;cursor:default}
 .saved-set{align-items:stretch;border-radius:7px;overflow:hidden}
 .saved-set .chip-done,.saved-set .set-undo{min-height:30px;height:30px;padding:3px 7px;display:inline-flex;align-items:center;justify-content:center;line-height:1.25}
 .saved-set .chip-done{border-radius:0}
+
+body.reordering-workout,body.reordering-workout *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+[data-reorder],[data-reorder] *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 </style>
 
 <div id="app">
@@ -780,7 +783,7 @@ function prepareSound(){try{audioContext ||= new (window.AudioContext||window.we
 function timerFinished(){
   if(DATA.settings.timerSound===false)return;
   if(window.webkit?.messageHandlers?.devicePreferences){nativeDevice({op:'sound'});return;}
-  try{for(let i=0;i<3;i++){const o=audioContext.createOscillator(),g=audioContext.createGain();o.connect(g);g.connect(audioContext.destination);o.frequency.value=880;g.gain.value=.15;o.start(audioContext.currentTime+i*.3);o.stop(audioContext.currentTime+i*.3+.18);}}catch{}
+  try{for(let i=0;i<2;i++){const o=audioContext.createOscillator(),g=audioContext.createGain(),start=audioContext.currentTime+i*.25;o.connect(g);g.connect(audioContext.destination);o.frequency.value=880;g.gain.setValueAtTime(0,start);g.gain.linearRampToValueAtTime(.15,start+.008);g.gain.setValueAtTime(.15,start+.112);g.gain.linearRampToValueAtTime(0,start+.12);o.start(start);o.stop(start+.12);}}catch{}
 }
 function previousRecord(id){
   for(const k of Object.keys(DATA.days).filter(k=>k<TODAY).sort().reverse()){
@@ -1107,7 +1110,7 @@ function bindReorder(){
       if(cancelled){const parent=row.parentElement;initialOrder.forEach(id=>{const item=parent?.querySelector(`.ex-row[data-id="${id}"]`);if(item)parent.appendChild(item);});}
       else{DATA.settings.active=[...document.querySelectorAll('#today-content .ex-row')].map(el=>el.dataset.id);saveData(DATA);}
       const rect=row.getBoundingClientRect();
-      const done=()=>{ghost?.remove();row.classList.remove('drag-placeholder');reorderInProgress=false;renderToday();};
+      const done=()=>{ghost?.remove();row.classList.remove('drag-placeholder');document.body.classList.remove('reordering-workout');window.getSelection()?.removeAllRanges();reorderInProgress=false;renderToday();};
       if(reduced){done();return;}
       ghost.animate([{transform:ghost.style.transform,boxShadow:'0 20px 48px #132d4040'},{transform:`translate3d(${rect.left}px,${rect.top}px,0) scale(1)`,boxShadow:'0 4px 16px #14254208'}],{duration:180,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'}).finished.then(done,done);
     };
@@ -1116,7 +1119,7 @@ function bindReorder(){
       clear();startX=x=e.clientX;startY=y=e.clientY;pointer=e.pointerId;
       document.addEventListener('pointermove',move,{passive:false});document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);
       timer=setTimeout(()=>{
-        dragging=true;reorderInProgress=true;initialOrder=[...document.querySelectorAll('#today-content .ex-row')].map(r=>r.dataset.id);
+        dragging=true;reorderInProgress=true;document.body.classList.add('reordering-workout');window.getSelection()?.removeAllRanges();initialOrder=[...document.querySelectorAll('#today-content .ex-row')].map(r=>r.dataset.id);
         const rect=row.getBoundingClientRect();offsetX=x-rect.left;offsetY=y-rect.top;
         ghost=row.cloneNode(true);ghost.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));ghost.removeAttribute('data-id');ghost.classList.add('drag-ghost');ghost.setAttribute('aria-hidden','true');ghost.inert=true;
         Object.assign(ghost.style,{width:rect.width+'px',height:rect.height+'px',transform:`translate3d(${rect.left}px,${rect.top}px,0) scale(1)`});

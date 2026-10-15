@@ -498,6 +498,17 @@ button:disabled{opacity:.35;cursor:default}
 .stats-wrap .chart-title{font-size:16px}.stats-wrap .bc-value{font-size:12px;white-space:nowrap}.stats-wrap .bc-lbl{font-size:11px;white-space:nowrap}.stats-wrap .hint{font-size:17px}
 .stats-wrap .chart-card:has(.stats-table){overflow-x:auto;-webkit-overflow-scrolling:touch}.stats-wrap .stats-table{font-size:14px;min-width:420px}.stats-wrap .stats-table th{font-size:13px}.stats-wrap .stats-table th,.stats-wrap .stats-table td{white-space:nowrap}
 .stats-wrap .pr-name{font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stats-wrap .pr-val{font-size:17px;white-space:nowrap}.stats-wrap .pr-unit{font-size:12px}.stats-wrap .muscle-name,.stats-wrap .muscle-pct{font-size:14px;white-space:nowrap}.stats-wrap .cumulative-details summary{font-size:15px}.stats-wrap .backup-btn{font-size:17px}
+
+/* Keep reps, weight and save in a single compact control row. */
+.set-active:has(.weight-field){grid-template-columns:30px minmax(38px,1fr) 30px minmax(58px,1fr) 56px;gap:6px;padding:10px 8px}
+.set-active:has(.weight-field) .stp-btn{width:30px;min-width:30px;height:36px;font-size:18px}
+.set-active:has(.weight-field) .stp-num{font-size:18px}
+.set-active:has(.weight-field) .ok-btn{grid-column:5;grid-row:2;padding:6px;font-size:12px}
+.set-active .weight-field{grid-column:4;grid-row:2;position:relative;display:block;min-width:0}
+.set-active .weight-field input{width:100%;height:36px;min-height:36px;padding:6px 19px 6px 3px;font-size:15px}
+.set-active .weight-field span{position:absolute;right:5px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--t2);pointer-events:none}
+.row-actions{flex-wrap:nowrap;gap:8px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.row-actions>*{flex-shrink:0;white-space:nowrap;font-size:12px}.row-actions .previous-note{margin-left:0}
 </style>
 
 <div id="app">
@@ -963,7 +974,7 @@ function renderToday(){
         <input ${ex.isCardio?'hidden':''} class="stp-num" id="reps-${id}" data-id="${id}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${inputReps}" aria-label="${ex.name} ${ex.isTime?'seconds':'reps'}">
         <button ${ex.isCardio?'hidden':''} class="stp-btn" data-id="${id}" data-action="plus" aria-label="${ex.name} increase reps">+</button>
         <button class="ok-btn" data-id="${id}" aria-label="${ex.name} ${isEditing?'Save edit':'Log set'}">Save</button>
-        ${!ex.isCardio&&exerciseGroup(ex)!=='Bodyweight'?`<label class="weight-field">Weight (kg)<input id="weight-${id}" type="number" inputmode="decimal" min="0" max="2000" step="0.5" placeholder="Optional" value="${isEditing?(exData.sets[inputIdx].weight??''):(exData.nextWeight??weights[0]??'')}"></label>`:''}
+        ${!ex.isCardio&&exerciseGroup(ex)!=='Bodyweight'?`<label class="weight-field"><span aria-hidden="true">kg</span><input aria-label="${ex.name} weight in kilograms" id="weight-${id}" type="number" inputmode="decimal" min="0" max="2000" step="0.5" placeholder="—" value="${isEditing?(exData.sets[inputIdx].weight??''):(exData.nextWeight??weights[0]??'')}"></label>`:''}
         ${isEditing?`<div class="edit-actions"><button data-cancel="${id}">Cancel edit</button></div>`:''}
       </div>`;
     }

@@ -88,7 +88,7 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
                         guard granted, let self, self.restNotificationToken == token else { return }
                         let content = UNMutableNotificationContent()
                         content.title = "HOMETS"
-                        content.body = "Rest complete. Ready for your next set?"
+                        content.body = body["language"] as? String == "ko" ? "휴식이 끝났습니다. 다음 세트를 시작하세요." : "Rest complete. Ready for your next set?"
                         content.sound = .default
                         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, deadline.timeIntervalSinceNow), repeats: false)
                         center.add(UNNotificationRequest(identifier: "homets-rest", content: content, trigger: trigger))

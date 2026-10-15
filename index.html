@@ -514,6 +514,13 @@ button:disabled{opacity:.35;cursor:default}
 .ex-table{position:relative}.ex-row.drag-placeholder{visibility:hidden;pointer-events:none}
 .ex-row.drag-ghost{position:fixed;left:0;top:0;margin:0;z-index:1000;pointer-events:none;opacity:1;transform-origin:50% 15%;will-change:transform;box-shadow:0 20px 48px #132d4040,0 4px 12px #132d4020;outline:1px solid var(--acb);transition:box-shadow 180ms ease;contain:layout style}
 @media(prefers-reduced-motion:reduce){.ex-row.drag-ghost{transition:none}}
+
+#settings-dialog{overflow-y:auto;overscroll-behavior:contain}
+#settings-dialog .settings-shell{display:block;max-height:none;overflow:visible}
+#settings-dialog .library-list{display:block;overflow:visible;flex:none;max-height:none;height:auto;min-height:0;overscroll-behavior:auto}
+#settings-dialog .library-item{min-height:66px}.library-item>span:last-child{min-width:0}.library-item strong,.library-item small{white-space:normal;overflow:visible;overflow-wrap:anywhere}
+#settings-dialog .library-filters{flex-wrap:wrap;overflow:visible}
+#app-language{margin-left:auto;min-height:40px;border:1px solid var(--bdr2);border-radius:9px;padding:6px 12px;background:var(--sf);color:var(--t1);font-size:15px}
 </style>
 
 <div id="app">
@@ -570,7 +577,7 @@ button:disabled{opacity:.35;cursor:default}
 <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
   <div class="settings-shell">
     <header class="settings-head"><div><h2 id="settings-title">Your routine</h2><p>Choose the exercises you want to log.</p></div><button class="icon-btn" id="settings-close" aria-label="Close settings">×</button></header>
-    <div class="device-preferences"><label><input type="checkbox" id="keep-awake"> Keep screen awake</label><label><input type="checkbox" id="timer-sound"> Rest timer sound</label><small>Hold an exercise heading to reorder. Targets use your latest 3 saved sets.</small></div><div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
+    <div class="device-preferences"><label><span>Language / 언어</span><select id="app-language" aria-label="Language / 언어"><option value="en">English</option><option value="ko">한국어</option></select></label><label><input type="checkbox" id="keep-awake"> Keep screen awake</label><label><input type="checkbox" id="timer-sound"> Rest timer sound</label><small>Hold an exercise heading to reorder. Targets use your latest 3 saved sets.</small></div><div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
     <div id="library-list" class="library-list"></div>
     <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><button class="backup-btn" id="open-backup">Backup & restore</button><p><a href="https://outinletter.github.io/privacy-policy/homets.html" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
   </div>
@@ -629,7 +636,7 @@ function exerciseName(id){return EX_MAP[id]?.name||({pushup:'Push-ups',squat:'Sq
 
 function dateKey(d=new Date()){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function prevDayKey(k){const d=new Date(k+'T00:00');d.setDate(d.getDate()-1);return dateKey(d)}
-function formatDateKR(k){return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',weekday:'short'}).format(new Date(k+'T00:00'));}
+function formatDateKR(k){return new Intl.DateTimeFormat(DATA.settings.language==='ko'?'ko-KR':'en-US',{month:'short',day:'numeric',weekday:'short'}).format(new Date(k+'T00:00'));}
 function formatMonthDay(k){const d=new Date(k+'T00:00');const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return{m:m[d.getMonth()],d:d.getDate()}}
 
 function validExtraFields(set){return !!set&&['weight','distanceKm','durationSeconds'].every(key=>set[key]===undefined||(Number.isFinite(set[key])&&set[key]>=0&&set[key]<=(key==='durationSeconds'?86400:key==='weight'?2000:999)));}
@@ -673,7 +680,7 @@ let editingSet=null;
 let routineDraft=new Set(),libraryFilter='All';
 function renderExerciseLibrary(){
   const query=document.getElementById('exercise-search').value.trim().toLowerCase();
-  const items=EXERCISES.filter(ex=>(libraryFilter==='All'||exerciseGroup(ex)===libraryFilter)&&[ex.name,...ex.tags,exerciseGroup(ex)].join(' ').toLowerCase().includes(query));
+  const items=EXERCISES.filter(ex=>(libraryFilter==='All'||exerciseGroup(ex)===libraryFilter)&&[ex.name,...ex.tags,exerciseGroup(ex),translateText(ex.name),...ex.tags.map(translateText)].join(' ').toLowerCase().includes(query));
   document.getElementById('library-filters').innerHTML=['All','Machines','Bodyweight','Free weights','Cardio'].map(group=>`<button data-group="${group}" aria-pressed="${libraryFilter===group}">${group}</button>`).join('');
   document.getElementById('library-list').innerHTML=items.length?items.map(ex=>`<label class="library-item"><input type="checkbox" data-ex="${ex.id}" ${routineDraft.has(ex.id)?'checked':''}><span class="ex-ico">${exerciseIcon()}</span><span><strong>${ex.name}</strong><small>${exerciseGroup(ex)} · ${ex.tags.join(' / ')} · ${ex.isCardio?'Distance (km) / time (min)':preferredReps(ex.id)+(ex.isTime?'s':' reps')+' per set'}</small></span></label>`).join(''):'<p class="empty-msg">No exercises found. Try another search.</p>';
   document.querySelectorAll('[data-group]').forEach(btn=>btn.onclick=()=>{libraryFilter=btn.dataset.group;renderExerciseLibrary();});
@@ -688,6 +695,7 @@ function updateRoutineCount(){
   document.getElementById('settings-apply').disabled=routineDraft.size===0;
 }
 document.getElementById('settings-btn').onclick=()=>{
+  document.getElementById('app-language').value=DATA.settings.language==='ko'?'ko':'en';
   document.getElementById('keep-awake').checked=!!DATA.settings.keepAwake;document.getElementById('timer-sound').checked=DATA.settings.timerSound!==false;
   routineDraft=new Set(DATA.settings.active);libraryFilter='All';document.getElementById('exercise-search').value='';
   renderExerciseLibrary();document.getElementById('settings-dialog').showModal();
@@ -704,7 +712,7 @@ document.getElementById('settings-apply').onclick=()=>{
   applyDevicePreferences();document.getElementById('settings-dialog').close();switchTab(currentTab);showToast('Routine updated.');
 };
 
-function nativeDevice(body){window.webkit?.messageHandlers?.devicePreferences?.postMessage(body);}
+function nativeDevice(body){window.webkit?.messageHandlers?.devicePreferences?.postMessage({...body,language:DATA.settings.language||'en'});}
 function applyDevicePreferences(){nativeDevice({op:'awake',enabled:!!DATA.settings.keepAwake});}
 function recentSets(id,limit=3){
   const items=[];for(const key of Object.keys(DATA.days).filter(k=>k<=TODAY)){
@@ -1275,7 +1283,7 @@ function renderStats(){
   const previousRange=periodRange(dateKey(prev));
   const previous=periodSummary(previousRange.start,previousRange.end);
   const diff=summary.reps-previous.reps;
-  const label=statsPeriod==='month'?new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'}).format(new Date(range.start+'T00:00')):statsPeriod==='day'?formatDateKR(range.start):formatDateKR(range.start)+' – '+formatDateKR(range.end);
+  const label=statsPeriod==='month'?new Intl.DateTimeFormat(DATA.settings.language==='ko'?'ko-KR':'en-US',{month:'long',year:'numeric'}).format(new Date(range.start+'T00:00')):statsPeriod==='day'?formatDateKR(range.start):formatDateKR(range.start)+' – '+formatDateKR(range.end);
   const buckets=[];
   if(statsPeriod!=='day'){
     const d=new Date(range.start+'T00:00');
@@ -1369,14 +1377,92 @@ document.getElementById('restore-confirm').onclick=confirmRestore;
 document.getElementById('restore-cancel').onclick=()=>{pendingRestore=null;document.getElementById('restore-actions').hidden=true;document.getElementById('restore-summary').textContent='Import cancelled. Records unchanged.';};
 document.getElementById('restore-previous').onclick=()=>receiveBackup(localStorage.getItem('homets_pre_import'));
 
+
+const KOREAN={
+'Your routine':'환경설정 · 운동 루틴','Choose the exercises you want to log.':'기록할 운동을 모두 확인하고 선택하세요.',
+'Keep screen awake':'화면 자동 꺼짐 방지','Rest timer sound':'휴식 종료 소리 알림',
+'Hold an exercise heading to reorder. Targets use your latest 3 saved sets.':'운동 제목을 길게 눌러 순서를 바꾸세요. 목표 횟수는 최근 3세트의 평균입니다.',
+'Search exercises or muscle groups':'운동 또는 근육 검색','Search exercises':'운동 검색','Exercise category':'운동 분류',
+'Changes apply to today and future workouts. Existing records stay saved.':'변경 사항은 오늘과 이후 운동에 적용되며 기존 기록은 유지됩니다.',
+'Apply routine':'루틴 적용','Backup & restore':'백업 및 복원','Privacy Policy':'개인정보 처리방침','Cancel':'취소','All':'전체',
+'Machines':'운동기구','Bodyweight':'맨몸 운동','Free weights':'프리웨이트','Cardio':'유산소',
+'Workout':'운동','History':'기록','Stats':'통계','Settings':'환경설정','Switch theme':'테마 변경','Close settings':'설정 닫기',
+'Today’s workout':'오늘의 운동','READY TO TRAIN':'운동 준비 완료','SESSION IN PROGRESS':'운동 진행 중','SESSION COMPLETE':'운동 완료','COMPLETE':'완료',
+'Exercises done':'완료 운동','Sets logged':'저장 세트','Total reps':'총 반복 횟수','Sets per exercise':'운동별 세트 수','Logged sets stay saved.':'저장한 세트는 유지됩니다.',
+'Adjust reps, tap Save. Each exercise remembers your latest input or saved reps.':'횟수를 조절한 후 저장하세요. 운동별 최근 입력 또는 저장 횟수가 유지됩니다.',
+'EXERCISE LOG':'운동 목록','REP TARGET':'목표 횟수','SECONDS':'초','TREADMILL':'트레드밀','Save':'저장','Add set':'세트 추가','Remove set':'세트 삭제','Reset reps':'횟수 초기화','Reset records':'기록 초기화','Undo':'취소','Cancel edit':'수정 취소',
+'Recent weights:':'최근 무게:','No saved weights yet':'저장한 무게 없음','Workout complete!':'오늘 운동을 완료했어요!','Customize your routine using the Settings button above.':'상단 환경설정에서 운동 루틴을 변경할 수 있습니다.',
+'WORKOUT LOG':'운동 기록','No workouts yet. Start logging today!':'아직 운동 기록이 없습니다. 오늘 운동을 기록해 보세요!',
+'Day':'일간','Week':'주간','Month':'월간','Previous period':'이전 기간','Next period':'다음 기간','Statistics period':'통계 기간','Days trained':'운동 일수','Workout days':'운동 일수','Exercises logged':'기록 운동','Exercises':'운동 종류',
+'Daily reps':'일별 반복 횟수','By date range reps':'기간별 반복 횟수','Exercise breakdown':'운동별 통계','Exercise':'운동','Sets':'세트','Total':'합계','Best':'최고',
+'All-time bests & muscle groups':'전체 최고 기록 및 근육별 통계','Muscle group reps · Groups may overlap':'근육별 반복 횟수 · 중복 집계 가능','No record':'기록 없음','No exercises found. Try another search.':'검색 결과가 없습니다. 다른 운동을 검색해 보세요.',
+'Rest timer':'휴식 타이머','Skip rest':'휴식 종료','+30s':'+30초','Distance (km)':'거리 (km)','Time (min)':'시간 (분)','Distance & time':'거리 및 시간','Distance (km) / time (min)':'거리 (km) / 시간 (분)',
+'Shoulder Press':'숄더 프레스','Lat Pulldown':'랫 풀다운','Rear Delt Machine':'리어 델트 머신','Seated Leg Extension':'시티드 레그 익스텐션','Leg Curl':'레그 컬','Leg Press':'레그 프레스','Arm Curl Machine':'암 컬 머신','Treadmill':'트레드밀',
+'Push-ups':'푸시업','Squats':'스쿼트','Lunges':'런지','Plank':'플랭크','Burpees':'버피','Mountain Climbers':'마운틴 클라이머','Triceps Dips':'트라이셉스 딥스','Leg Raises':'레그 레이즈','Crunches':'크런치','Glute Bridge':'글루트 브리지','Jumping Jacks':'점핑 잭','Inchworms':'인치웜','Bench Press':'벤치 프레스','Dumbbell Row':'덤벨 로우','Deadlift':'데드리프트','Lateral Raises':'레터럴 레이즈','Calf Raises':'카프 레이즈',
+'Shoulders':'어깨','Triceps':'삼두','Back':'등','Biceps':'이두','Quads':'대퇴사두','Thighs':'허벅지','Hamstrings':'햄스트링','Lower body':'하체','Glutes':'둔근','Chest':'가슴','Legs':'다리','Core':'코어','Full body':'전신','Calves':'종아리','Posterior chain':'후면 근육',
+'Export JSON backup':'JSON 백업 내보내기','Import JSON backup':'JSON 백업 가져오기','Restore pre-import backup':'가져오기 전 백업 복원','Replace records':'기록 교체','Reset exercise records?':'운동 기록을 초기화할까요?',
+"Only today's records for this exercise are cleared. Past workouts and preferred reps stay saved.":'이 운동의 오늘 기록만 초기화합니다. 과거 기록과 선호 횟수는 유지됩니다.',
+'Keep your backup in Files or iCloud Drive to restore it on another device.':'다른 기기에서 복원할 수 있도록 파일 또는 iCloud Drive에 백업을 보관하세요.',
+'Export or import records, and restore them on another device.':'기록을 내보내거나 가져와 다른 기기에서도 복원하세요.',
+'Enter a whole number from 1 to 999.':'1~999 사이의 정수를 입력하세요.','Enter a weight from 0 to 2000 kg.':'0~2000kg 사이의 무게를 입력하세요.','Enter distance (0–999 km) and time (0.1–1440 min).':'거리(0~999km)와 시간(0.1~1440분)을 입력하세요.',
+'Routine updated.':'루틴을 변경했습니다.','Set save undone.':'세트 저장을 취소했습니다.','Input reset to your target.':'입력값을 목표 횟수로 초기화했습니다.','Set added.':'세트를 추가했습니다.','Unlogged set removed. Saved records stay unchanged.':'저장하지 않은 세트를 삭제했습니다. 기존 기록은 유지됩니다.',
+'Drag to reorder your routine.':'드래그하여 운동 순서를 변경하세요.',"Today's exercise records reset.":'오늘 운동 기록을 초기화했습니다.','Reset undone.':'초기화를 취소했습니다.','Edit undone.':'수정을 취소했습니다.','Backup restored.':'백업을 복원했습니다.'
+};
+const languageTextSources=new WeakMap(),languageAttributeSources=new WeakMap();
+const translationCache=new Map();
+const koreanPairs=Object.entries(KOREAN).sort((a,b)=>b[0].length-a[0].length);
+function translateText(source){
+  if(DATA.settings.language!=='ko')return source;
+  if(KOREAN[source])return KOREAN[source];
+  if(translationCache.has(source))return translationCache.get(source);
+  let text=source;
+  for(const [en,ko] of koreanPairs){
+    const escaped=en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    text=text.replace(new RegExp('(?<![A-Za-z])'+escaped+'(?![A-Za-z])','g'),ko);
+  }
+  text=text.replace(/(\d+) selected · (\d+) available/g,'$1개 선택 · 전체 $2개')
+    .replace(/(\d+) exercises · (\d+) planned sets/g,'운동 $1개 · 예정 $2세트')
+    .replace(/(\d+) exercises/g,'운동 $1개').replace(/(\d+) \/ (\d+) saved/g,'$1 / $2 저장')
+    .replace(/(?:Edit|Set) (\d+) \/ (\d+)/g,'$1 / $2세트')
+    .replace(/Set (\d+)/g,'$1세트').replace(/Last best /g,'최근 최고 ')
+    .replace(/Done · /g,'완료 · ').replace(/(\d+) sets/g,'$1세트').replace(/(\d+) reps/g,'$1회')
+    .replace(/(\d+(?:\.\d+)?) min/g,'$1분').replace(/(\d+)s\b/g,'$1초')
+    .replace(/ per set/g,' / 세트').replace(/saved/g,'저장됨').replace(/updated/g,'수정됨')
+    .replace(/All time:/g,'전체 누적:').replace(/Current streak:/g,'연속 운동:')
+    .replace(/(\d+) days/g,'$1일').replace(/vs\. previous/g,'이전 기간 대비').replace(/Current period is in progress\./g,'현재 기간은 진행 중입니다.')
+    .replace(/Timed exercises this period:/g,'이번 기간 시간 운동:').replace(/Best is the highest count in a single set\./g,'최고는 한 세트의 최대 기록입니다.')
+    .replace(/Last exported backup: /g,'최근 백업 내보내기: ').replace(/Never/g,'없음').replace(/workout days/g,'운동 일수').replace(/saved sets/g,'저장 세트');
+  if(translationCache.size>2000)translationCache.clear();translationCache.set(source,text);return text;
+}
+function localizeUI(){
+  document.documentElement.lang=DATA.settings.language==='ko'?'ko':'en';
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement?.closest('script,style,textarea,option')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  while(walker.nextNode()){
+    const node=walker.currentNode,previous=languageTextSources.get(node);
+    const source=previous&&(node.nodeValue===previous.output||node.nodeValue===previous.source)?previous.source:node.nodeValue;
+    const output=translateText(source);languageTextSources.set(node,{source,output});if(node.nodeValue!==output)node.nodeValue=output;
+  }
+  document.querySelectorAll('[aria-label],[placeholder],[title]').forEach(el=>{
+    const saved=languageAttributeSources.get(el)||{};
+    for(const name of ['aria-label','placeholder','title']){if(!el.hasAttribute(name))continue;const current=el.getAttribute(name),old=saved[name],source=old&&(current===old.output||current===old.source)?old.source:current;const output=translateText(source);saved[name]={source,output};if(current!==output)el.setAttribute(name,output);}
+    languageAttributeSources.set(el,saved);
+  });
+}
+document.getElementById('app-language').onchange=e=>{
+  DATA.settings.language=e.target.value==='ko'?'ko':'en';if(!saveData(DATA)){e.target.value=DATA.settings.language||'en';return;}
+  updateHeader();switchTab(currentTab);renderExerciseLibrary();localizeUI();
+};
+let localizationQueued=false;
+new MutationObserver(()=>{if(localizationQueued)return;localizationQueued=true;queueMicrotask(()=>{localizationQueued=false;localizeUI();});}).observe(document.getElementById('app'),{childList:true,subtree:true,characterData:true});
+new MutationObserver(()=>{localizeUI();}).observe(document.getElementById('library-list'),{childList:true,subtree:true});
 function updateHeader(){
   const d=new Date();
-  document.getElementById('hdr-date').textContent=new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',weekday:'long'}).format(d);
+  document.getElementById('hdr-date').textContent=new Intl.DateTimeFormat(DATA.settings.language==='ko'?'ko-KR':'en-US',{month:'short',day:'numeric',weekday:'long'}).format(d);
   document.getElementById('streak-num').textContent=getStreak();
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab));
-applyTheme(DATA.settings.theme||'light');applyDevicePreferences();updateHeader();ensureToday();renderToday();
+applyTheme(DATA.settings.theme||'light');applyDevicePreferences();updateHeader();ensureToday();renderToday();localizeUI();
 function syncToday(){
   const today=dateKey();if(today===TODAY)return false;
   document.querySelectorAll('.toast').forEach(el=>el.remove());

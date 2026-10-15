@@ -1,5 +1,7 @@
 import UIKit
 import WebKit
+import AudioToolbox
+import UserNotifications
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -13,9 +15,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
+final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler, UNUserNotificationCenterDelegate {
     private var webView: WKWebView!
     private var exportURL: URL?
+    private var restNotificationToken = UUID()
     private let backup = RecordBackup()
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,6 +26,8 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
         configuration.websiteDataStore = .default()
         configuration.userContentController.add(self, name: "exportRecords")
         configuration.userContentController.add(self, name: "backupRecords")
+        configuration.userContentController.add(self, name: "devicePreferences")
+        UNUserNotificationCenter.current().delegate = self
         configuration.userContentController.addUserScript(WKUserScript(source: """
             window.exportRecords = function() {
                 window.webkit.messageHandlers.exportRecords.postMessage(backupJSON());
@@ -62,6 +67,37 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
         webView.evaluateJavaScript("refreshBackup();", completionHandler: nil)
     }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "devicePreferences", message.frameInfo.isMainFrame,
+           message.frameInfo.request.url?.isFileURL == true, let body = message.body as? [String: Any] {
+            switch body["op"] as? String {
+            case "awake": UIApplication.shared.isIdleTimerDisabled = body["enabled"] as? Bool ?? false
+            case "sound": AudioServicesPlayAlertSound(1005)
+            case "cancelTimer":
+                restNotificationToken = UUID()
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["homets-rest"])
+            case "timer":
+                restNotificationToken = UUID()
+                let token = restNotificationToken
+                let center = UNUserNotificationCenter.current()
+                center.removePendingNotificationRequests(withIdentifiers: ["homets-rest"])
+                guard let seconds = body["seconds"] as? Double, seconds > 0, seconds <= 86400,
+                      body["sound"] as? Bool != false else { return }
+                let deadline = Date().addingTimeInterval(seconds)
+                center.requestAuthorization(options: [.alert, .sound]) { [weak self] granted, _ in
+                    DispatchQueue.main.async {
+                        guard granted, let self, self.restNotificationToken == token else { return }
+                        let content = UNMutableNotificationContent()
+                        content.title = "HOMETS"
+                        content.body = "Rest complete. Ready for your next set?"
+                        content.sound = .default
+                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, deadline.timeIntervalSinceNow), repeats: false)
+                        center.add(UNNotificationRequest(identifier: "homets-rest", content: content, trigger: trigger))
+                    }
+                }
+            default: break
+            }
+            return
+        }
         if message.name == "backupRecords", message.frameInfo.isMainFrame, message.frameInfo.request.url?.isFileURL == true,
            let body = message.body as? [String: Any] { backup.handle(body); return }
         guard message.name == "exportRecords", message.frameInfo.isMainFrame,
@@ -85,6 +121,11 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
             }
             present(share, animated: true)
         } catch { showError("Could not export your records. Please try again.") }
+    }
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // The web timer plays the foreground alert; notifications cover background/locked operation.
+        completionHandler([])
     }
     private func showError(_ message: String) {
         let alert = UIAlertController(title: "HOMETS", message: message, preferredStyle: .alert)

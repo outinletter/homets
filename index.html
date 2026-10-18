@@ -543,6 +543,9 @@ button:disabled{opacity:.35;cursor:default}
 
 body.reordering-workout,body.reordering-workout *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 [data-reorder],[data-reorder] *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#custom-exercise-form label{display:grid;gap:6px;min-width:0}
+#custom-exercise-form input,#custom-exercise-form select{box-sizing:border-box;width:100%;min-width:0;height:40px;padding:8px 10px;border:1px solid var(--bdr);border-radius:10px;background:var(--bg);color:var(--t1);font:inherit}
+#custom-exercise-form button,#notification-settings{min-height:40px;padding:8px 12px;border:1px solid var(--bdr);border-radius:10px;color:var(--ac);background:transparent;font:inherit}
 </style>
 
 <div id="app">
@@ -600,6 +603,8 @@ body.reordering-workout,body.reordering-workout *{-webkit-user-select:none!impor
   <div class="settings-shell">
     <div class="sheet-grab" aria-hidden="true"></div><header class="settings-head"><div><h2 id="settings-title" tabindex="-1" autofocus>Your routine</h2><p>Choose the exercises you want to log.</p></div></header>
     <div class="device-preferences"><label><span>Language / 언어</span><select id="app-language" aria-label="Language / 언어"><option value="en">English</option><option value="ko">한국어</option></select></label><label><input type="checkbox" id="keep-awake"> Keep screen awake</label><label><input type="checkbox" id="timer-sound"> Rest timer sound</label><small>Hold an exercise heading to reorder. Targets use your latest 3 saved sets.</small></div><div class="library-tools"><input type="search" id="exercise-search" class="library-search" placeholder="Search exercises or muscle groups" aria-label="Search exercises"><div id="library-filters" class="library-filters" role="group" aria-label="Exercise category"></div></div>
+    <div class="device-preferences"><label><input type="checkbox" id="rep-haptics"> 횟수 버튼 진동 / Rep haptics</label><small>화면이 꺼져 있어도 휴식 알림을 받으려면 iPhone 설정에서 HOMETS 알림과 사운드를 허용하세요.</small><button type="button" id="notification-settings">알림 설정 / Notification settings</button></div>
+    <form id="custom-exercise-form" class="device-preferences"><label>운동 직접 추가 / Add exercise <input id="custom-exercise-name" maxlength="60" placeholder="운동 이름 / Exercise name" required></label><label>기록 방식 / Tracking <select id="custom-exercise-type"><option value="reps">횟수 / Reps</option><option value="time">시간(초) / Seconds</option><option value="cardio">거리·시간 / Distance and time</option></select></label><button type="submit">추가 / Add</button></form>
     <div id="library-list" class="library-list"></div>
     <footer class="settings-footer"><div class="settings-count" id="settings-count" aria-live="polite"></div><p>Changes apply to today and future workouts. Existing records stay saved.</p><button class="backup-btn" id="open-backup">Backup & restore</button><p><a href="https://outinletter.github.io/privacy-policy/homets.html" target="_blank" rel="noopener noreferrer" style="color:var(--ac)">Privacy Policy</a></p><div class="settings-buttons"><button id="settings-cancel">Cancel</button><button class="apply" id="settings-apply">Apply routine</button></div></footer>
   </div>
@@ -652,6 +657,10 @@ const EXERCISES = [
 ];
 const EX_MAP = Object.fromEntries(EXERCISES.map(e=>[e.id,e]));
 const DEFAULT_ACTIVE = EXERCISES.filter(ex=>!ex.isCardio).slice(0,7).map(e=>e.id);
+function validCustomExercise(ex){return ex&&/^custom_[a-z0-9-]{1,80}$/.test(ex.id)&&typeof ex.name==='string'&&ex.name.trim().length>0&&ex.name.length<=60&&!/[<>&"']/.test(ex.name)&&['reps','time','cardio'].includes(ex.type);}
+function registerCustomExercises(items){
+  for(const ex of items){if(!validCustomExercise(ex))continue;const item={id:ex.id,name:ex.name.trim(),group:'Bodyweight',tags:[],muscles:[],def:ex.type==='reps'?12:ex.type==='time'?30:1,isTime:ex.type!=='reps',isCardio:ex.type==='cardio'};const index=EXERCISES.findIndex(e=>e.id===ex.id);if(index<0)EXERCISES.push(item);else EXERCISES[index]=item;EX_MAP[ex.id]=item;}
+}
 function exerciseGroup(ex){return ex.group||'Machines';}
 function exerciseIcon(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 12h10M4 7h3v10H4zM17 7h3v10h-3zM2 10v4M22 10v4"/></svg>';}
 function exerciseName(id){return EX_MAP[id]?.name||({pushup:'Push-ups',squat:'Squats',lunge:'Lunges',plank:'Plank',burpee:'Burpees',mountain:'Mountain Climbers',dip:'Triceps Dips',legraise:'Leg Raises',crunch:'Crunches',bridge:'Glute Bridge',jumpjack:'Jumping Jacks',inchworm:'Inchworms'}[id])||'Previous Exercise';}
@@ -666,6 +675,8 @@ function loadData(raw){
   try{
     const d=JSON.parse(raw??localStorage.getItem('homefit_v2')??'{}');
     if(!d||typeof d!=='object'||Array.isArray(d))return{};
+    d.customExercises=Array.isArray(d.customExercises)?d.customExercises.filter(validCustomExercise).slice(0,100):[];
+    registerCustomExercises(d.customExercises);
     if(!d.days||typeof d.days!=='object'||Array.isArray(d.days))d.days={};
     for(const [key,day] of Object.entries(d.days)){
       if((!/^\d{4}-\d{2}-\d{2}$/.test(key)||!Number.isFinite(new Date(key+'T00:00').getTime())||dateKey(new Date(key+'T00:00'))!==key)||!day||!day.exercises||typeof day.exercises!=='object'||Array.isArray(day.exercises)){delete d.days[key];continue;}
@@ -697,6 +708,14 @@ if(!DATA.settings) DATA.settings={sets:3,restTime:60,active:[...DEFAULT_ACTIVE]}
 if(!DATA.settings.active) DATA.settings.active=[...DEFAULT_ACTIVE];
 if(!DATA.settings.reps) DATA.settings.reps={};
 let savedSnapshot=JSON.stringify(DATA);
+document.getElementById('custom-exercise-form').onsubmit=event=>{
+  event.preventDefault();const input=document.getElementById('custom-exercise-name');const name=input.value.trim();
+  if(!name||/[<>&"']/.test(name)){showToast('운동 이름에 < > & 따옴표는 사용할 수 없습니다.');return;}
+  if((DATA.customExercises||[]).length>=100){showToast('직접 추가한 운동은 최대 100개입니다.');return;}
+  const ex={id:'custom_'+crypto.randomUUID(),name,type:document.getElementById('custom-exercise-type').value};
+  DATA.customExercises=[...(DATA.customExercises||[]),ex];if(!saveData(DATA))return;registerCustomExercises([ex]);routineDraft.add(ex.id);input.value='';libraryFilter='All';document.getElementById('exercise-search').value='';renderExerciseLibrary();
+};
+document.getElementById('notification-settings').onclick=()=>nativeDevice({op:'notificationSettings'});
 let TODAY=dateKey();
 let editingSet=null;
 let routineDraft=new Set(),libraryFilter='All';
@@ -718,7 +737,7 @@ function updateRoutineCount(){
 }
 document.getElementById('settings-btn').onclick=()=>{
   document.getElementById('app-language').value=DATA.settings.language==='ko'?'ko':'en';
-  document.getElementById('keep-awake').checked=!!DATA.settings.keepAwake;document.getElementById('timer-sound').checked=DATA.settings.timerSound!==false;
+  document.getElementById('keep-awake').checked=!!DATA.settings.keepAwake;document.getElementById('timer-sound').checked=DATA.settings.timerSound!==false;document.getElementById('rep-haptics').checked=DATA.settings.repHaptics!==false;
   routineDraft=new Set(DATA.settings.active);libraryFilter='All';document.getElementById('exercise-search').value='';
   renderExerciseLibrary();document.getElementById('settings-dialog').showModal();document.getElementById('settings-title').focus({preventScroll:true});document.getElementById('settings-dialog').scrollTop=0;
 };
@@ -760,7 +779,7 @@ document.getElementById('settings-cancel').onclick=()=>document.getElementById('
 document.getElementById('settings-apply').onclick=()=>{
   if(!routineDraft.size)return;
   DATA.settings.active=[...routineDraft];
-  DATA.settings.keepAwake=document.getElementById('keep-awake').checked;DATA.settings.timerSound=document.getElementById('timer-sound').checked;
+  DATA.settings.keepAwake=document.getElementById('keep-awake').checked;DATA.settings.timerSound=document.getElementById('timer-sound').checked;DATA.settings.repHaptics=document.getElementById('rep-haptics').checked;
   editingSet=null;ensureToday();
   if(!DATA.settings.active.every(id=>DATA.days[TODAY].exercises[id].sets.every(s=>s.done)))DATA.days[TODAY].endTime=null;
   if(!saveData(DATA)){switchTab(currentTab);return;}
@@ -769,6 +788,7 @@ document.getElementById('settings-apply').onclick=()=>{
 
 function nativeDevice(body){window.webkit?.messageHandlers?.devicePreferences?.postMessage({...body,language:DATA.settings.language||'en'});}
 function applyDevicePreferences(){nativeDevice({op:'awake',enabled:!!DATA.settings.keepAwake});}
+function repHaptic(){if(DATA.settings.repHaptics!==false)nativeDevice({op:'haptic'});}
 function recentSets(id,limit=3){
   const items=[];for(const key of Object.keys(DATA.days).filter(k=>k<=TODAY)){
     (DATA.days[key].exercises?.[id]?.sets||[]).forEach((set,i)=>{if(set.done)items.push({set,time:Number.isFinite(set.loggedAt)?set.loggedAt:new Date(key+'T00:00').getTime()+i});});
@@ -890,15 +910,15 @@ function startRest(duration){
     numEl.className='rest-num'+(remaining<=10?' urgent':'');
     progEl.style.width=`${(remaining/total)*100}%`;
     progEl.className='rest-prog'+(remaining<=10?' urgent':'');
-    if(remaining<=0){timerFinished();endRest();return;}
+    if(remaining<=0){if(!document.hidden)timerFinished();endRest(false);return;}
   }
   tick();
   restState={iv:setInterval(tick,1000)};
   document.getElementById('rest-add-btn').onclick=()=>{deadline+=30000;total+=30;nativeDevice({op:'timer',seconds:Math.ceil((deadline-Date.now())/1000),sound:DATA.settings.timerSound!==false});tick();};
-  document.getElementById('rest-skip-btn').onclick=endRest;
+  document.getElementById('rest-skip-btn').onclick=()=>endRest();
 }
-function endRest(){
-  nativeDevice({op:'cancelTimer'});
+function endRest(cancelNotification=true){
+  if(cancelNotification)nativeDevice({op:'cancelTimer'});
   if(restState){clearInterval(restState.iv);restState=null;}
   document.getElementById('rest-overlay').style.display='none';
   document.body.classList.remove('resting');
@@ -1136,7 +1156,7 @@ function bindTodayEvents(){
   document.getElementById('sets-plus').onclick=()=>adjustSets(1);
   document.querySelectorAll('.stp-btn').forEach(btn=>{
     btn.onclick=()=>{
-      const id=btn.dataset.id,action=btn.dataset.action;
+      repHaptic();const id=btn.dataset.id,action=btn.dataset.action;
       const ex=DATA.days[TODAY].exercises[id];
       const input=document.getElementById(`reps-${id}`);
       const cur=Number(input.value)||ex.target;
@@ -1146,6 +1166,7 @@ function bindTodayEvents(){
     };
   });
   document.querySelectorAll('.stp-num').forEach(input=>{
+    input.onclick=repHaptic;
     input.onchange=()=>{
       const n=Number(input.value);
       if(Number.isInteger(n)&&n>=1&&n<=999&&editingSet?.id!==input.dataset.id){rememberReps(input.dataset.id,n);if(!saveData(DATA))renderToday();}

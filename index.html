@@ -505,7 +505,7 @@ button:disabled{opacity:.35;cursor:default}
 .set-active:has(.weight-field) .stp-num{font-size:18px}
 .set-active:has(.weight-field) .ok-btn{grid-column:5;grid-row:2;padding:6px;font-size:12px}
 .set-active .weight-field{grid-column:4;grid-row:2;position:relative;display:block;min-width:0}
-.set-active .weight-field input{width:100%;height:36px;min-height:36px;padding:6px 19px 6px 3px;font-size:15px}
+.set-active .weight-field input{width:100%;height:36px;min-height:36px;padding:6px 19px 6px 3px;font-size:16px}
 .set-active .weight-field span{position:absolute;right:5px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--t2);pointer-events:none}
 .row-actions{flex-wrap:nowrap;gap:8px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
 .row-actions>*{flex-shrink:0;white-space:nowrap;font-size:12px}.row-actions .previous-note{margin-left:0}
@@ -543,6 +543,8 @@ button:disabled{opacity:.35;cursor:default}
 
 body.reordering-workout,body.reordering-workout *{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
 [data-reorder],[data-reorder] *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ex-row,.ex-row *,.library-item,.library-item *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ex-row input,.ex-row textarea{-webkit-user-select:text;user-select:text}
 #custom-exercise-form label{display:grid;gap:6px;min-width:0}
 #custom-exercise-form input,#custom-exercise-form select{box-sizing:border-box;width:100%;min-width:0;height:40px;padding:8px 10px;border:1px solid var(--bdr);border-radius:10px;background:var(--bg);color:var(--t1);font:inherit}
 #custom-exercise-form button,#notification-settings{min-height:40px;padding:8px 12px;border:1px solid var(--bdr);border-radius:10px;color:var(--ac);background:transparent;font:inherit}
@@ -1136,6 +1138,7 @@ function bindReorder(){
     };
     header.onpointerdown=e=>{
       if(reorderInProgress||e.button!==0||e.target.closest('input'))return;
+      if(e.pointerType==='touch'){e.preventDefault();window.getSelection()?.removeAllRanges();}
       clear();startX=x=e.clientX;startY=y=e.clientY;pointer=e.pointerId;
       document.addEventListener('pointermove',move,{passive:false});document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);
       timer=setTimeout(()=>{
@@ -1148,6 +1151,7 @@ function bindReorder(){
       },450);
     };
     header.oncontextmenu=e=>e.preventDefault();
+    header.onselectstart=e=>e.preventDefault();
   });
 }
 function bindTodayEvents(){

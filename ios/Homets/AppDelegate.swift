@@ -105,6 +105,8 @@ final class WorkoutViewController: UIViewController, WKNavigationDelegate, WKScr
                         content.title = "HOMETS"
                         content.body = body["language"] as? String == "ko" ? "휴식이 끝났습니다. 다음 세트를 시작하세요." : "Rest complete. Ready for your next set?"
                         content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "timer-double-beep.wav"))
+                        content.badge = 1
+                        content.threadIdentifier = "homets-rest"
                         if #available(iOS 15.0, *) { content.interruptionLevel = .timeSensitive }
                         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, deadline.timeIntervalSinceNow), repeats: false)
                         center.add(UNNotificationRequest(identifier: "homets-rest", content: content, trigger: trigger))

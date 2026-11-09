@@ -1,29 +1,260 @@
 // !$*UTF8*$!
-{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
-000000000000000000000019 = { isa = PBXFileReference; lastKnownFileType = audio.wav; path = "timer-double-beep.wav"; sourceTree = "<group>"; };
-00000000000000000000001A = { isa = PBXBuildFile; fileRef = 000000000000000000000019; };
-000000000000000000000006 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-000000000000000000000009 = { isa = PBXBuildFile; fileRef = 000000000000000000000006; };
-000000000000000000000017 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordBackup.swift; sourceTree = "<group>"; };
-000000000000000000000018 = { isa = PBXBuildFile; fileRef = 000000000000000000000017; };
-000000000000000000000007 = { isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-00000000000000000000000A = { isa = PBXBuildFile; fileRef = 000000000000000000000007; };
-000000000000000000000008 = { isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-00000000000000000000000B = { isa = PBXBuildFile; fileRef = 000000000000000000000008; };
-000000000000000000000005 = { isa = PBXFileReference; explicitFileType = wrapper.application; path = Homets.app; sourceTree = BUILT_PRODUCTS_DIR; };
-000000000000000000000002 = { isa = PBXGroup; children = (000000000000000000000004,000000000000000000000003); sourceTree = "<group>"; };
-000000000000000000000004 = { isa = PBXGroup; children = (000000000000000000000006,000000000000000000000017,000000000000000000000007,000000000000000000000008,000000000000000000000019); path = Homets; sourceTree = "<group>"; };
-000000000000000000000003 = { isa = PBXGroup; children = (000000000000000000000005); name = Products; sourceTree = "<group>"; };
-00000000000000000000000C = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (000000000000000000000009,000000000000000000000018); runOnlyForDeploymentPostprocessing = 0; };
-00000000000000000000000D = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (00000000000000000000000A,00000000000000000000000B,00000000000000000000001A); runOnlyForDeploymentPostprocessing = 0; };
-00000000000000000000000E = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-00000000000000000000000F = { isa = PBXShellScriptBuildPhase; buildActionMask = 2147483647; files = (); inputPaths = (); outputPaths = (); alwaysOutOfDate = 1; name = "Bundle workout files"; shellPath = /bin/sh; shellScript = "set -eu\nweb=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Web\"\nmkdir -p \"$web\"\ncp \"$SRCROOT/../index.html\" \"$SRCROOT/../manifest.webmanifest\" \"$web/\"\ncp -R \"$SRCROOT/../fonts\" \"$SRCROOT/../icons\" \"$web/\"\n"; runOnlyForDeploymentPostprocessing = 0; };
-000000000000000000000010 = { isa = PBXNativeTarget; buildConfigurationList = 000000000000000000000012; buildPhases = (00000000000000000000000C,00000000000000000000000E,00000000000000000000000D,00000000000000000000000F); buildRules = (); dependencies = (); name = Homets; productName = Homets; productReference = 000000000000000000000005; productType = "com.apple.product-type.application"; };
-000000000000000000000001 = { isa = PBXProject; attributes = {LastUpgradeCheck = 2630;}; buildConfigurationList = 000000000000000000000011; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en,Base); mainGroup = 000000000000000000000002; productRefGroup = 000000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (000000000000000000000010); };
-000000000000000000000013 = { isa = XCBuildConfiguration; name = Debug; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 5.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone";}; };
-000000000000000000000014 = { isa = XCBuildConfiguration; name = Release; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 5.0; SWIFT_OPTIMIZATION_LEVEL = "-O";}; };
-000000000000000000000015 = { isa = XCBuildConfiguration; name = Debug; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = A7QB8PT33N; CURRENT_PROJECT_VERSION = 13; MARKETING_VERSION = 1.2; PRODUCT_BUNDLE_IDENTIFIER = com.addvalue.homets; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO; INFOPLIST_KEY_CFBundleDisplayName = HOMETS; INFOPLIST_KEY_UILaunchScreen_Generation = YES; INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait; INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"; TARGETED_DEVICE_FAMILY = "1,2"; ENABLE_USER_SCRIPT_SANDBOXING = NO;}; };
-000000000000000000000016 = { isa = XCBuildConfiguration; name = Release; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = A7QB8PT33N; CURRENT_PROJECT_VERSION = 13; MARKETING_VERSION = 1.2; PRODUCT_BUNDLE_IDENTIFIER = com.addvalue.homets; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO; INFOPLIST_KEY_CFBundleDisplayName = HOMETS; INFOPLIST_KEY_UILaunchScreen_Generation = YES; INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait; INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"; TARGETED_DEVICE_FAMILY = "1,2"; ENABLE_USER_SCRIPT_SANDBOXING = NO;}; };
-000000000000000000000011 = { isa = XCConfigurationList; buildConfigurations = (000000000000000000000013,000000000000000000000014); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-000000000000000000000012 = { isa = XCConfigurationList; buildConfigurations = (000000000000000000000015,000000000000000000000016); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-}; rootObject = 000000000000000000000001; }
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000000000000000000000009 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000006 /* AppDelegate.swift */; };
+		00000000000000000000000B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000008 /* PrivacyInfo.xcprivacy */; };
+		00000000000000000000001A /* timer-double-beep.wav in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000019 /* timer-double-beep.wav */; };
+		000000000000000000000025 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000020 /* Models.swift */; };
+		000000000000000000000026 /* WorkoutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000021 /* WorkoutStore.swift */; };
+		000000000000000000000027 /* PurchaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000022 /* PurchaseService.swift */; };
+		000000000000000000000028 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000023 /* RootView.swift */; };
+		000000000000000000000029 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000024 /* SettingsView.swift */; };
+		00000000000000000000002D /* Barlow-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002A /* Barlow-Regular.ttf */; };
+		00000000000000000000002E /* Barlow-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002B /* Barlow-SemiBold.ttf */; };
+		00000000000000000000002F /* Barlow-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002C /* Barlow-ExtraBold.ttf */; };
+		000000000000000000000031 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000030 /* Localization.swift */; };
+		000000000000000000000033 /* BackupDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000032 /* BackupDocument.swift */; };
+		099EF8AE685CAC5908595D8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B094D4C2C9BE26090253AB89 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		000000000000000000000005 /* Homets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Homets.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000006 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		000000000000000000000008 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		000000000000000000000019 /* timer-double-beep.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "timer-double-beep.wav"; sourceTree = "<group>"; };
+		000000000000000000000020 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		000000000000000000000021 /* WorkoutStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutStore.swift; sourceTree = "<group>"; };
+		000000000000000000000022 /* PurchaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseService.swift; sourceTree = "<group>"; };
+		000000000000000000000023 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		000000000000000000000024 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		00000000000000000000002A /* Barlow-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Barlow-Regular.ttf"; sourceTree = "<group>"; };
+		00000000000000000000002B /* Barlow-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Barlow-SemiBold.ttf"; sourceTree = "<group>"; };
+		00000000000000000000002C /* Barlow-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Barlow-ExtraBold.ttf"; sourceTree = "<group>"; };
+		000000000000000000000030 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		000000000000000000000032 /* BackupDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDocument.swift; sourceTree = "<group>"; };
+		B094D4C2C9BE26090253AB89 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		00000000000000000000000E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000004 /* Homets */,
+				000000000000000000000003 /* Products */,
+				9317EC71A3D4F6829C860318 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000005 /* Homets.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000000000004 /* Homets */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000006 /* AppDelegate.swift */,
+				000000000000000000000020 /* Models.swift */,
+				000000000000000000000021 /* WorkoutStore.swift */,
+				000000000000000000000022 /* PurchaseService.swift */,
+				000000000000000000000023 /* RootView.swift */,
+				000000000000000000000024 /* SettingsView.swift */,
+				000000000000000000000030 /* Localization.swift */,
+				000000000000000000000032 /* BackupDocument.swift */,
+				000000000000000000000008 /* PrivacyInfo.xcprivacy */,
+				000000000000000000000019 /* timer-double-beep.wav */,
+				00000000000000000000002A /* Barlow-Regular.ttf */,
+				00000000000000000000002B /* Barlow-SemiBold.ttf */,
+				00000000000000000000002C /* Barlow-ExtraBold.ttf */,
+				B094D4C2C9BE26090253AB89 /* Assets.xcassets */,
+			);
+			path = Homets;
+			sourceTree = "<group>";
+		};
+		9317EC71A3D4F6829C860318 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000010 /* Homets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000012 /* Build configuration list for PBXNativeTarget "Homets" */;
+			buildPhases = (
+				00000000000000000000000C /* Sources */,
+				00000000000000000000000E /* Frameworks */,
+				00000000000000000000000D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Homets;
+			productName = Homets;
+			productReference = 000000000000000000000005 /* Homets.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 2630;
+			};
+			buildConfigurationList = 000000000000000000000011 /* Build configuration list for PBXProject "Homets" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000002;
+			productRefGroup = 000000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000010 /* Homets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		00000000000000000000000D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00000000000000000000000B /* PrivacyInfo.xcprivacy in Resources */,
+				00000000000000000000001A /* timer-double-beep.wav in Resources */,
+				00000000000000000000002D /* Barlow-Regular.ttf in Resources */,
+				00000000000000000000002E /* Barlow-SemiBold.ttf in Resources */,
+				00000000000000000000002F /* Barlow-ExtraBold.ttf in Resources */,
+				099EF8AE685CAC5908595D8A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		00000000000000000000000C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000009 /* AppDelegate.swift in Sources */,
+				000000000000000000000025 /* Models.swift in Sources */,
+				000000000000000000000026 /* WorkoutStore.swift in Sources */,
+				000000000000000000000027 /* PurchaseService.swift in Sources */,
+				000000000000000000000028 /* RootView.swift in Sources */,
+				000000000000000000000029 /* SettingsView.swift in Sources */,
+				000000000000000000000031 /* Localization.swift in Sources */,
+				000000000000000000000033 /* BackupDocument.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000013 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		000000000000000000000014 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		000000000000000000000015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = A7QB8PT33N;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Homets/Info.plist;
+				MARKETING_VERSION = 1.3.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.addvalue.homets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		000000000000000000000016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = A7QB8PT33N;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Homets/Info.plist;
+				MARKETING_VERSION = 1.3.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.addvalue.homets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000011 /* Build configuration list for PBXProject "Homets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000013 /* Debug */,
+				000000000000000000000014 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000012 /* Build configuration list for PBXNativeTarget "Homets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000015 /* Debug */,
+				000000000000000000000016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}

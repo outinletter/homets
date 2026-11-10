@@ -24,6 +24,6 @@ final class NotificationDelegate: NSObject, UIApplicationDelegate, UNUserNotific
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .sound])
+        completionHandler(notification.request.identifier == "homets-rest" ? [.banner] : [.banner, .sound])
     }
 }

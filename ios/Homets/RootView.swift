@@ -74,7 +74,7 @@ struct RootView: View {
                     Group {
                         switch tab {
                         case 1: HistoryView(store: store, settings: $settings, dark: $dark)
-                        case 2: StatsView(store: store, settings: $settings, dark: $dark)
+                        case 2: StatsView(store: store, purchases: purchases, settings: $settings, dark: $dark)
                         default: WorkoutView(store: store, settings: $settings, dark: $dark)
                         }
                     }
@@ -274,16 +274,17 @@ private struct ExerciseCard: View {
     @State private var timedRemaining: Int?
     @State private var timedTask: Task<Void, Never>?
     var sets: [LoggedSet] { store.loggedSets(for: exercise) }
+    var supportsWeight: Bool { exercise.tracking == .repetitions && exercise.id != "pushup" }
     var validInput: Bool {
         if exercise.tracking == .cardio {
             guard let km = Double(distance), let mins = Double(minutes) else { return false }
             return km > 0 && km <= 999 && mins >= 0.1 && mins <= 1440
         }
-        guard weight.isEmpty || Double(weight) != nil else { return false }
+        guard !supportsWeight || weight.isEmpty || Double(weight) != nil else { return false }
         return weight.isEmpty || (Double(weight)! >= 0 && Double(weight)! <= 2000)
     }
     var recentRecordText: String {
-        let weights = store.recentWeights(for: exercise)
+        let weights = supportsWeight ? store.recentWeights(for: exercise) : []
         if let best = store.previousBest(for: exercise), exercise.tracking != .cardio {
             if let w = weights.first {
                 return "\(tr("최근")): \(String(format: "%gkg", w)) · \(best)\(tr(exercise.tracking == .seconds ? "초" : "회"))"
@@ -304,9 +305,17 @@ private struct ExerciseCard: View {
                     Text("\(exercise.localizedGroup) · \(recentRecordText)").font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text2)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 5) {
-                    Text("\(value)").font(HometsStyle.font(26, .bold))
-                    Text(tr(exercise.tracking == .seconds ? "목표 시간" : "목표 횟수")).font(HometsStyle.font(11)).foregroundStyle(HometsStyle.text2)
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .trailing, spacing: 5) {
+                        Text("\(value)").font(HometsStyle.font(26, .bold))
+                        Text(tr(exercise.tracking == .seconds ? "목표 시간" : "목표 횟수")).font(HometsStyle.font(11)).foregroundStyle(HometsStyle.text2)
+                    }
+                    if supportsWeight, let targetWeight = store.suggestedWeight(for: exercise) {
+                        VStack(alignment: .trailing, spacing: 5) {
+                            Text(targetWeight.rounded() == targetWeight ? String(format: "%.0fkg", targetWeight) : String(format: "%.1fkg", targetWeight)).font(HometsStyle.font(20, .bold))
+                            Text(tr("목표 무게")).font(HometsStyle.font(11)).foregroundStyle(HometsStyle.text2)
+                        }
+                    }
                 }
             }.padding(.horizontal, 15).padding(.top, 16).padding(.bottom, 12)
             VStack(alignment: .leading, spacing: 8) {
@@ -314,8 +323,10 @@ private struct ExerciseCard: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
                             ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
+                                let unit = exercise.tracking == .seconds ? "s" : ""
+                                let weightLabel = set.weight.map { String(format: "•%gkg", $0) } ?? ""
                                 HStack(spacing: 3) {
-                                    Button("\(index + 1) · \(set.value)\(exercise.tracking == .seconds ? "s" : "")") { beginEditing(index, set) }
+                                    Button("\(index + 1)•\(set.value)\(unit)\(weightLabel)") { beginEditing(index, set) }
                                     Button { store.removeSet(at: index, for: exercise); editingIndex = nil } label: { Image(systemName: "arrow.uturn.backward") }
                                 }
                                 .font(HometsStyle.font(11, .semibold)).foregroundStyle(HometsStyle.blue)
@@ -352,15 +363,17 @@ private struct ExerciseCard: View {
                     CompactButton(icon: "minus") { value = max(1, value - 1) }
                     Text("\(value)\(tr("회"))").font(HometsStyle.font(15, .semibold)).frame(maxWidth: .infinity, minHeight: 36).background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 8))
                     CompactButton(icon: "plus") { value = min(999, value + 1) }
-                        TextField("kg", text: $weight).font(HometsStyle.font(15, .semibold)).keyboardType(.decimalPad).textFieldStyle(.roundedBorder).frame(maxWidth: 65)
+                        if supportsWeight {
+                            TextField("kg", text: $weight).font(HometsStyle.font(15, .semibold)).keyboardType(.decimalPad).textFieldStyle(.roundedBorder).frame(maxWidth: 65)
+                        }
                     }
                     if exercise.tracking != .seconds { Button(tr("저장")) {
                         if UserDefaults.standard.object(forKey: "homets.haptics") as? Bool ?? true { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
                         if let editingIndex {
-                            store.updateSet(at: editingIndex, value: value, for: exercise, weight: Double(weight), distance: Double(distance), duration: Double(minutes).map { $0 * 60 })
+                            store.updateSet(at: editingIndex, value: value, for: exercise, weight: supportsWeight ? Double(weight) : nil, distance: Double(distance), duration: Double(minutes).map { $0 * 60 })
                             self.editingIndex = nil
                         } else {
-                            store.log(value, for: exercise, weight: Double(weight), distance: Double(distance), duration: Double(minutes).map { $0 * 60 })
+                            store.log(value, for: exercise, weight: supportsWeight ? Double(weight) : nil, distance: Double(distance), duration: Double(minutes).map { $0 * 60 })
                         }
                     }.font(HometsStyle.font(12, .semibold)).foregroundStyle(.white).frame(width: 48, height: 36)
                         .background(HometsStyle.buttonGradient, in: RoundedRectangle(cornerRadius: 9)).buttonStyle(.plain).disabled(store.restRemaining != nil || store.activeTimedExerciseID != nil || !validInput).opacity(store.restRemaining == nil && store.activeTimedExerciseID == nil && validInput ? 1 : 0.5)
@@ -555,10 +568,12 @@ private struct HistoryView: View {
 
 private struct StatsView: View {
     let store: WorkoutStore
+    let purchases: PurchaseService
     @Binding var settings: Bool
     @Binding var dark: Bool
     @State private var period = 1
     @State private var anchor = Date.now
+    @State private var showPremium = false
     var interval: DateInterval { Calendar.current.dateInterval(of: period == 0 ? .day : period == 1 ? .weekOfYear : .month, for: anchor)! }
     func key(_ date: Date) -> String { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: date) }
     var days: [WorkoutDay] { store.sortedDays.filter { $0.id >= key(interval.start) && $0.id < key(interval.end) } }
@@ -631,14 +646,187 @@ private struct StatsView: View {
                     .font(HometsStyle.font(14)).foregroundStyle(HometsStyle.text2).frame(maxWidth: .infinity, alignment: .leading)
                 DailyChart(values: daily)
                 ExerciseStatsTable(store: store, ids: exerciseIDs, days: days)
+                if purchases.isPremium {
+                    PremiumProgressCard(exercises: store.exercises, days: store.sortedDays, today: .now)
+                } else {
+                    Button { showPremium = true } label: {
+                        Label(tr("Premium · 개인 기록 및 4주 추세"), systemImage: "lock.fill")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(16)
+                            .background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 17))
+                    }
+                    .font(HometsStyle.font(15, .semibold))
+                    .foregroundStyle(HometsStyle.blue)
+                    .buttonStyle(.plain)
+                }
                 Text(UserDefaults.standard.string(forKey: "homets.language") == "en" ? "All time: \(store.sortedDays.count) days · \(allSets.count) sets\nCurrent streak: \(streak) days" : "전체 누적: \(store.sortedDays.count)일 · \(allSets.count)세트\n연속 운동: \(streak)일")
                     .font(HometsStyle.font(14)).foregroundStyle(HometsStyle.text2).frame(maxWidth: .infinity, alignment: .leading)
             }.padding(.horizontal, 16).padding(.bottom, 24)
         }.background(HometsStyle.background.ignoresSafeArea())
+            .sheet(isPresented: $showPremium) { PremiumView(purchases: purchases) }
     }
     var periodTitle: String {
         hometsDate(interval.start) + " – " + hometsDate(interval.end.addingTimeInterval(-1))
     }
+}
+
+private struct PremiumProgressCard: View {
+    let exercises: [Exercise]
+    let days: [WorkoutDay]
+    let today: Date
+    @State private var selectedID: String?
+
+    var body: some View {
+        let recordedIDs = Set(days.flatMap { $0.sets.filter { !$0.value.isEmpty }.keys })
+        let choices = exercises.filter { recordedIDs.contains($0.id) }
+        let selection = Binding<String?>(
+            get: { choices.contains { $0.id == selectedID } ? selectedID : choices.first?.id },
+            set: { selectedID = $0 }
+        )
+
+        VStack(alignment: .leading, spacing: 12) {
+            Label(tr("Premium · 개인 기록 및 4주 추세"), systemImage: "chart.bar.xaxis")
+                .font(HometsStyle.font(16, .semibold))
+            if let exercise = choices.first(where: { $0.id == selection.wrappedValue }) {
+                Picker(tr("운동"), selection: selection) {
+                    ForEach(choices) { item in
+                        Text(item.localizedName).tag(Optional(item.id))
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(HometsStyle.blue)
+                progress(for: exercise)
+            } else {
+                Text(tr("운동 세트를 저장하면 개인 기록과 추세가 표시됩니다."))
+                    .foregroundStyle(HometsStyle.text2)
+            }
+        }
+        .font(HometsStyle.font(14))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 17))
+    }
+
+    private func progress(for exercise: Exercise) -> some View {
+        let sets = days.flatMap { $0.sets[exercise.id] ?? [] }
+        let weighted = exercise.tracking == .repetitions ? sets.filter { recordedWeight($0) != nil } : []
+        let reference = weighted.max { $0.date < $1.date }
+        let weight = reference.flatMap(recordedWeight)
+        let best = bestValue(in: sets, tracking: exercise.tracking, weight: weight)
+        let sameRepWeight = reference.flatMap { reference in
+            weighted.filter { $0.value == reference.value }.compactMap(recordedWeight).max()
+        }
+        let weeks = weeklyRecords(for: exercise.id)
+        let weeklyBests = weeks.map { bestValue(in: $0.sets, tracking: exercise.tracking, weight: weight) }
+        let scale = weeklyBests.compactMap { $0 }.max() ?? 0
+
+        return VStack(alignment: .leading, spacing: 10) {
+            Text(tr("전체 기간 개인 기록")).font(HometsStyle.font(14, .semibold))
+            Text(performanceText(best, tracking: exercise.tracking, weight: weight))
+                .font(HometsStyle.font(24, .bold))
+                .foregroundStyle(HometsStyle.blue)
+            if let reference, let sameRepWeight {
+                Text(hometsIsEnglish
+                    ? "Heaviest at \(reference.value) reps: \(number(sameRepWeight)) kg"
+                    : "\(reference.value)회 기준 최고 무게 \(number(sameRepWeight)) kg")
+            }
+            Text(tr("최근 28일 · 7일 단위")).font(HometsStyle.font(14, .semibold)).padding(.top, 4)
+            if let weight {
+                Text(hometsIsEnglish ? "Best reps at \(number(weight)) kg" : "\(number(weight)) kg 기준 최고 횟수")
+                    .foregroundStyle(HometsStyle.text2)
+            }
+            ForEach(Array(weeks.enumerated()), id: \.element.start) { index, week in
+                let weeklyBest = weeklyBests[index]
+                let weightedSets = exercise.tracking == .repetitions ? week.sets.filter { recordedWeight($0) != nil } : []
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack {
+                        Text(hometsDate(week.start, dateStyle: .short) + " – " + hometsDate(week.end, dateStyle: .short))
+                        Spacer()
+                        Text(performanceText(weeklyBest, tracking: exercise.tracking, weight: nil))
+                            .font(HometsStyle.font(14, .semibold))
+                    }
+                    if let weeklyBest, scale > 0 {
+                        ProgressView(value: weeklyBest, total: scale)
+                            .tint(HometsStyle.blue)
+                            .accessibilityHidden(true)
+                    }
+                    Text(weekSummary(setCount: week.sets.count, weightedSets: weightedSets))
+                        .font(HometsStyle.font(12))
+                        .foregroundStyle(HometsStyle.text2)
+                }
+                .padding(10)
+                .background(HometsStyle.input, in: RoundedRectangle(cornerRadius: 9))
+            }
+        }
+    }
+
+    private func bestValue(in sets: [LoggedSet], tracking: Exercise.Tracking, weight: Double?) -> Double? {
+        switch tracking {
+        case .cardio:
+            return sets.compactMap(\.distanceKm).filter { $0.isFinite && $0 > 0 }.max()
+        case .seconds:
+            return sets.map(\.value).filter { $0 > 0 }.max().map(Double.init)
+        case .repetitions:
+            return sets.filter { recordedWeight($0) == weight }.map(\.value).filter { $0 > 0 }.max().map(Double.init)
+        }
+    }
+
+    private func recordedWeight(_ set: LoggedSet) -> Double? {
+        guard let weight = set.weight, weight.isFinite, weight > 0 else { return nil }
+        return weight
+    }
+
+    private func number(_ value: Double) -> String {
+        value.formatted(.number.precision(.fractionLength(0...2)))
+    }
+
+    private func performanceText(_ value: Double?, tracking: Exercise.Tracking, weight: Double?) -> String {
+        guard let value else { return "—" }
+        if let weight { return "\(number(weight)) kg × \(number(value))\(hometsIsEnglish ? " reps" : "회")" }
+        switch tracking {
+        case .cardio: return "\(number(value)) km"
+        case .seconds: return "\(number(value))\(hometsIsEnglish ? " s" : "초")"
+        case .repetitions: return "\(number(value))\(hometsIsEnglish ? " reps" : "회")"
+        }
+    }
+
+    private func weekSummary(setCount: Int, weightedSets: [LoggedSet]) -> String {
+        let count = hometsIsEnglish ? "\(setCount) sets" : "\(setCount)세트"
+        guard !weightedSets.isEmpty else { return count }
+        let volume = weightedSets.reduce(0.0) { $0 + Double($1.value) * ($1.weight ?? 0) }
+        return hometsIsEnglish
+            ? "\(count) · \(number(volume)) kg·reps (\(weightedSets.count)/\(setCount) sets with weight)"
+            : "\(count) · \(number(volume)) kg·회 (무게 기록 \(weightedSets.count)/\(setCount)세트)"
+    }
+
+    private func weeklyRecords(for id: String) -> [(start: Date, end: Date, sets: [LoggedSet])] {
+        let calendar = Calendar.current
+        let day = calendar.startOfDay(for: today)
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return (0..<4).reversed().compactMap { index in
+            guard let end = calendar.date(byAdding: .day, value: -7 * index, to: day),
+                  let start = calendar.date(byAdding: .day, value: -6, to: end) else { return nil }
+            let keys = formatter.string(from: start)...formatter.string(from: end)
+            let sets = days.filter { keys.contains($0.id) }.flatMap { $0.sets[id] ?? [] }
+            return (start, end, sets)
+        }
+    }
+}
+
+#Preview("Premium progress") {
+    let date = Date(timeIntervalSince1970: 1_783_411_200)
+    let exercises = Exercise.builtIn.filter { $0.id == "benchpress" }
+    let days = [
+        WorkoutDay(id: "2026-07-01", sets: ["benchpress": [LoggedSet(value: 10, date: date.addingTimeInterval(-518_400), weight: 25)]]),
+        WorkoutDay(id: "2026-07-07", sets: ["benchpress": [LoggedSet(value: 12, date: date, weight: 25)]])
+    ]
+    return ScrollView { PremiumProgressCard(exercises: exercises, days: days, today: date).padding() }
+}
+
+#Preview("Premium progress · Empty") {
+    PremiumProgressCard(exercises: Exercise.builtIn, days: [], today: .now).padding()
 }
 
 private struct StatBox: View {

@@ -224,7 +224,7 @@ struct SettingsView: View {
     }
 }
 
-private struct PremiumView: View {
+struct PremiumView: View {
     let purchases: PurchaseService
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -235,10 +235,10 @@ private struct PremiumView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label(tr("운동 종목 무제한 선택"), systemImage: "checkmark.circle.fill")
                 Label(tr("전체 운동 기록 및 통계 이용"), systemImage: "checkmark.circle.fill")
-                Label(tr("새 운동 종목과 통계 기능 지속 업데이트"), systemImage: "checkmark.circle.fill")
+                Label(tr("운동별 개인 기록과 최근 4주 추세"), systemImage: "checkmark.circle.fill")
             }.font(HometsStyle.font(14)).foregroundStyle(HometsStyle.text2).frame(maxWidth: .infinity, alignment: .leading)
-            Button(UserDefaults.standard.string(forKey: "homets.language") == "en" ? "Annual \(purchases.priceText) subscription" : "연간 \(purchases.priceText) 구독") { Task { await purchases.purchase(); if purchases.isPremium { dismiss() } } }.buttonStyle(.borderedProminent).disabled(purchases.isBusy)
-            Text(tr("구독은 1년마다 자동 갱신됩니다. 현재 기간 종료 최소 24시간 전에 취소하지 않으면 App Store 계정으로 결제됩니다. 구독은 App Store 계정 설정에서 관리하거나 취소할 수 있습니다."))
+            Button(UserDefaults.standard.string(forKey: "homets.language") == "en" ? "Premium \(purchases.priceText) one-time purchase" : "Premium \(purchases.priceText) 1회 구매") { Task { await purchases.purchase(); if purchases.isPremium { dismiss() } } }.buttonStyle(.borderedProminent).disabled(purchases.isBusy)
+            Text(tr("Premium은 자동 갱신되지 않는 1회 구매이며, 운동 종목 무제한 선택과 전체 통계를 계속 이용할 수 있습니다."))
                 .font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text2).multilineTextAlignment(.center)
             Button(tr("구매 복원")) { Task { await purchases.restore(); if purchases.isPremium { dismiss() } } }.disabled(purchases.isBusy)
             HStack(spacing: 18) {

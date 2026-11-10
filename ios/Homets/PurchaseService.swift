@@ -3,7 +3,7 @@ import StoreKit
 
 @MainActor @Observable
 final class PurchaseService {
-    static let productID = "com.addvalue.homets.premium.yearly"
+    static let productID = "com.addvalue.homets.unlimited.v1"
     private(set) var product: Product?
     private(set) var isPremium = false
     private(set) var isBusy = false

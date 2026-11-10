@@ -45,6 +45,11 @@ final class WorkoutStore {
     func recentWeights(for exercise: Exercise) -> [Double] {
         sortedDays.flatMap { $0.sets[exercise.id] ?? [] }.sorted { $0.date > $1.date }.compactMap(\.weight).prefix(3).map { $0 }
     }
+    func suggestedWeight(for exercise: Exercise) -> Double? {
+        let weights = recentWeights(for: exercise)
+        guard !weights.isEmpty else { return nil }
+        return weights.reduce(0, +) / Double(weights.count)
+    }
     func previousBest(for exercise: Exercise) -> Int? {
         sortedDays.dropFirst(sortedDays.first?.id == dateKey() ? 1 : 0).flatMap { $0.sets[exercise.id] ?? [] }.map(\.value).max()
     }
@@ -60,7 +65,9 @@ final class WorkoutStore {
         guard restRemaining == nil, activeTimedExerciseID == nil else { return }
         var day = today; day.sets[exercise.id, default: []].append(LoggedSet(value: value, weight: weight, distanceKm: distance, durationSeconds: duration)); data.days[day.id] = day
         save()
-        startRest(seconds: data.settings.defaultRestSeconds)
+        if day.sets[exercise.id, default: []].count < plannedSets(exercise.id) {
+            startRest(seconds: data.settings.defaultRestSeconds)
+        }
     }
     func beginTimedExercise(_ exercise: Exercise) -> Bool {
         guard restRemaining == nil, activeTimedExerciseID == nil else { return false }

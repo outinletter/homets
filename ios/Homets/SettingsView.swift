@@ -115,7 +115,7 @@ struct SettingsView: View {
             Toggle(tr("화면 자동 꺼짐 방지"), isOn: $draft.keepAwake).tint(HometsStyle.blue)
             Toggle(tr("휴식 종료 소리 알림"), isOn: $draft.timerSound).tint(HometsStyle.blue)
             Stepper(language == "en" ? "Default rest  \(draft.defaultRestSeconds)s" : "기본 휴식 시간  \(draft.defaultRestSeconds)초", value: $draft.defaultRestSeconds, in: 10...3600, step: 10)
-            Text(tr("운동 카드를 길게 눌러 순서를 바꾸세요. 목표 횟수는 최근 3세트의 평균입니다."))
+            Text(tr("목표 횟수는 최근 3세트의 평균입니다."))
                 .font(HometsStyle.font(14)).foregroundStyle(HometsStyle.text2).fixedSize(horizontal: false, vertical: true)
         }.font(HometsStyle.font(16)).padding(.horizontal, 20).padding(.vertical, 16)
     }

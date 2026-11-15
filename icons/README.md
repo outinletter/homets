@@ -3,10 +3,6 @@
 Created with the built-in image generation tool. The original generated image is exported at 1024px; the smaller PNGs are resized exports of the same design. All exports have an opaque square background. The OS applies its own home-screen mask.
 
 - `homets-icon-1024.png`: master export
-- `icon-192.png`, `icon-512.png`: Android / web app icons
-- `icon-maskable-512.png`: Android adaptive mask
-- `apple-touch-icon.png`: iOS Add to Home Screen, 180px
-- `favicon-32.png`: browser tab icon
 
 ## Generation prompt
 

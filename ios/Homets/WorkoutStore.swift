@@ -53,6 +53,12 @@ final class WorkoutStore {
     func previousBest(for exercise: Exercise) -> Int? {
         sortedDays.dropFirst(sortedDays.first?.id == dateKey() ? 1 : 0).flatMap { $0.sets[exercise.id] ?? [] }.map(\.value).max()
     }
+    func reorderExercises(from: IndexSet, to: Int) {
+        let ids = activeExercises.map(\.id)
+        guard ids.count == data.settings.activeExerciseIDs.count else { return }
+        var reordered = ids; reordered.move(fromOffsets: from, toOffset: to)
+        data.settings.activeExerciseIDs = reordered; save()
+    }
     @discardableResult func moveExercise(_ source: String, before target: String) -> Bool {
         guard source != target, let from = data.settings.activeExerciseIDs.firstIndex(of: source), let to = data.settings.activeExerciseIDs.firstIndex(of: target) else { return false }
         let item = data.settings.activeExerciseIDs.remove(at: from)
@@ -195,11 +201,20 @@ final class WorkoutStore {
     private func playRestSound() {
         guard let url = Bundle.main.url(forResource: "timer-double-beep", withExtension: "wav") else { return }
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.duckOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
-            restSoundPlayer = try AVAudioPlayer(contentsOf: url)
-            restSoundPlayer?.volume = 1.0
-            restSoundPlayer?.play()
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default, options: [.duckOthers])
+            try session.setActive(true)
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.volume = 1.0
+            restSoundPlayer = player
+            player.play()
+            // 재생이 끝나면 세션을 해제해 다른 앱(YouTube 등)의 볼륨을 원래대로 복원한다.
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(player.duration + 0.3))
+                guard self?.restSoundPlayer === player, !player.isPlaying else { return }
+                self?.restSoundPlayer = nil
+                try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            }
         } catch { print("Rest sound playback failed: \(error)") }
     }
 }

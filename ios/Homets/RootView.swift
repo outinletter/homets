@@ -1,28 +1,5 @@
 import SwiftUI
 import UIKit
-import UniformTypeIdentifiers
-
-extension UTType { static let hometsExerciseOrder = UTType(exportedAs: "com.addvalue.homets.exercise-order") }
-private struct ExerciseOrderItem: Codable, Transferable {
-    let id: String
-    static var transferRepresentation: some TransferRepresentation { CodableRepresentation(contentType: .hometsExerciseOrder) }
-}
-
-private struct ExerciseMoveDropDelegate: DropDelegate {
-    let store: WorkoutStore
-    let targetID: String
-
-    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.hometsExerciseOrder]) }
-    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
-    func performDrop(info: DropInfo) -> Bool {
-        guard let provider = info.itemProviders(for: [.hometsExerciseOrder]).first else { return false }
-        provider.loadTransferable(type: ExerciseOrderItem.self) { result in
-            guard case .success(let item) = result else { return }
-            Task { @MainActor in _ = store.moveExercise(item.id, before: targetID) }
-        }
-        return true
-    }
-}
 
 enum HometsStyle {
     static let ink = Color.adaptive(light: 0x132D40, dark: 0xEAF3F5)
@@ -46,6 +23,19 @@ enum HometsStyle {
         case .black, .heavy, .bold: .custom("Barlow-ExtraBold", size: size)
         case .semibold, .medium: .custom("Barlow-SemiBold", size: size)
         default: .custom("Barlow-Regular", size: size)
+        }
+    }
+}
+
+extension View {
+    /// iOS 26+: Liquid Glass. Earlier: material + hairline border.
+    @ViewBuilder func glassSurface(radius: CGFloat, interactive: Bool = false, backing: Bool = false) -> some View {
+        if #available(iOS 26.0, *) {
+            self.background(backing ? HometsStyle.background.opacity(0.82) : .clear, in: RoundedRectangle(cornerRadius: radius))
+                .glassEffect(interactive ? .regular.interactive() : .regular, in: RoundedRectangle(cornerRadius: radius))
+        } else {
+            self.background(backing ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(.ultraThinMaterial), in: RoundedRectangle(cornerRadius: radius))
+                .overlay(RoundedRectangle(cornerRadius: radius).stroke(HometsStyle.border))
         }
     }
 }
@@ -113,17 +103,18 @@ private struct FloatingTabBar: View {
     var body: some View {
         HStack(spacing: 5) {
             ForEach(items.indices, id: \.self) { i in
-                Button { selection = i } label: {
+                Button { var t = Transaction(); t.disablesAnimations = true; withTransaction(t) { selection = i }; UIImpactFeedbackGenerator(style: .light).impactOccurred() } label: {
                     Label(tr(items[i].1), systemImage: items[i].0).font(HometsStyle.font(14, .semibold))
                         .frame(maxWidth: .infinity, minHeight: 48)
                         .foregroundStyle(selection == i ? HometsStyle.blue : HometsStyle.text2)
                         .background(selection == i ? HometsStyle.input : .clear, in: RoundedRectangle(cornerRadius: 10))
                 }.buttonStyle(.plain)
+                    .accessibilityLabel(tr(items[i].1))
+                    .accessibilityAddTraits(selection == i ? .isSelected : [])
             }
         }
         .padding(5).frame(height: 58)
-        .background(HometsStyle.surfaceRaised, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(HometsStyle.border))
+        .glassSurface(radius: 24, interactive: true, backing: true)
         .padding(.horizontal, 12)
     }
 }
@@ -140,17 +131,17 @@ private struct AppHeader: View {
                     .font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2).lineLimit(1).minimumScaleFactor(0.7)
             }
             Spacer(minLength: 3)
-            Button { dark.toggle() } label: { Image(systemName: dark ? "sun.max" : "moon") }.buttonStyle(HeaderButton())
-            Button { settings = true } label: { Image(systemName: "gearshape") }.buttonStyle(HeaderButton())
+            Button { dark.toggle() } label: { Image(systemName: dark ? "sun.max" : "moon") }.buttonStyle(HeaderButton()).accessibilityLabel(tr("다크 모드"))
+            Button { settings = true } label: { Image(systemName: "gearshape") }.buttonStyle(HeaderButton()).accessibilityLabel(tr("설정"))
         }.padding(.leading, 24).padding(.trailing, 20).padding(.top, 16).padding(.bottom, 12)
     }
 }
 
 private struct HeaderButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 17)).foregroundStyle(HometsStyle.text2).frame(width: 26, height: 32)
-            .background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 10)).overlay(RoundedRectangle(cornerRadius: 10).stroke(HometsStyle.border))
-            .opacity(configuration.isPressed ? 0.55 : 1)
+        configuration.label.font(.system(size: 17)).foregroundStyle(HometsStyle.text2).frame(width: 36, height: 36)
+            .glassSurface(radius: 12, interactive: true)
+            .opacity(configuration.isPressed ? 0.7 : 1)
     }
 }
 
@@ -159,6 +150,8 @@ private struct WorkoutView: View {
     @Binding var settings: Bool
     @Binding var dark: Bool
     @State private var targets: [String: Int] = [:]
+    @AppStorage("homets.sort") private var sortMode = "default"
+    @State private var reordering = false
     var saved: Int { store.activeExercises.reduce(0) { $0 + store.loggedSets(for: $1).count } }
     var reps: Int { store.activeExercises.reduce(0) { $0 + store.loggedSets(for: $1).reduce(0) { $0 + $1.value } } }
     var completed: Int { store.activeExercises.filter { store.loggedSets(for: $0).count >= store.plannedSets($0.id) }.count }
@@ -166,7 +159,11 @@ private struct WorkoutView: View {
         let exercises = store.activeExercises
         let unfinished = exercises.filter { store.loggedSets(for: $0).count < store.plannedSets($0.id) }
         let completed = exercises.filter { store.loggedSets(for: $0).count >= store.plannedSets($0.id) }
-        return unfinished + completed
+        switch sortMode {
+        case "name": return exercises.sorted { $0.localizedName.localizedStandardCompare($1.localizedName) == .orderedAscending }
+        case "group": return exercises.sorted { ($0.localizedGroup, $0.localizedName) < ($1.localizedGroup, $1.localizedName) }
+        default: return unfinished + completed
+        }
     }
     var progress: Double { store.activeExercises.isEmpty ? 0 : Double(completed) / Double(store.activeExercises.count) }
     var body: some View {
@@ -180,33 +177,32 @@ private struct WorkoutView: View {
                 SetsStepper(store: store).padding(.horizontal, 16).padding(.top, 10).padding(.bottom, 10)
                 HStack {
                     Text(tr("운동 목록")).font(HometsStyle.font(10, .semibold)).tracking(1)
-                    Spacer(); Text(UserDefaults.standard.string(forKey: "homets.language") == "en" ? "\(store.activeExercises.count) exercises" : "운동 \(store.activeExercises.count)개").font(HometsStyle.font(10)).foregroundStyle(HometsStyle.text2)
+                    Spacer()
+                    Menu {
+                        Picker(tr("정렬"), selection: $sortMode) {
+                            Label(tr("기본 (미완료 우선)"), systemImage: "hand.draw").tag("default")
+                            Label(tr("이름순"), systemImage: "textformat").tag("name")
+                            Label(tr("분류순"), systemImage: "square.grid.2x2").tag("group")
+                        }
+                    } label: {
+                        Label(tr("정렬"), systemImage: "arrow.up.arrow.down").font(HometsStyle.font(12, .semibold)).foregroundStyle(HometsStyle.blue)
+                            .frame(minHeight: 32).padding(.horizontal, 6)
+                    }.padding(.trailing, 2)
+                    Button { sortMode = "default"; reordering = true } label: {
+                        Label(tr("순서 편집"), systemImage: "list.number").font(HometsStyle.font(12, .semibold)).foregroundStyle(HometsStyle.blue)
+                            .frame(minHeight: 32).padding(.horizontal, 6)
+                    }.padding(.trailing, 6)
+                     Text(UserDefaults.standard.string(forKey: "homets.language") == "en" ? "\(store.activeExercises.count) exercises" : "운동 \(store.activeExercises.count)개").font(HometsStyle.font(10)).foregroundStyle(HometsStyle.text2)
                 }.padding(.horizontal, 16).padding(.bottom, 9)
                 LazyVStack(spacing: 12) {
                     ForEach(displayedExercises) { exercise in
                         ExerciseCard(store: store, exercise: exercise, value: target(exercise))
                             .opacity(store.loggedSets(for: exercise).count >= store.plannedSets(exercise.id) ? 0.55 : 1)
-                            .overlay(alignment: .top) {
-                                Color.clear
-                                    .frame(height: 78)
-                                    .contentShape(Rectangle())
-                                    .draggable(ExerciseOrderItem(id: exercise.id)) {
-                                        ZStack(alignment: .topTrailing) {
-                                            ExerciseCard(store: store, exercise: exercise, value: target(exercise))
-                                                .frame(width: UIScreen.main.bounds.width - 32)
-                                                .contentShape(RoundedRectangle(cornerRadius: 18))
-                                            Image(systemName: "arrow.up.arrow.down")
-                                                .font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
-                                                .frame(width: 34, height: 34).background(HometsStyle.blue, in: Circle())
-                                                .padding(8)
-                                        }
-                                    }
-                            }
-                            .onDrop(of: [.hometsExerciseOrder], delegate: ExerciseMoveDropDelegate(store: store, targetID: exercise.id))
                     }
                 }.padding(.horizontal, 16)
             }.padding(.bottom, 24)
         }.background(HometsStyle.background.ignoresSafeArea())
+            .sheet(isPresented: $reordering) { ReorderSheet(store: store) }
     }
     func target(_ ex: Exercise) -> Binding<Int> { Binding(get: { targets[ex.id] ?? store.suggestedTarget(for: ex) }, set: { targets[ex.id] = $0 }) }
 }
@@ -225,9 +221,9 @@ private struct SessionHero: View {
             Spacer(minLength: 4)
             ZStack {
                 Circle().stroke(HometsStyle.surfaceRaised.opacity(0.72), lineWidth: 8)
-                Circle().trim(from: 0, to: progress).stroke(Color.adaptive(light: 0x8EA8D6, dark: 0x91A8DD), style: StrokeStyle(lineWidth: 8, lineCap: .round)).rotationEffect(.degrees(-90))
+                Circle().trim(from: 0, to: progress).stroke(Color.adaptive(light: 0x8EA8D6, dark: 0x91A8DD), style: StrokeStyle(lineWidth: 8, lineCap: .round)).rotationEffect(.degrees(-90)).animation(.easeOut(duration: 0.5), value: progress)
                 VStack(spacing: 3) { Text("\(Int(progress * 100))%").font(HometsStyle.font(22, .semibold)); Text(tr("완료")).font(HometsStyle.font(11)).foregroundStyle(HometsStyle.text2) }
-            }.frame(width: 74, height: 74).shadow(color: HometsStyle.blue.opacity(0.08), radius: 8, y: 4)
+            }.frame(width: 74, height: 74).accessibilityElement(children: .combine).shadow(color: HometsStyle.blue.opacity(0.08), radius: 8, y: 4)
         }.padding(.vertical, 22).padding(.horizontal, 18).background(HometsStyle.gradient, in: RoundedRectangle(cornerRadius: 20))
     }
 }
@@ -260,7 +256,7 @@ private struct SetsStepper: View {
 
 private struct SquareButton: View {
     let icon: String, action: () -> Void
-    var body: some View { Button(action: action) { Image(systemName: icon).font(.system(size: 15, weight: .medium)).frame(width: 40, height: 40) }.foregroundStyle(HometsStyle.ink).background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).stroke(HometsStyle.border)).buttonStyle(.plain) }
+    var body: some View { Button(action: action) { Image(systemName: icon).font(.system(size: 15, weight: .medium)).frame(width: 44, height: 44) }.foregroundStyle(HometsStyle.ink).glassSurface(radius: 14, interactive: true).buttonStyle(.plain).sensoryFeedback(.selection, trigger: icon) .accessibilityLabel(icon == "plus" ? tr("늘리기") : tr("줄이기")) }
 }
 
 private struct ExerciseCard: View {
@@ -301,22 +297,22 @@ private struct ExerciseCard: View {
             HStack(spacing: 10) {
                 Image(systemName: "dumbbell.fill").font(.system(size: 17)).foregroundStyle(HometsStyle.blue).frame(width: 38, height: 38).background(HometsStyle.selected, in: RoundedRectangle(cornerRadius: 13))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(exercise.localizedName).font(HometsStyle.font(16, .semibold))
-                    Text("\(exercise.localizedGroup) · \(recentRecordText)").font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text2)
+                    Text(exercise.localizedName).font(HometsStyle.font(16, .semibold)).lineLimit(2)
+                    Text("\(exercise.localizedGroup) · \(recentRecordText)").font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text2).lineLimit(2)
                 }
-                Spacer()
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .trailing, spacing: 5) {
-                        Text("\(value)").font(HometsStyle.font(26, .bold))
+                Spacer(minLength: 6)
+                HStack(alignment: .top, spacing: 14) {
+                    VStack(spacing: 3) {
+                        Text("\(value)").font(HometsStyle.font(21, .semibold)).monospacedDigit().foregroundStyle(HometsStyle.ink)
                         Text(tr(exercise.tracking == .seconds ? "목표 시간" : "목표 횟수")).font(HometsStyle.font(11)).foregroundStyle(HometsStyle.text2)
                     }
                     if supportsWeight, let targetWeight = store.suggestedWeight(for: exercise) {
-                        VStack(alignment: .trailing, spacing: 5) {
-                            Text(targetWeight.rounded() == targetWeight ? String(format: "%.0fkg", targetWeight) : String(format: "%.1fkg", targetWeight)).font(HometsStyle.font(20, .bold))
+                        VStack(spacing: 3) {
+                            Text(targetWeight.rounded() == targetWeight ? String(format: "%.0fkg", targetWeight) : String(format: "%.1fkg", targetWeight)).font(HometsStyle.font(21, .semibold)).monospacedDigit().foregroundStyle(HometsStyle.ink)
                             Text(tr("목표 무게")).font(HometsStyle.font(11)).foregroundStyle(HometsStyle.text2)
                         }
                     }
-                }
+                }.lineLimit(1).fixedSize()
             }.padding(.horizontal, 15).padding(.top, 16).padding(.bottom, 12)
             VStack(alignment: .leading, spacing: 8) {
                 if !sets.isEmpty {
@@ -327,7 +323,7 @@ private struct ExerciseCard: View {
                                 let weightLabel = set.weight.map { String(format: "•%gkg", $0) } ?? ""
                                 HStack(spacing: 3) {
                                     Button("\(index + 1)•\(set.value)\(unit)\(weightLabel)") { beginEditing(index, set) }
-                                    Button { store.removeSet(at: index, for: exercise); editingIndex = nil } label: { Image(systemName: "arrow.uturn.backward") }
+                                    Button { store.removeSet(at: index, for: exercise); editingIndex = nil } label: { Image(systemName: "arrow.uturn.backward").frame(width: 28, height: 30).contentShape(Rectangle()) }.accessibilityLabel(tr("세트 취소"))
                                 }
                                 .font(HometsStyle.font(11, .semibold)).foregroundStyle(HometsStyle.blue)
                                 .padding(.horizontal, 8).frame(height: 30).background(HometsStyle.surface, in: Capsule())
@@ -375,7 +371,7 @@ private struct ExerciseCard: View {
                         } else {
                             store.log(value, for: exercise, weight: supportsWeight ? Double(weight) : nil, distance: Double(distance), duration: Double(minutes).map { $0 * 60 })
                         }
-                    }.font(HometsStyle.font(12, .semibold)).foregroundStyle(.white).frame(width: 48, height: 36)
+                    }.font(HometsStyle.font(12, .semibold)).foregroundStyle(.white).frame(width: 56, height: 40)
                         .background(HometsStyle.buttonGradient, in: RoundedRectangle(cornerRadius: 9)).buttonStyle(.plain).disabled(store.restRemaining != nil || store.activeTimedExerciseID != nil || !validInput).opacity(store.restRemaining == nil && store.activeTimedExerciseID == nil && validInput ? 1 : 0.5)
                     }
                 }.font(HometsStyle.font(14))
@@ -394,7 +390,7 @@ private struct ExerciseCard: View {
                 Text(UserDefaults.standard.string(forKey: "homets.language") == "en" ? "\(sets.count) / \(store.plannedSets(exercise.id)) sets saved" : "\(sets.count) / \(store.plannedSets(exercise.id))세트 저장됨").foregroundStyle(HometsStyle.text2)
                 Spacer(); if editingIndex != nil { Button(tr("수정 취소")) { editingIndex = nil } }
             }.font(HometsStyle.font(12)).padding(.horizontal, 15).padding(.top, 12)
-            HStack(spacing: 10) { Button(tr("+ 세트 추가")) { store.changeSets(1, id: exercise.id) }; Button(tr("− 세트 삭제")) { store.changeSets(-1, id: exercise.id) }; Text("\(sets.count) / \(store.plannedSets(exercise.id)) \(tr("저장"))"); Button(tr("횟수 초기화")) { value = store.suggestedTarget(for: exercise) }; if !sets.isEmpty {
+            HStack(spacing: 10) { Button(tr("+ 세트 추가")) { store.changeSets(1, id: exercise.id) }; Button(tr("− 세트 삭제")) { store.changeSets(-1, id: exercise.id) }; Button(tr("횟수 초기화")) { value = store.suggestedTarget(for: exercise) }; if !sets.isEmpty {
                 Button(tr("기록 초기화"), role: .destructive) { confirmReset = true }
                     .popover(isPresented: $confirmReset, attachmentAnchor: .rect(.bounds), arrowEdge: .bottom) {
                         VStack(spacing: 8) {
@@ -413,7 +409,8 @@ private struct ExerciseCard: View {
             } }
                 .font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text2).lineLimit(1).minimumScaleFactor(0.72)
                 .padding(.horizontal, 15).padding(.top, 10).padding(.bottom, 14)
-        }.background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 18)).overlay(RoundedRectangle(cornerRadius: 18).stroke(HometsStyle.border)).shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+        }.background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 18)).overlay(RoundedRectangle(cornerRadius: 18).stroke(HometsStyle.border)).shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+            .animation(.snappy, value: sets.count)
             .textSelection(.disabled)
     }
     private func startTimedSet() {
@@ -451,9 +448,8 @@ private struct CompactButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon).font(.system(size: 13, weight: .semibold))
-                .frame(width: 28, height: 36)
-                .background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 9))
-                .overlay(RoundedRectangle(cornerRadius: 9).stroke(HometsStyle.border))
+                .frame(width: 36, height: 40)
+                .glassSurface(radius: 10, interactive: true)
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
@@ -477,11 +473,11 @@ private struct RestTimerView: View {
                 }
             }.frame(height: 4)
             HStack(spacing: 8) {
-                Button("−10") { store.adjustRest(-10) }
+                Button("−10") { store.adjustRest(-10); UIImpactFeedbackGenerator(style: .light).impactOccurred() }
                     .font(HometsStyle.font(12, .semibold)).foregroundStyle(HometsStyle.text2)
                     .padding(.horizontal, 10).frame(height: 34)
                     .background(HometsStyle.input, in: RoundedRectangle(cornerRadius: 8))
-                Button("+10") { store.adjustRest(10) }
+                Button("+10") { store.adjustRest(10); UIImpactFeedbackGenerator(style: .light).impactOccurred() }
                     .font(HometsStyle.font(12, .semibold)).foregroundStyle(HometsStyle.text2)
                     .padding(.horizontal, 10).frame(height: 34)
                     .background(HometsStyle.input, in: RoundedRectangle(cornerRadius: 8))
@@ -495,9 +491,8 @@ private struct RestTimerView: View {
             }.buttonStyle(.plain)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
-        .background(HometsStyle.surfaceRaised, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(HometsStyle.border))
-        .shadow(color: HometsStyle.ink.opacity(0.14), radius: 12, y: 4)
+        .glassSurface(radius: 20, backing: true)
+        .shadow(color: HometsStyle.ink.opacity(0.12), radius: 12, y: 4)
     }
 }
 
@@ -512,12 +507,12 @@ private struct HistoryView: View {
                 Text(tr("운동 LOG")).font(HometsStyle.font(15, .semibold)).tracking(0.8).foregroundStyle(HometsStyle.text2).padding(.bottom, 2)
                 ForEach(store.sortedDays) { day in
                     VStack(spacing: 0) {
-                        Button { withAnimation(.easeInOut(duration: 0.2)) { expandedDay = expandedDay == day.id ? nil : day.id } } label: {
+                        Button { UISelectionFeedbackGenerator().selectionChanged(); withAnimation(.snappy(duration: 0.25)) { expandedDay = expandedDay == day.id ? nil : day.id } } label: {
                             HStack(spacing: 14) {
                                 VStack(spacing: 1) {
                                     Text(month(day.id)).font(HometsStyle.font(11)).foregroundStyle(HometsStyle.text2)
                                     Text(day.id.suffix(2)).font(HometsStyle.font(27, .semibold)).foregroundStyle(HometsStyle.blue)
-                                }.frame(width: 58, height: 64).background(HometsStyle.gradient, in: RoundedRectangle(cornerRadius: 10))
+                                }.frame(width: 58, height: 64).background(HometsStyle.gradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(names(day)).font(HometsStyle.font(16, .semibold)).foregroundStyle(HometsStyle.ink).lineLimit(1)
                                     HStack(spacing: 13) {
@@ -532,7 +527,8 @@ private struct HistoryView: View {
                                 Image(systemName: expandedDay == day.id ? "chevron.up" : "chevron.down").font(.system(size: 13, weight: .bold)).foregroundStyle(HometsStyle.text2)
                             }.padding(.horizontal, 16).padding(.vertical, 14)
                                 .background(HometsStyle.input)
-                        }.buttonStyle(.plain)
+                                .contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityHint(tr("기록 펼치기"))
                         if expandedDay == day.id {
                             VStack(spacing: 0) {
                                 ForEach(store.exercises.filter { day.sets[$0.id] != nil }) { exercise in
@@ -546,12 +542,12 @@ private struct HistoryView: View {
                                     }.padding(.vertical, 8).overlay(alignment: .bottom) { Rectangle().fill(HometsStyle.border).frame(height: 1) }
                                 }
                             }.padding(.horizontal, 16).padding(.vertical, 7).background(HometsStyle.surface)
-                                .overlay(alignment: .top) { Rectangle().fill(HometsStyle.border).frame(height: 1) }
+                                .transition(.opacity)
                         }
                     }
-                    .background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 17))
-                    .clipShape(RoundedRectangle(cornerRadius: 17))
-                    .overlay(RoundedRectangle(cornerRadius: 17).stroke(HometsStyle.border))
+                    .background(HometsStyle.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(HometsStyle.border))
                 }
                 if store.sortedDays.isEmpty {
                     Text(tr("아직 저장된 운동 기록이 없습니다.")).font(HometsStyle.font(15)).foregroundStyle(HometsStyle.text2)
@@ -609,7 +605,7 @@ private struct StatsView: View {
             let date = calendar.date(byAdding: .day, value: offset, to: interval.start) ?? anchor
             let formatter = DateFormatter(); formatter.dateFormat = "yyyy-MM-dd"
             let key = formatter.string(from: date)
-            let label = hometsDate(date, dateStyle: .short)
+            let label = "\(calendar.component(.month, from: date))/\(calendar.component(.day, from: date))"
             let value = store.data.days[key]?.sets.values.flatMap { $0 }.reduce(0) { $0 + $1.value } ?? 0
             return (label, value)
         }
@@ -646,6 +642,7 @@ private struct StatsView: View {
                     .font(HometsStyle.font(14)).foregroundStyle(HometsStyle.text2).frame(maxWidth: .infinity, alignment: .leading)
                 DailyChart(values: daily)
                 ExerciseStatsTable(store: store, ids: exerciseIDs, days: days)
+                InsightsCard(store: store, interval: interval, previous: previousInterval)
                 if purchases.isPremium {
                     PremiumProgressCard(exercises: store.exercises, days: store.sortedDays, today: .now)
                 } else {
@@ -836,8 +833,8 @@ private struct StatBox: View {
 
 private struct PeriodButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 11, weight: .semibold)).foregroundStyle(HometsStyle.text2).frame(width: 32, height: 32)
-            .background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(HometsStyle.border))
+        configuration.label.font(.system(size: 11, weight: .semibold)).foregroundStyle(HometsStyle.text2).frame(width: 44, height: 44)
+            .glassSurface(radius: 12, interactive: true)
     }
 }
 
@@ -893,5 +890,128 @@ private struct ExerciseStatsTable: View {
                 .font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text2)
             if ids.isEmpty { Text(tr("아직 저장된 운동 기록이 없습니다.")).font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2).padding(.vertical, 20) }
         }.padding(14).background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 17)).overlay(RoundedRectangle(cornerRadius: 17).stroke(HometsStyle.border))
+    }
+}
+
+// MARK: - 과학적 지표 (볼륨, 추정 1RM, 이동평균, 근육군별 세트)
+private struct InsightsCard: View {
+    let store: WorkoutStore
+    let interval: DateInterval, previous: DateInterval
+    private func key(_ d: Date) -> String { let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: d) }
+    private func exercise(_ id: String) -> Exercise? { store.exercises.first { $0.id == id } }
+    private func days(_ i: DateInterval) -> [WorkoutDay] { store.sortedDays.filter { $0.id >= key(i.start) && $0.id < key(i.end) } }
+    private func volume(_ ds: [WorkoutDay]) -> Double {
+        ds.flatMap { d in d.sets.filter { exercise($0.key)?.tracking == .repetitions }.values.flatMap { $0 } }
+            .reduce(0) { $0 + (($1.weight ?? 0) * Double($1.value)) }
+    }
+    /// Epley 추정 1RM. 신뢰도를 위해 1~10회 세트만 사용.
+    private func e1RM(_ sets: [LoggedSet]) -> Double? {
+        sets.filter { ($0.weight ?? 0) > 0 && (1...10).contains($0.value) }.map { $0.weight! * (1 + Double($0.value) / 30) }.max()
+    }
+    private func sets(_ id: String, _ ds: [WorkoutDay]) -> [LoggedSet] { ds.flatMap { $0.sets[id] ?? [] } }
+    private func dailyReps(offset: Int) -> Double {
+        let cal = Calendar.current
+        let total = (0..<7).reduce(0) { acc, i in
+            let d = cal.date(byAdding: .day, value: -(offset + i), to: .now) ?? .now
+            return acc + (store.data.days[key(d)]?.sets.filter { exercise($0.key)?.tracking == .repetitions }.values.flatMap { $0 }.reduce(0) { $0 + $1.value } ?? 0)
+        }
+        return Double(total) / 7
+    }
+    var body: some View {
+        let cur = days(interval), prev = days(previous)
+        let vol = volume(cur), pvol = volume(prev)
+        let history = store.sortedDays.filter { $0.id < key(interval.start) }
+        let rows: [(String, Double, Bool)] = store.exercises.compactMap { ex in
+            guard ex.tracking == .repetitions, let now = e1RM(sets(ex.id, cur)) else { return nil }
+            let before = e1RM(sets(ex.id, history))
+            return (ex.localizedName, now, before.map { now > $0 } ?? false)
+        }.sorted { $0.1 > $1.1 }
+        var groups: [String: Int] = [:]
+        for d in cur { for (id, ss) in d.sets { if let ex = exercise(id), !ss.isEmpty { groups[ex.localizedGroup, default: 0] += ss.count } } }
+        let avg7 = dailyReps(offset: 0), avgPrev = dailyReps(offset: 7)
+        return VStack(alignment: .leading, spacing: 14) {
+            Label(tr("분석 지표"), systemImage: "function").font(HometsStyle.font(16, .semibold))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(tr("총 볼륨 (무게×횟수)")).font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2)
+                Text(String(format: "%.0f kg", vol)).font(HometsStyle.font(28, .semibold))
+                if pvol > 0 {
+                    let pct = (vol - pvol) / pvol * 100
+                    Text(String(format: "%@%.0f%% %@", pct >= 0 ? "+" : "", pct, tr("이전 기간 대비"))).font(HometsStyle.font(13)).foregroundStyle(pct >= 0 ? HometsStyle.blue : HometsStyle.text2)
+                } else {
+                    Text(tr("비교할 이전 기간 기록이 부족합니다")).font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2)
+                }
+            }
+            Divider()
+            VStack(alignment: .leading, spacing: 8) {
+                Text(tr("추정 1RM (Epley, 1~10회 세트)")).font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2)
+                if rows.isEmpty {
+                    Text(tr("무게와 횟수(1~10회)를 입력하면 표시됩니다")).font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2)
+                }
+                ForEach(rows.indices, id: \.self) { i in
+                    HStack {
+                        Text(rows[i].0).font(HometsStyle.font(14, .semibold))
+                        if rows[i].2 { Text("PR").font(HometsStyle.font(10, .bold)).foregroundStyle(.white).padding(.horizontal, 6).padding(.vertical, 2).background(HometsStyle.blue, in: Capsule()) }
+                        Spacer()
+                        Text(String(format: "%.1f kg", rows[i].1)).font(HometsStyle.font(14, .semibold)).foregroundStyle(HometsStyle.blue)
+                    }
+                }
+            }
+            if !groups.isEmpty {
+                Divider()
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(tr("분류별 세트 수")).font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2)
+                    let top = max(groups.values.max() ?? 1, 1)
+                    ForEach(groups.sorted { $0.value > $1.value }, id: \.key) { g in
+                        HStack(spacing: 8) {
+                            Text(g.key).font(HometsStyle.font(13)).frame(width: 70, alignment: .leading)
+                            GeometryReader { p in Capsule().fill(HometsStyle.blue.opacity(0.75)).frame(width: p.size.width * CGFloat(g.value) / CGFloat(top)) }.frame(height: 8)
+                            Text("\(g.value)").font(HometsStyle.font(13, .semibold)).frame(width: 30, alignment: .trailing)
+                        }
+                    }
+                }
+            }
+            Divider()
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(tr("최근 7일 일평균 반복")).font(HometsStyle.font(13)).foregroundStyle(HometsStyle.text2)
+                    Text(String(format: "%.1f", avg7)).font(HometsStyle.font(22, .semibold))
+                }
+                Spacer()
+                if avgPrev > 0 {
+                    let pct = (avg7 - avgPrev) / avgPrev * 100
+                    Label(String(format: "%@%.0f%%", pct >= 0 ? "+" : "", pct), systemImage: pct >= 0 ? "arrow.up.right" : "arrow.down.right")
+                        .font(HometsStyle.font(14, .semibold)).foregroundStyle(pct >= 0 ? HometsStyle.blue : HometsStyle.text2)
+                }
+            }
+            Text(tr("참고용 추정치이며 의학적 조언이 아닙니다. 같은 운동끼리 비교하세요.")).font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text3)
+        }
+        .font(HometsStyle.font(14)).frame(maxWidth: .infinity, alignment: .leading).padding(16)
+        .background(HometsStyle.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(HometsStyle.border))
+    }
+}
+
+private struct ReorderSheet: View {
+    let store: WorkoutStore
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(store.activeExercises) { ex in
+                        HStack(spacing: 10) {
+                            Text(ex.localizedName).font(HometsStyle.font(16, .semibold)).foregroundStyle(HometsStyle.ink)
+                            Spacer()
+                            Text(ex.localizedGroup).font(HometsStyle.font(12)).foregroundStyle(HometsStyle.text2)
+                        }.frame(minHeight: 44)
+                    }.onMove { store.reorderExercises(from: $0, to: $1) }
+                } footer: {
+                    Text(tr("오른쪽 핸들을 끌어 순서를 바꾸세요. 완료한 운동은 목록 아래로 내려갑니다.")).font(HometsStyle.font(12))
+                }
+            }
+            .environment(\.editMode, .constant(.active))
+            .navigationTitle(tr("순서 편집")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(tr("완료")) { dismiss() } } }
+        }.presentationDetents([.medium, .large])
     }
 }

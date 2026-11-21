@@ -105,14 +105,21 @@ final class WatchStore: NSObject, WCSessionDelegate {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [Self.restID])
     }
     private func scheduleNotification(after seconds: Int) {
-        let content = UNMutableNotificationContent()
-        content.title = "HOMETS"
-        content.body = text("휴식이 끝났습니다. 다음 세트를 시작하세요.", "Rest is over. Start your next set.")
-        content.sound = .default
-        content.interruptionLevel = .timeSensitive
-        let request = UNNotificationRequest(identifier: Self.restID, content: content,
-                                            trigger: UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false))
-        UNUserNotificationCenter.current().add(request)
+        guard !ProcessInfo.processInfo.arguments.contains("-uitest") else { return }
+        let body = text("휴식이 끝났습니다. 다음 세트를 시작하세요.", "Rest is over. Start your next set.")
+        let id = Self.restID
+        let center = UNUserNotificationCenter.current()
+        // 권한이 승인된 경우에만 예약한다(미승인 상태에서 예약을 시도하지 않는다).
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "HOMETS"
+            content.body = body
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: id, content: content,
+                                                trigger: UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false))
+            center.add(request)
+        }
     }
 
     // MARK: WatchConnectivity

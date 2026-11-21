@@ -20,6 +20,10 @@ final class WatchStore: NSObject, WCSessionDelegate {
 
     override init() {
         let defaults = UserDefaults.standard
+        if ProcessInfo.processInfo.arguments.contains("-uitest") {
+            defaults.removeObject(forKey: Self.payloadKey)
+            defaults.removeObject(forKey: Self.pendingKey)
+        }
         payload = defaults.data(forKey: Self.payloadKey).flatMap { try? JSONDecoder().decode(WatchPayload.self, from: $0) } ?? .standalone
         pending = defaults.data(forKey: Self.pendingKey).flatMap { try? JSONDecoder().decode([WatchSetMessage].self, from: $0) } ?? []
         super.init()

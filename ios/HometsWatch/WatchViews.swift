@@ -88,7 +88,7 @@ struct ExerciseView: View {
         _weight = State(initialValue: startWeight)
         _reps = State(initialValue: target)
         _field = State(initialValue: weighted ? .weight : .reps)
-        _crown = State(initialValue: weighted ? startWeight / 2.5 : Double(target) / Double(step))
+        _crown = State(initialValue: weighted ? startWeight : Double(target) / Double(step))
     }
 
     private var usesWeight: Bool { store.supportsWeight(exercise) }
@@ -102,7 +102,7 @@ struct ExerciseView: View {
     private func ticks(for field: InputField) -> Double {
         switch field {
         case .sets: Double(planned)
-        case .weight: weight / 2.5
+        case .weight: weight
         case .reps: Double(reps) / Double(repStep)
         }
     }
@@ -114,7 +114,7 @@ struct ExerciseView: View {
             let next = min(10, max(max(1, done), Int(value.rounded())))
             store.changePlannedSets(next - planned, for: exercise)
         case .weight:
-            weight = min(500, max(0, (value * 2.5 * 2).rounded() / 2))
+            weight = min(500, max(0, value.rounded()))
         case .reps:
             reps = min(maxReps, max(1, Int(value.rounded()) * repStep))
         }

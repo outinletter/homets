@@ -62,17 +62,3 @@ struct WatchGhostButtonStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
-
-/// − / + 원형 아이콘 버튼
-struct WatchRoundButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(WatchStyle.ink)
-            .frame(width: 34, height: 34)
-            .background(configuration.isPressed ? WatchStyle.selected : WatchStyle.surfaceRaised, in: Circle())
-            .overlay(Circle().stroke(WatchStyle.border, lineWidth: 1))
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-    }
-}

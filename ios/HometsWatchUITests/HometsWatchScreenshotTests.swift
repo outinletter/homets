@@ -21,9 +21,8 @@ final class HometsWatchScreenshotTests: XCTestCase {
         app.buttons.firstMatch.tap()
         let log = app.buttons["logSet"]
         XCTAssertTrue(log.waitForExistence(timeout: 10))
-        app.buttons["weight-plus"].tap()
-        app.buttons["weight-plus"].tap()
-        app.buttons["reps-plus"].tap()
+        app.buttons["tile-weight"].tap()
+        XCUIDevice.shared.rotateDigitalCrown(delta: 0.3)
         shot(app, "02-weight-reps-sets")
 
         log.tap()

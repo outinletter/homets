@@ -67,23 +67,27 @@ private extension WatchStyle {
     static let strongDot = Color(hex: 0x46606D)
 }
 
-private enum InputField { case weight, reps }
+private enum InputField { case sets, weight, reps }
 
 struct ExerciseView: View {
     let store: WatchStore
     let exercise: Exercise
     @State private var weight: Double
     @State private var reps: Int
-    @State private var field: InputField = .reps
+    @State private var field: InputField
     @State private var crown: Double
 
     init(store: WatchStore, exercise: Exercise) {
         self.store = store
         self.exercise = exercise
         let target = store.defaultReps(for: exercise)
-        _weight = State(initialValue: store.defaultWeight(for: exercise) ?? 0)
+        let startWeight = store.defaultWeight(for: exercise) ?? 0
+        let weighted = store.supportsWeight(exercise)
+        let step = exercise.tracking == .seconds ? 5 : 1
+        _weight = State(initialValue: startWeight)
         _reps = State(initialValue: target)
-        _crown = State(initialValue: Double(target))
+        _field = State(initialValue: weighted ? .weight : .reps)
+        _crown = State(initialValue: weighted ? startWeight / 2.5 : Double(target) / Double(step))
     }
 
     private var usesWeight: Bool { store.supportsWeight(exercise) }
@@ -91,28 +95,52 @@ struct ExerciseView: View {
     private var done: Int { store.sets(for: exercise).count }
     private var planned: Int { store.plannedSets(exercise) }
     private var repStep: Int { isSeconds ? 5 : 1 }
-    private var activeField: InputField { usesWeight ? field : .reps }
+    private var maxReps: Int { isSeconds ? 600 : 200 }
+
+    /// 크라운 눈금 ↔ 값 변환. 세 칸이 같은 눈금 범위(0...600)를 쓰므로 칸을 바꿔도 값이 섞이지 않는다.
+    private func ticks(for field: InputField) -> Double {
+        switch field {
+        case .sets: Double(planned)
+        case .weight: weight / 2.5
+        case .reps: Double(reps) / Double(repStep)
+        }
+    }
+
+    private func apply(_ value: Double) {
+        guard abs(value - ticks(for: field)) > 0.001 else { return }
+        switch field {
+        case .sets:
+            let next = min(10, max(max(1, done), Int(value.rounded())))
+            store.changePlannedSets(next - planned, for: exercise)
+        case .weight:
+            weight = min(500, max(0, (value * 2.5 * 2).rounded() / 2))
+        case .reps:
+            reps = min(maxReps, max(1, Int(value.rounded()) * repStep))
+        }
+        let corrected = ticks(for: field)
+        if abs(corrected - value) > 0.001 { crown = corrected }
+    }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 5) {
-                if let remaining = store.restRemaining { restView(remaining) }
-                stepper(title: store.text("세트", "SETS"), value: "\(done)/\(planned)", selected: false, tint: done >= planned ? WatchStyle.mint : WatchStyle.ink,
-                        minus: { store.changePlannedSets(-1, for: exercise) }, plus: { store.changePlannedSets(1, for: exercise) }, id: "sets")
-                if usesWeight {
-                    stepper(title: "KG", value: number(weight), selected: field == .weight,
-                            minus: { weight = max(0, weight - 2.5); crown = weight }, plus: { weight = min(500, weight + 2.5); crown = weight },
-                            select: { field = .weight }, id: "weight")
-                }
-                stepper(title: isSeconds ? store.text("초", "SEC") : store.text("횟수", "REPS"), value: "\(reps)", selected: activeField == .reps,
-                        minus: { reps = max(1, reps - repStep); crown = Double(reps) }, plus: { reps = min(isSeconds ? 600 : 200, reps + repStep); crown = Double(reps) },
-                        select: { field = .reps }, id: "reps")
-                if store.restRemaining == nil {
+            VStack(spacing: 8) {
+                if let remaining = store.restRemaining {
+                    restView(remaining)
+                } else {
+                    HStack(spacing: 6) {
+                        tile(.sets, title: store.text("세트", "SETS"), value: "\(done)/\(planned)", id: "tile-sets", tint: done >= planned ? WatchStyle.mint : WatchStyle.ink)
+                        if usesWeight { tile(.weight, title: "KG", value: number(weight), id: "tile-weight") }
+                        tile(.reps, title: isSeconds ? store.text("초", "SEC") : store.text("횟수", "REPS"), value: "\(reps)", id: "tile-reps")
+                    }
+                    HStack(spacing: 4) {
+                        Image(systemName: "digitalcrown.horizontal.arrow.clockwise").font(.system(size: 10))
+                        Text(store.text("탭해서 선택 · 크라운으로 조절", "Tap to select · Crown to adjust")).font(WatchStyle.font(10, .semibold))
+                    }
+                    .foregroundStyle(WatchStyle.text3)
                     Button { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) } label: {
                         Text(done >= planned ? store.text("세트 추가", "Add set") : store.text("세트 완료", "Done"))
                     }
                     .buttonStyle(WatchPrimaryButtonStyle())
-                    .padding(.top, 2)
                     .accessibilityIdentifier("logSet")
                 }
             }
@@ -122,35 +150,24 @@ struct ExerciseView: View {
         .navigationBarTitleDisplayMode(.inline)
         .containerBackground(WatchStyle.screenBackground, for: .navigation)
         .focusable()
-        .digitalCrownRotation($crown,
-                              from: activeField == .weight ? 0 : 1,
-                              through: activeField == .weight ? 500 : (isSeconds ? 600 : 200),
-                              by: activeField == .weight ? 2.5 : Double(repStep),
-                              sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
-        .onChange(of: crown) { _, value in
-            if activeField == .weight { weight = value } else { reps = Int(value) }
-        }
-        .onChange(of: field) { _, _ in crown = activeField == .weight ? weight : Double(reps) }
+        .digitalCrownRotation($crown, from: 0, through: 600, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
+        .onChange(of: crown) { _, value in apply(value) }
+        .onChange(of: field) { _, _ in crown = ticks(for: field) }
     }
 
-    private func stepper(title: String, value: String, selected: Bool, tint: Color = WatchStyle.ink,
-                         minus: @escaping () -> Void, plus: @escaping () -> Void,
-                         select: (() -> Void)? = nil, id: String) -> some View {
-        HStack(spacing: 4) {
-            Button(action: minus) { Image(systemName: "minus") }
-                .buttonStyle(WatchRoundButtonStyle()).accessibilityIdentifier("\(id)-minus")
-            VStack(spacing: -1) {
-                Text(value).font(WatchStyle.font(26, .bold)).monospacedDigit().minimumScaleFactor(0.6).foregroundStyle(tint)
+    private func tile(_ target: InputField, title: String, value: String, id: String, tint: Color = WatchStyle.ink) -> some View {
+        let selected = field == target
+        return Button { field = target } label: {
+            VStack(spacing: 2) {
                 Text(title).font(WatchStyle.font(10, .semibold)).tracking(0.8).foregroundStyle(selected ? WatchStyle.blue : WatchStyle.text3)
+                Text(value).font(WatchStyle.font(28, .bold)).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1).foregroundStyle(tint)
             }
-            .frame(maxWidth: .infinity, minHeight: 38)
-            .background(selected ? WatchStyle.selected : Color.clear, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? WatchStyle.blue.opacity(0.7) : Color.clear, lineWidth: 1))
-            .contentShape(Rectangle())
-            .onTapGesture { select?() }
-            Button(action: plus) { Image(systemName: "plus") }
-                .buttonStyle(WatchRoundButtonStyle()).accessibilityIdentifier("\(id)-plus")
+            .frame(maxWidth: .infinity, minHeight: 72)
+            .background(selected ? WatchStyle.selected : WatchStyle.surfaceRaised, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(selected ? WatchStyle.blue : WatchStyle.border, lineWidth: selected ? 1.5 : 1))
         }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(id)
     }
 
     private func restView(_ remaining: Int) -> some View {

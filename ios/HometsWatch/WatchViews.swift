@@ -76,6 +76,7 @@ struct ExerciseView: View {
     @State private var reps: Int
     @State private var field: InputField
     @State private var crown: Double
+    @FocusState private var crownFocused: Bool
 
     init(store: WatchStore, exercise: Exercise) {
         self.store = store
@@ -122,7 +123,7 @@ struct ExerciseView: View {
     }
 
     var body: some View {
-        ScrollView {
+        VStack(spacing: 0) {
             VStack(spacing: 8) {
                 if let remaining = store.restRemaining {
                     restView(remaining)
@@ -145,19 +146,23 @@ struct ExerciseView: View {
                 }
             }
             .padding(.horizontal, 2)
+            Spacer(minLength: 0)
         }
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
         .containerBackground(WatchStyle.screenBackground, for: .navigation)
         .focusable()
+        .focused($crownFocused)
         .digitalCrownRotation($crown, from: 0, through: 600, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
         .onChange(of: crown) { _, value in apply(value) }
-        .onChange(of: field) { _, _ in crown = ticks(for: field) }
+        .onChange(of: field) { _, _ in crown = ticks(for: field); crownFocused = true }
+        .onChange(of: store.restRemaining) { _, _ in crownFocused = true }
+        .onAppear { crownFocused = true }
     }
 
     private func tile(_ target: InputField, title: String, value: String, id: String, tint: Color = WatchStyle.ink) -> some View {
         let selected = field == target
-        return Button { field = target } label: {
+        return Button { field = target; crownFocused = true } label: {
             VStack(spacing: 2) {
                 Text(title).font(WatchStyle.font(10, .semibold)).tracking(0.8).foregroundStyle(selected ? WatchStyle.blue : WatchStyle.text3)
                 Text(value).font(WatchStyle.font(28, .bold)).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1).foregroundStyle(tint)
@@ -183,7 +188,7 @@ struct ExerciseView: View {
                     Text(store.text("휴식", "REST")).font(WatchStyle.font(10, .semibold)).tracking(0.8).foregroundStyle(WatchStyle.text3)
                 }
             }
-            .frame(width: 104, height: 104)
+            .frame(width: 96, height: 96)
             HStack(spacing: 6) {
                 Button("−10") { store.adjustRest(-10) }
                 Button("+10") { store.adjustRest(10) }

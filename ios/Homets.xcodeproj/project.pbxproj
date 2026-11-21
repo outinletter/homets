@@ -24,6 +24,7 @@
 		242587899E0766E2D050F702 /* WatchViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E6D9F8285DADC402751154 /* WatchViews.swift */; };
 		36EC0346A38DC0468C708BB2 /* WatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30726FA781E3499A62DA0CB /* WatchStore.swift */; };
 		4509F8D0F2FFCBFD4C4DFC6E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B22C79401814850586D0E68A /* Foundation.framework */; };
+		4665C7D3E8451A0E27587B7B /* HometsWatchFunctionalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F7028F7A76A0F61EDE624D /* HometsWatchFunctionalTests.swift */; };
 		518AFDC9F11D70535A356CE9 /* WatchShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8442163F3550EDCDA598FC32 /* WatchShared.swift */; };
 		6C9175F85AEB218F3B15E592 /* HometsWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863392B247D9407E7898CA30 /* HometsWatchApp.swift */; };
 		6F5FD929EAE4F5CCD3060B52 /* Barlow-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002A /* Barlow-Regular.ttf */; };
@@ -90,6 +91,7 @@
 		4E252A451204EDDF1D8771E7 /* WatchSync.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSync.swift; sourceTree = "<group>"; };
 		8442163F3550EDCDA598FC32 /* WatchShared.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchShared.swift; sourceTree = "<group>"; };
 		863392B247D9407E7898CA30 /* HometsWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HometsWatchApp.swift; sourceTree = "<group>"; };
+		88F7028F7A76A0F61EDE624D /* HometsWatchFunctionalTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HometsWatchFunctionalTests.swift; sourceTree = "<group>"; };
 		89572DD6A0BDA924A48AE0C0 /* HometsWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HometsWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B042A647F8EA1C9EE1CEA78 /* HometsWatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HometsWatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B094D4C2C9BE26090253AB89 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -190,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				3571489E4FE38B8EF90BF6C1 /* HometsWatchScreenshotTests.swift */,
+				88F7028F7A76A0F61EDE624D /* HometsWatchFunctionalTests.swift */,
 			);
 			name = HometsWatchUITests;
 			path = HometsWatchUITests;
@@ -362,6 +365,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A2250D2B76BCE4DE9ADDC72F /* HometsWatchScreenshotTests.swift in Sources */,
+				4665C7D3E8451A0E27587B7B /* HometsWatchFunctionalTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

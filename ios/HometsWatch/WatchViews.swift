@@ -172,6 +172,8 @@ struct ExerciseView: View {
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(selected ? WatchStyle.blue : WatchStyle.border, lineWidth: selected ? 1.5 : 1))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityValue(value)
         .accessibilityIdentifier(id)
     }
 

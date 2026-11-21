@@ -143,7 +143,25 @@ final class WorkoutStore {
         let item = Exercise(id: "custom_\(UUID().uuidString.lowercased())", name: name, group: "사용자 운동", tracking: tracking, defaultTarget: tracking == .seconds ? 30 : 12)
         data.customExercises.append(item); save()
     }
-    private func save() { if let encoded = try? JSONEncoder().encode(data) { UserDefaults.standard.set(encoded, forKey: Self.storageKey) } }
+    private func save() {
+        if let encoded = try? JSONEncoder().encode(data) { UserDefaults.standard.set(encoded, forKey: Self.storageKey) }
+        WatchSync.shared.push()
+    }
+    func watchPayload() -> WatchPayload {
+        let list = activeExercises.filter { $0.tracking != .cardio }
+        var hints: [String: WatchHint] = [:]
+        for exercise in list { hints[exercise.id] = WatchHint(weight: suggestedWeight(for: exercise), target: suggestedTarget(for: exercise)) }
+        return WatchPayload(english: hometsIsEnglish, exercises: list, restSeconds: data.settings.defaultRestSeconds,
+                            defaultSets: defaultSets, dayKey: dateKey(), today: today.sets, hints: hints)
+    }
+    func ingestWatch(_ message: WatchSetMessage) {
+        var day = data.days[message.dayKey] ?? WorkoutDay(id: message.dayKey)
+        var items = day.sets[message.exerciseID, default: []]
+        guard !items.contains(where: { $0.id == message.set.id }) else { return }
+        items.append(message.set); items.sort { $0.date < $1.date }
+        day.sets[message.exerciseID] = items; data.days[message.dayKey] = day
+        save()
+    }
     private func dateKey(_ date: Date = .now) -> String { let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: date) }
     private func scheduleNotification(after seconds: Int) {
         guard data.settings.timerSound else { return }

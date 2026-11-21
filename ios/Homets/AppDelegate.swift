@@ -9,7 +9,7 @@ struct HometsApp: App {
     @State private var purchases = PurchaseService()
 
     var body: some Scene {
-        WindowGroup { RootView(store: store, purchases: purchases).task { await purchases.refresh() } }
+        WindowGroup { RootView(store: store, purchases: purchases).task { WatchSync.shared.start(store: store); await purchases.refresh() } }
     }
 }
 

@@ -50,9 +50,10 @@ final class HometsWatchFunctionalTests: XCTestCase {
         XCUIDevice.shared.rotateDigitalCrown(delta: 0.3)
         let planned = waitForChange(app, "tile-sets", from: "0/3")
         XCTAssertNotEqual(planned, "0/3", "크라운이 세트 수를 바꾸지 못함")
+        let attachment = XCTAttachment(screenshot: app.screenshot()); attachment.name = "sets-after-crown"; attachment.lifetime = .keepAlways; add(attachment)
 
         app.buttons["logSet"].tap()
-        XCTAssertTrue(app.staticTexts["restTime"].waitForExistence(timeout: 10), "세트 완료 후 휴식 타이머가 안 나옴")
+        XCTAssertTrue(app.staticTexts["restTime"].waitForExistence(timeout: 10), "세트 완료 후 휴식 타이머가 안 나옴 (세트 칸=\(planned) → \(value(app, "tile-sets")))")
         app.buttons["skipRest"].tap()
         XCTAssertTrue(app.buttons["logSet"].waitForExistence(timeout: 10))
         XCTAssertTrue(value(app, "tile-sets").hasPrefix("1/"), "세트 완료 후 진행 수가 1이 아님: \(value(app, "tile-sets"))")

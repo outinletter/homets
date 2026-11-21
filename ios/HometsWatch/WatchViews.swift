@@ -95,7 +95,7 @@ struct ExerciseView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 6) {
+            VStack(spacing: 5) {
                 if let remaining = store.restRemaining { restView(remaining) }
                 stepper(title: store.text("세트", "SETS"), value: "\(done)/\(planned)", selected: false, tint: done >= planned ? WatchStyle.mint : WatchStyle.ink,
                         minus: { store.changePlannedSets(-1, for: exercise) }, plus: { store.changePlannedSets(1, for: exercise) }, id: "sets")
@@ -143,7 +143,7 @@ struct ExerciseView: View {
                 Text(value).font(WatchStyle.font(26, .bold)).monospacedDigit().minimumScaleFactor(0.6).foregroundStyle(tint)
                 Text(title).font(WatchStyle.font(10, .semibold)).tracking(0.8).foregroundStyle(selected ? WatchStyle.blue : WatchStyle.text3)
             }
-            .frame(maxWidth: .infinity, minHeight: 42)
+            .frame(maxWidth: .infinity, minHeight: 38)
             .background(selected ? WatchStyle.selected : Color.clear, in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? WatchStyle.blue.opacity(0.7) : Color.clear, lineWidth: 1))
             .contentShape(Rectangle())
@@ -160,7 +160,6 @@ struct ExerciseView: View {
                 Circle().trim(from: 0, to: min(1, Double(remaining) / Double(max(store.payload.restSeconds, remaining))))
                     .stroke(WatchStyle.ringGradient, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 0.25), value: remaining)
                 VStack(spacing: -2) {
                     Text(clock(remaining)).font(WatchStyle.font(30, .bold)).monospacedDigit().foregroundStyle(WatchStyle.ink)
                         .accessibilityIdentifier("restTime")

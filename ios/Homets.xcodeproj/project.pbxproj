@@ -26,9 +26,13 @@
 		4509F8D0F2FFCBFD4C4DFC6E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B22C79401814850586D0E68A /* Foundation.framework */; };
 		518AFDC9F11D70535A356CE9 /* WatchShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8442163F3550EDCDA598FC32 /* WatchShared.swift */; };
 		6C9175F85AEB218F3B15E592 /* HometsWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863392B247D9407E7898CA30 /* HometsWatchApp.swift */; };
+		6F5FD929EAE4F5CCD3060B52 /* Barlow-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002A /* Barlow-Regular.ttf */; };
 		7F0701A3CFCB159D0D5E2104 /* HometsWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 89572DD6A0BDA924A48AE0C0 /* HometsWatch.app */; };
+		87F9BC6675A8781156FF9859 /* Barlow-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002C /* Barlow-ExtraBold.ttf */; };
+		8BD2522E0A3C2C35FE8AF372 /* WatchStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E829DB261FDAD904C16F787 /* WatchStyle.swift */; };
 		98F5A9A74C37494EA11849C2 /* WatchShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8442163F3550EDCDA598FC32 /* WatchShared.swift */; };
 		A2250D2B76BCE4DE9ADDC72F /* HometsWatchScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3571489E4FE38B8EF90BF6C1 /* HometsWatchScreenshotTests.swift */; };
+		A3DBE2B99B9B2D96C9972F05 /* Barlow-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000002B /* Barlow-SemiBold.ttf */; };
 		D0C0DA4D6E521DCFD15EE1AF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D6A9EB707DD277B258B4ED2A /* Assets.xcassets */; };
 		E5EA95F3E4D62977BAD648F8 /* WatchSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E252A451204EDDF1D8771E7 /* WatchSync.swift */; };
 		E80417742CD2169088D7C136 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000020 /* Models.swift */; };
@@ -81,6 +85,7 @@
 		00000000000000000000002C /* Barlow-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Barlow-ExtraBold.ttf"; sourceTree = "<group>"; };
 		000000000000000000000030 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		000000000000000000000032 /* BackupDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDocument.swift; sourceTree = "<group>"; };
+		1E829DB261FDAD904C16F787 /* WatchStyle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchStyle.swift; sourceTree = "<group>"; };
 		3571489E4FE38B8EF90BF6C1 /* HometsWatchScreenshotTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HometsWatchScreenshotTests.swift; sourceTree = "<group>"; };
 		4E252A451204EDDF1D8771E7 /* WatchSync.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSync.swift; sourceTree = "<group>"; };
 		8442163F3550EDCDA598FC32 /* WatchShared.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchShared.swift; sourceTree = "<group>"; };
@@ -197,6 +202,7 @@
 				B30726FA781E3499A62DA0CB /* WatchStore.swift */,
 				D1E6D9F8285DADC402751154 /* WatchViews.swift */,
 				D6A9EB707DD277B258B4ED2A /* Assets.xcassets */,
+				1E829DB261FDAD904C16F787 /* WatchStyle.swift */,
 			);
 			name = HometsWatch;
 			path = HometsWatch;
@@ -305,6 +311,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0C0DA4D6E521DCFD15EE1AF /* Assets.xcassets in Resources */,
+				6F5FD929EAE4F5CCD3060B52 /* Barlow-Regular.ttf in Resources */,
+				A3DBE2B99B9B2D96C9972F05 /* Barlow-SemiBold.ttf in Resources */,
+				87F9BC6675A8781156FF9859 /* Barlow-ExtraBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -344,6 +353,7 @@
 				242587899E0766E2D050F702 /* WatchViews.swift in Sources */,
 				E80417742CD2169088D7C136 /* Models.swift in Sources */,
 				518AFDC9F11D70535A356CE9 /* WatchShared.swift in Sources */,
+				8BD2522E0A3C2C35FE8AF372 /* WatchStyle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

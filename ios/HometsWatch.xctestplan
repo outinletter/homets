@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "8C7C7B5E-0C1B-4B53-9F0B-6F3B0E7B1A11",
+      "name" : "Default",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "maximumTestRepetitions" : 3,
+    "testRepetitionMode" : "retryOnFailure"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Homets.xcodeproj",
+        "identifier" : "31C675E3F0A4ECA90A203187",
+        "name" : "HometsWatchUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

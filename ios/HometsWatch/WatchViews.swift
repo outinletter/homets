@@ -153,7 +153,7 @@ struct ExerciseView: View {
         .containerBackground(WatchStyle.screenBackground, for: .navigation)
         .focusable()
         .focused($crownFocused)
-        .digitalCrownRotation($crown, from: 0, through: 600, by: 1, sensitivity: .medium, isContinuous: false, isHapticFeedbackEnabled: true)
+        .digitalCrownRotation($crown, from: 0, through: 600, by: 1, sensitivity: .low, isContinuous: false, isHapticFeedbackEnabled: true)
         .onChange(of: crown) { _, value in apply(value) }
         .onChange(of: field) { _, _ in crown = ticks(for: field); crownFocused = true }
         .onChange(of: store.restRemaining) { _, _ in crownFocused = true }

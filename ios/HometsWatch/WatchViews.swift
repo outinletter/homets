@@ -62,6 +62,7 @@ struct ExerciseView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 8) {
+                if let remaining = store.restRemaining { restView(remaining) }
                 stepper(title: store.text("세트", "Sets"), value: "\(done)/\(planned)", selected: false,
                         minus: { store.changePlannedSets(-1, for: exercise) }, plus: { store.changePlannedSets(1, for: exercise) }, id: "sets")
                 if usesWeight {
@@ -72,9 +73,7 @@ struct ExerciseView: View {
                 stepper(title: isSeconds ? store.text("초", "sec") : store.text("횟수", "Reps"), value: "\(reps)", selected: activeField == .reps,
                         minus: { reps = max(1, reps - repStep); crown = Double(reps) }, plus: { reps = min(isSeconds ? 600 : 200, reps + repStep); crown = Double(reps) },
                         select: { field = .reps }, id: "reps")
-                if let remaining = store.restRemaining {
-                    restView(remaining)
-                } else {
+                if store.restRemaining == nil {
                     Button { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) } label: {
                         Text(done >= planned ? store.text("세트 추가", "Add set") : store.text("세트 완료", "Done"))
                             .frame(maxWidth: .infinity)

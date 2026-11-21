@@ -37,6 +37,7 @@ final class WatchStore: NSObject, WCSessionDelegate {
         guard WCSession.isSupported() else { return }
         WCSession.default.delegate = self
         WCSession.default.activate()
+        guard !ProcessInfo.processInfo.arguments.contains("-uitest") else { return }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 

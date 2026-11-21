@@ -12,6 +12,7 @@ final class HometsWatchScreenshotTests: XCTestCase {
 
     func testCaptureWorkoutFlow() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-uitest"]
         app.launch()
 
         XCTAssertTrue(app.buttons.firstMatch.waitForExistence(timeout: 15))
@@ -24,9 +25,12 @@ final class HometsWatchScreenshotTests: XCTestCase {
         app.buttons["weight-plus"].tap()
         app.buttons["reps-plus"].tap()
         shot(app, "02-weight-reps-sets")
+        app.swipeUp()
+        shot(app, "02b-log-button")
 
         log.tap()
         XCTAssertTrue(app.staticTexts["restTime"].waitForExistence(timeout: 10))
+        app.swipeDown()
         shot(app, "03-rest-timer")
 
         app.buttons["skipRest"].tap()

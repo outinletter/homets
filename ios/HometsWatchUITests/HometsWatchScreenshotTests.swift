@@ -2,6 +2,7 @@ import XCTest
 
 final class HometsWatchScreenshotTests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
+    override func tearDown() { XCUIApplication().terminate(); Thread.sleep(forTimeInterval: 4) }
 
     private func shot(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
@@ -11,9 +12,7 @@ final class HometsWatchScreenshotTests: XCTestCase {
     }
 
     func testCaptureWorkoutFlow() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uitest"]
-        app.launch()
+        let app = launchWatchApp()
 
         XCTAssertTrue(app.buttons.firstMatch.waitForExistence(timeout: 15))
         shot(app, "01-exercise-list")

@@ -1,12 +1,24 @@
 import XCTest
 
+/// 시뮬레이터가 직전 인스턴스 종료 직후의 재실행을 가끔 거부해서, 종료를 확인하고 실패하면 다시 실행한다.
+func launchWatchApp() -> XCUIApplication {
+    let app = XCUIApplication()
+    app.launchArguments = ["-uitest"]
+    for _ in 1...4 {
+        app.launch()
+        if app.wait(for: .runningForeground, timeout: 15) { break }
+        app.terminate()
+        Thread.sleep(forTimeInterval: 4)
+    }
+    return app
+}
+
 final class HometsWatchFunctionalTests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
+    override func tearDown() { XCUIApplication().terminate(); Thread.sleep(forTimeInterval: 4) }
 
     private func openFirstExercise() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uitest"]
-        app.launch()
+        let app = launchWatchApp()
         XCTAssertTrue(app.buttons.firstMatch.waitForExistence(timeout: 15))
         app.buttons.firstMatch.tap()
         XCTAssertTrue(app.buttons["logSet"].waitForExistence(timeout: 10))

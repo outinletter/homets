@@ -4,11 +4,12 @@ import XCTest
 func launchWatchApp() -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = ["-uitest"]
-    for _ in 1...4 {
+    for _ in 1...5 {
         app.launch()
-        if app.wait(for: .runningForeground, timeout: 15) { break }
+        // 앱이 떠 있고 운동 목록이 실제로 보일 때까지 확인한다. 아니면 종료 후 다시 실행.
+        if app.wait(for: .runningForeground, timeout: 15), app.buttons.firstMatch.waitForExistence(timeout: 15) { return app }
         app.terminate()
-        Thread.sleep(forTimeInterval: 4)
+        Thread.sleep(forTimeInterval: 5)
     }
     return app
 }

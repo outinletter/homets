@@ -1,9 +1,9 @@
 import XCTest
 
 /// 시뮬레이터가 직전 인스턴스 종료 직후의 재실행을 가끔 거부해서, 종료를 확인하고 실패하면 다시 실행한다.
-func launchWatchApp() -> XCUIApplication {
+func launchWatchApp(language: String = "ko") -> XCUIApplication {
     let app = XCUIApplication()
-    app.launchArguments = ["-uitest"]
+    app.launchArguments = ["-uitest", "-AppleLanguages", "(\(language))", "-AppleLocale", language == "ko" ? "ko_KR" : "en_US"]
     for _ in 1...5 {
         app.launch()
         // 앱이 떠 있고 운동 목록이 실제로 보일 때까지 확인한다. 아니면 종료 후 다시 실행.
@@ -73,5 +73,37 @@ final class HometsWatchFunctionalTests: XCTestCase {
         let tree = XCTAttachment(string: app.debugDescription); tree.name = "tree-after-skip"; tree.lifetime = .keepAlways; add(tree)
         XCTAssertTrue(app.buttons["logSet"].waitForExistence(timeout: 10))
         XCTAssertTrue(value(app, "tile-sets").hasPrefix("1/"), "세트 완료 후 진행 수가 1이 아님: \(value(app, "tile-sets"))")
+    }
+
+    // MARK: 언어
+
+    private func firstExerciseButton(_ app: XCUIApplication, startingWith name: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+    }
+
+    func testEnglishTexts() throws {
+        let app = launchWatchApp(language: "en")
+        XCTAssertTrue(firstExerciseButton(app, startingWith: "Shoulder Press").waitForExistence(timeout: 10), "영어에서 운동 이름이 영어가 아님")
+        app.buttons.firstMatch.tap()
+        XCTAssertTrue(app.buttons["logSet"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons["tile-sets"].label, "SETS")
+        XCTAssertEqual(app.buttons["tile-reps"].label, "REPS")
+        XCTAssertEqual(app.buttons["logSet"].label, "Done")
+        app.buttons["logSet"].tap()
+        XCTAssertTrue(app.buttons["skipRest"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons["skipRest"].label, "Skip")
+    }
+
+    func testKoreanTexts() throws {
+        let app = launchWatchApp(language: "ko")
+        XCTAssertTrue(firstExerciseButton(app, startingWith: "숄더 프레스").waitForExistence(timeout: 10), "한국어에서 운동 이름이 한국어가 아님")
+        app.buttons.firstMatch.tap()
+        XCTAssertTrue(app.buttons["logSet"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons["tile-sets"].label, "세트")
+        XCTAssertEqual(app.buttons["tile-reps"].label, "횟수")
+        XCTAssertEqual(app.buttons["logSet"].label, "세트 완료")
+        app.buttons["logSet"].tap()
+        XCTAssertTrue(app.buttons["skipRest"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons["skipRest"].label, "건너뛰기")
     }
 }

@@ -28,6 +28,7 @@ final class WatchStore: NSObject, WCSessionDelegate {
     var english: Bool { payload.english }
     func text(_ korean: String, _ english: String) -> String { payload.english ? english : korean }
     var exercises: [Exercise] { payload.exercises }
+    func name(_ exercise: Exercise) -> String { payload.english ? (Exercise.englishNames[exercise.id] ?? exercise.name) : exercise.name }
 
     var dayKey: String {
         let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: .now)

@@ -16,8 +16,20 @@ struct WatchPayload: Codable, Equatable {
     var hints: [String: WatchHint] = [:]
 
     static var standalone: WatchPayload {
-        WatchPayload(exercises: Array(Exercise.builtIn.filter { $0.tracking != .cardio }.prefix(7)))
+        WatchPayload(english: !(Locale.preferredLanguages.first?.hasPrefix("ko") ?? false), exercises: Array(Exercise.builtIn.filter { $0.tracking != .cardio }.prefix(7)))
     }
+}
+
+extension Exercise {
+    /// 기본 운동의 영어 이름(아이폰·워치 공용).
+    static let englishNames: [String: String] = [
+        "treadmill": "Treadmill", "shoulderpress": "Shoulder Press", "latpulldown": "Lat Pulldown", "reardelt": "Rear Delt Machine",
+        "legextension": "Seated Leg Extension", "legcurl": "Leg Curl", "legpress": "Leg Press", "armcurl": "Arm Curl Machine",
+        "pushup": "Push-ups", "squat": "Squats", "lunge": "Lunges", "plank": "Plank", "bodyinversion": "Body Inversion", "burpee": "Burpees",
+        "mountain": "Mountain Climbers", "dip": "Triceps Dips", "legraise": "Leg Raises", "crunch": "Crunches",
+        "bridge": "Glute Bridge", "jumpjack": "Jumping Jacks", "inchworm": "Inchworms", "benchpress": "Bench Press",
+        "dumbbellrow": "Dumbbell Row", "deadlift": "Deadlift", "lateralraise": "Lateral Raises", "calfraise": "Calf Raises"
+    ]
 }
 
 struct WatchSetMessage: Codable, Equatable {

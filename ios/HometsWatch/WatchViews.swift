@@ -39,7 +39,7 @@ struct WatchRootView: View {
         let complete = done >= planned
         return HStack(spacing: 6) {
             VStack(alignment: .leading, spacing: 5) {
-                Text(exercise.name)
+                Text(store.name(exercise))
                     .font(WatchStyle.font(15, .semibold))
                     .foregroundStyle(WatchStyle.ink)
                     .lineLimit(2).minimumScaleFactor(0.85)
@@ -148,7 +148,7 @@ struct ExerciseView: View {
             .padding(.horizontal, 2)
             Spacer(minLength: 0)
         }
-        .navigationTitle(exercise.name)
+        .navigationTitle(store.name(exercise))
         .navigationBarTitleDisplayMode(.inline)
         .containerBackground(WatchStyle.screenBackground, for: .navigation)
         .focusable()

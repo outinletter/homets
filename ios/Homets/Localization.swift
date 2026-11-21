@@ -75,14 +75,7 @@ enum HometsEnglish {
         "복원할 구독이 없습니다.": "No purchase is available to restore.", "구매 복원에 실패했습니다.": "Could not restore purchases.", "Premium 구매": "Get Premium"
     ]
 
-    static let exerciseNames: [String: String] = [
-        "treadmill": "Treadmill", "shoulderpress": "Shoulder Press", "latpulldown": "Lat Pulldown", "reardelt": "Rear Delt Machine",
-        "legextension": "Seated Leg Extension", "legcurl": "Leg Curl", "legpress": "Leg Press", "armcurl": "Arm Curl Machine",
-        "pushup": "Push-ups", "squat": "Squats", "lunge": "Lunges", "plank": "Plank", "bodyinversion": "Body Inversion", "burpee": "Burpees",
-        "mountain": "Mountain Climbers", "dip": "Triceps Dips", "legraise": "Leg Raises", "crunch": "Crunches",
-        "bridge": "Glute Bridge", "jumpjack": "Jumping Jacks", "inchworm": "Inchworms", "benchpress": "Bench Press",
-        "dumbbellrow": "Dumbbell Row", "deadlift": "Deadlift", "lateralraise": "Lateral Raises", "calfraise": "Calf Raises"
-    ]
+    static let exerciseNames = Exercise.englishNames
 }
 
 extension Exercise {

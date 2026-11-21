@@ -5,9 +5,20 @@ import WatchConnectivity
 final class WatchSync: NSObject, WCSessionDelegate {
     @MainActor static let shared = WatchSync()
     @MainActor private weak var store: WorkoutStore?
+    @MainActor private var lastEnglish = hometsIsEnglish
+    @MainActor private var observer: NSObjectProtocol?
 
     @MainActor func start(store: WorkoutStore) {
         self.store = store
+        if observer == nil {
+            observer = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, self.lastEnglish != hometsIsEnglish else { return }
+                    self.lastEnglish = hometsIsEnglish
+                    self.push()
+                }
+            }
+        }
         guard WCSession.isSupported() else { return }
         let session = WCSession.default
         session.delegate = self

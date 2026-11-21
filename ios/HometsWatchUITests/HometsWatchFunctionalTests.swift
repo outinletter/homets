@@ -55,6 +55,9 @@ final class HometsWatchFunctionalTests: XCTestCase {
         app.buttons["logSet"].tap()
         XCTAssertTrue(app.staticTexts["restTime"].waitForExistence(timeout: 10), "세트 완료 후 휴식 타이머가 안 나옴 (세트 칸=\(planned) → \(value(app, "tile-sets")))")
         app.buttons["skipRest"].tap()
+        Thread.sleep(forTimeInterval: 2)
+        let shotAfter = XCTAttachment(screenshot: app.screenshot()); shotAfter.name = "after-skip"; shotAfter.lifetime = .keepAlways; add(shotAfter)
+        let tree = XCTAttachment(string: app.debugDescription); tree.name = "tree-after-skip"; tree.lifetime = .keepAlways; add(tree)
         XCTAssertTrue(app.buttons["logSet"].waitForExistence(timeout: 10))
         XCTAssertTrue(value(app, "tile-sets").hasPrefix("1/"), "세트 완료 후 진행 수가 1이 아님: \(value(app, "tile-sets"))")
     }

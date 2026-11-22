@@ -11,8 +11,12 @@ final class HometsWatchScreenshotTests: XCTestCase {
         add(attachment)
     }
 
-    func testCaptureWorkoutFlow() throws {
-        let app = launchWatchApp()
+    func testCaptureWorkoutFlow() throws { try captureFlow(language: "ko", prefix: "") }
+    func testCaptureWorkoutFlowEnglish() throws { try captureFlow(language: "en", prefix: "en-") }
+
+    private func captureFlow(language: String, prefix: String) throws {
+        let app = launchWatchApp(language: language)
+        let shot = { (app: XCUIApplication, name: String) in self.shot(app, prefix + name) }
 
         XCTAssertTrue(app.buttons.firstMatch.waitForExistence(timeout: 15))
         shot(app, "01-exercise-list")

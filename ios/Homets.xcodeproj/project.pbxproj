@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1B2C3D4E5F60718293A4B5D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* PrivacyInfo.xcprivacy */; };
 		000000000000000000000009 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000006 /* AppDelegate.swift */; };
 		00000000000000000000000B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000008 /* PrivacyInfo.xcprivacy */; };
 		00000000000000000000001A /* timer-double-beep.wav in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000019 /* timer-double-beep.wav */; };
@@ -72,6 +73,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A1B2C3D4E5F60718293A4B5C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		000000000000000000000005 /* Homets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Homets.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000006 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		000000000000000000000008 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 				D1E6D9F8285DADC402751154 /* WatchViews.swift */,
 				D6A9EB707DD277B258B4ED2A /* Assets.xcassets */,
 				1E829DB261FDAD904C16F787 /* WatchStyle.swift */,
+				A1B2C3D4E5F60718293A4B5C /* PrivacyInfo.xcprivacy */,
 			);
 			name = HometsWatch;
 			path = HometsWatch;
@@ -314,6 +317,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0C0DA4D6E521DCFD15EE1AF /* Assets.xcassets in Resources */,
+				A1B2C3D4E5F60718293A4B5D /* PrivacyInfo.xcprivacy in Resources */,
 				6F5FD929EAE4F5CCD3060B52 /* Barlow-Regular.ttf in Resources */,
 				A3DBE2B99B9B2D96C9972F05 /* Barlow-SemiBold.ttf in Resources */,
 				87F9BC6675A8781156FF9859 /* Barlow-ExtraBold.ttf in Resources */,
@@ -414,7 +418,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = A7QB8PT33N;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -431,7 +435,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = A7QB8PT33N;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -467,7 +471,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = A7QB8PT33N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -512,7 +516,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = A7QB8PT33N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

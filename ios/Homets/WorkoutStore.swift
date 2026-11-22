@@ -29,7 +29,7 @@ final class WorkoutStore {
     private var restSoundPlayer: AVAudioPlayer?
     var watchAcked: [UUID] { ackedWatchIDs }
     func plannedSets(_ id: String) -> Int {
-        if let item = plannedOverrides[id], item.at > defaultSetsAt { return item.count }
+        if let item = plannedOverrides[id], item.at > defaultSetsAt, item.at >= Calendar.current.startOfDay(for: .now) { return item.count }
         return defaultSets
     }
     func changeSets(_ delta: Int, id: String? = nil) {
@@ -104,7 +104,7 @@ final class WorkoutStore {
         guard restRemaining == nil, activeTimedExerciseID == nil else { return }
         var day = today; day.sets[exercise.id, default: []].append(LoggedSet(value: value, weight: weight, distanceKm: distance, durationSeconds: duration)); data.days[day.id] = day
         save()
-        if day.sets[exercise.id, default: []].count < plannedSets(exercise.id) {
+        if day.sets[exercise.id, default: []].count != plannedSets(exercise.id) {
             startRest(seconds: data.settings.defaultRestSeconds)
         }
     }

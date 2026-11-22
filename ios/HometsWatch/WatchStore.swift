@@ -46,9 +46,11 @@ final class WatchStore: NSObject, WCSessionDelegate {
     var exercises: [Exercise] { payload.exercises }
     func name(_ exercise: Exercise) -> String { payload.english ? (Exercise.englishNames[exercise.id] ?? exercise.name) : exercise.name }
 
-    var dayKey: String {
-        let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: .now)
-    }
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f
+    }()
+    var dayKey: String { Self.dayFormatter.string(from: .now) }
+    private var startOfToday: Date { Calendar.current.startOfDay(for: .now) }
 
     func start() {
         guard WCSession.isSupported() else { return }
@@ -70,7 +72,7 @@ final class WatchStore: NSObject, WCSessionDelegate {
         pending.filter { $0.exerciseID == exercise.id && $0.dayKey == dayKey }.map(\.set)
     }
     func plannedSets(_ exercise: Exercise) -> Int {
-        if let item = planned[exercise.id], item.at > (payload.defaultSetsAt ?? .distantPast) { return item.count }
+        if let item = planned[exercise.id], item.at >= startOfToday, item.at > (payload.defaultSetsAt ?? .distantPast) { return item.count }
         return payload.defaultSets
     }
     func changePlannedSets(_ delta: Int, for exercise: Exercise) {
@@ -79,8 +81,7 @@ final class WatchStore: NSObject, WCSessionDelegate {
         let item = WatchPlanned(count: count, at: .now)
         planned[exercise.id] = item
         savePlanned()
-        send(WatchKey.planned, WatchPlannedMessage(exerciseID: exercise.id, dayKey: dayKey, planned: item))
-        syncState()
+        scheduleSync()
     }
     /// 마지막으로 기록한 세트를 지운다(아이폰에도 전달).
     func undoLastSet(for exercise: Exercise) {
@@ -99,12 +100,22 @@ final class WatchStore: NSObject, WCSessionDelegate {
         guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
         let today = dayKey
         let state = WatchState(
-            sets: pending.filter { $0.dayKey == today },
+            sets: pending,
             deletes: deleteMessages.filter { $0.dayKey == today },
-            planned: planned.map { WatchPlannedMessage(exerciseID: $0.key, dayKey: today, planned: $0.value) })
+            planned: planned.filter { $0.value.at >= startOfToday }.map { WatchPlannedMessage(exerciseID: $0.key, dayKey: today, planned: $0.value) })
         guard let data = try? JSONEncoder().encode(state) else { return }
         try? WCSession.default.updateApplicationContext([WatchKey.state: data])
         if WCSession.default.isReachable { WCSession.default.sendMessage([WatchKey.state: data], replyHandler: nil, errorHandler: nil) }
+    }
+    /// 크라운을 돌리는 동안 값이 계속 바뀌므로 잠시 모아서 한 번만 보낸다.
+    private var syncTask: Task<Void, Never>?
+    private func scheduleSync() {
+        syncTask?.cancel()
+        syncTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled else { return }
+            self?.syncState()
+        }
     }
     private func send<T: Encodable>(_ key: String, _ message: T) {
         guard WCSession.isSupported(), WCSession.default.activationState == .activated, let data = try? JSONEncoder().encode(message) else { return }
@@ -123,7 +134,8 @@ final class WatchStore: NSObject, WCSessionDelegate {
         send(WatchKey.set, message)
         syncState()
         WKInterfaceDevice.current().play(.success)
-        if sets(for: exercise).count < plannedSets(exercise) { startRest(seconds: payload.restSeconds) }
+        // 계획한 마지막 세트만 휴식 없이 끝낸다. 추가로 기록하는 세트(계획 초과)는 다음 세트가 이어지므로 휴식한다.
+        if sets(for: exercise).count != plannedSets(exercise) { startRest(seconds: payload.restSeconds) }
     }
 
     // MARK: 휴식 타이머
@@ -178,10 +190,12 @@ final class WatchStore: NSObject, WCSessionDelegate {
         UserDefaults.standard.set(data, forKey: Self.payloadKey)
         let known = Set(received.today.values.flatMap { $0 }.map(\.id))
         let acked = Set(received.acked ?? [])
-        pending.removeAll { known.contains($0.set.id) || acked.contains($0.set.id) || $0.dayKey != dayKey }
+        // 아이폰이 확인한 세트만 지운다. 확인되지 않은 지난 기록은 다음 연결 때 다시 보내되, 3일이 지나면 버린다.
+        let cutoff = Self.dayFormatter.string(from: Calendar.current.date(byAdding: .day, value: -3, to: .now) ?? .now)
+        pending.removeAll { known.contains($0.set.id) || acked.contains($0.set.id) || $0.dayKey < cutoff }
         deleted = deleted.filter { known.contains($0) }
         deleteMessages.removeAll { !known.contains($0.setID) || $0.dayKey != dayKey }
-        for (id, item) in received.overrides ?? [:] where item.at > (planned[id]?.at ?? .distantPast) { planned[id] = item }
+        for (id, item) in received.overrides ?? [:] where item.at >= startOfToday && item.at > (planned[id]?.at ?? .distantPast) { planned[id] = item }
         savePlanned()
         if let encoded = try? JSONEncoder().encode(pending) { UserDefaults.standard.set(encoded, forKey: Self.pendingKey) }
     }

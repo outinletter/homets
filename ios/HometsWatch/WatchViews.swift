@@ -213,8 +213,8 @@ struct ExerciseView: View {
                     Text(store.text("휴식", "REST")).font(WatchStyle.font(10, .semibold)).tracking(0.8).foregroundStyle(WatchStyle.text3)
                 }
             }
-            .frame(width: 92, height: 92)
-            .padding(.top, 14)
+            .frame(width: 88, height: 88)
+            .padding(.top, 26)
             HStack(spacing: 6) {
                 Button("−10") { store.adjustRest(-10) }
                 Button("+10") { store.adjustRest(10) }

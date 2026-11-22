@@ -133,16 +133,39 @@ struct ExerciseView: View {
                         if usesWeight { tile(.weight, title: "KG", value: number(weight), id: "tile-weight") }
                         tile(.reps, title: isSeconds ? store.text("초", "SEC") : store.text("횟수", "REPS"), value: "\(reps)", id: "tile-reps")
                     }
-                    HStack(spacing: 4) {
-                        Image(systemName: "digitalcrown.horizontal.arrow.clockwise").font(.system(size: 10))
-                        Text(store.text("탭해서 선택 · 크라운으로 조절", "Tap to select · Crown to adjust")).font(WatchStyle.font(10, .semibold))
+                    if field == .sets {
+                        HStack(spacing: 8) {
+                            Button { store.changePlannedSets(-1, for: exercise); crown = ticks(for: .sets) } label: { Image(systemName: "minus") }
+                                .buttonStyle(WatchGhostButtonStyle())
+                                .disabled(planned <= max(1, done))
+                                .accessibilityLabel(store.text("세트 삭제", "Remove set")).accessibilityIdentifier("plannedMinus")
+                            Text(store.text("세트 수", "Sets")).font(WatchStyle.font(10, .semibold)).foregroundStyle(WatchStyle.text3)
+                            Button { store.changePlannedSets(1, for: exercise); crown = ticks(for: .sets) } label: { Image(systemName: "plus") }
+                                .buttonStyle(WatchGhostButtonStyle())
+                                .disabled(planned >= 10)
+                                .accessibilityLabel(store.text("세트 추가", "Add set")).accessibilityIdentifier("plannedPlus")
+                        }
+                    } else {
+                        HStack(spacing: 4) {
+                            Image(systemName: "digitalcrown.horizontal.arrow.clockwise").font(.system(size: 10))
+                            Text(store.text("탭해서 선택 · 크라운으로 조절", "Tap to select · Crown to adjust")).font(WatchStyle.font(10, .semibold))
+                        }
+                        .foregroundStyle(WatchStyle.text3)
                     }
-                    .foregroundStyle(WatchStyle.text3)
-                    Button { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) } label: {
-                        Text(done >= planned ? store.text("세트 추가", "Add set") : store.text("세트 완료", "Done"))
+                    HStack(spacing: 6) {
+                        if done > 0 {
+                            Button { store.undoLastSet(for: exercise) } label: { Image(systemName: "arrow.uturn.backward") }
+                                .buttonStyle(WatchGhostButtonStyle(tint: WatchStyle.lavender))
+                                .frame(width: 50)
+                                .accessibilityLabel(store.text("마지막 세트 삭제", "Delete last set"))
+                                .accessibilityIdentifier("undoSet")
+                        }
+                        Button { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) } label: {
+                            Text(done >= planned ? store.text("세트 추가", "Add set") : store.text("세트 완료", "Done"))
+                        }
+                        .buttonStyle(WatchPrimaryButtonStyle())
+                        .accessibilityIdentifier("logSet")
                     }
-                    .buttonStyle(WatchPrimaryButtonStyle())
-                    .accessibilityIdentifier("logSet")
                 }
             }
             .padding(.horizontal, 2)
@@ -190,7 +213,8 @@ struct ExerciseView: View {
                     Text(store.text("휴식", "REST")).font(WatchStyle.font(10, .semibold)).tracking(0.8).foregroundStyle(WatchStyle.text3)
                 }
             }
-            .frame(width: 96, height: 96)
+            .frame(width: 92, height: 92)
+            .padding(.top, 14)
             HStack(spacing: 6) {
                 Button("−10") { store.adjustRest(-10) }
                 Button("+10") { store.adjustRest(10) }

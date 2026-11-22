@@ -10,12 +10,15 @@ import WatchKit
 final class WatchStore: NSObject, WCSessionDelegate {
     private(set) var payload: WatchPayload
     private var pending: [WatchSetMessage]
-    private var setOverrides: [String: Int] = [:]
+    private var planned: [String: WatchPlanned] = [:]
+    private var deleted: Set<UUID> = []
+    private var deleteMessages: [WatchDeleteMessage] = []
     var restRemaining: Int?
     private var restDeadline: Date?
     private var restTask: Task<Void, Never>?
     private static let payloadKey = "watch.payload"
     private static let pendingKey = "watch.pending"
+    private static let plannedKey = "watch.planned"
     private static let restID = "homets-watch-rest"
 
     override init() {
@@ -23,10 +26,19 @@ final class WatchStore: NSObject, WCSessionDelegate {
         if ProcessInfo.processInfo.arguments.contains("-uitest") {
             defaults.removeObject(forKey: Self.payloadKey)
             defaults.removeObject(forKey: Self.pendingKey)
+            defaults.removeObject(forKey: Self.plannedKey)
         }
         payload = defaults.data(forKey: Self.payloadKey).flatMap { try? JSONDecoder().decode(WatchPayload.self, from: $0) } ?? .standalone
         pending = defaults.data(forKey: Self.pendingKey).flatMap { try? JSONDecoder().decode([WatchSetMessage].self, from: $0) } ?? []
+        if let raw = defaults.data(forKey: Self.plannedKey), let saved = try? JSONDecoder().decode(PlannedSaved.self, from: raw), saved.day == Self.today() { planned = saved.items }
         super.init()
+    }
+    private struct PlannedSaved: Codable { var day: String; var items: [String: WatchPlanned] }
+    private static func today() -> String {
+        let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: .now)
+    }
+    private func savePlanned() {
+        if let data = try? JSONEncoder().encode(PlannedSaved(day: dayKey, items: planned)) { UserDefaults.standard.set(data, forKey: Self.plannedKey) }
     }
 
     var english: Bool { payload.english }
@@ -49,17 +61,54 @@ final class WatchStore: NSObject, WCSessionDelegate {
     // MARK: 기록
 
     func sets(for exercise: Exercise) -> [LoggedSet] {
-        guard payload.dayKey == dayKey else { return pendingSets(for: exercise) }
+        guard payload.dayKey == dayKey else { return pendingSets(for: exercise).filter { !deleted.contains($0.id) } }
         var items = payload.today[exercise.id] ?? []
         for set in pendingSets(for: exercise) where !items.contains(where: { $0.id == set.id }) { items.append(set) }
-        return items.sorted { $0.date < $1.date }
+        return items.filter { !deleted.contains($0.id) }.sorted { $0.date < $1.date }
     }
     private func pendingSets(for exercise: Exercise) -> [LoggedSet] {
         pending.filter { $0.exerciseID == exercise.id && $0.dayKey == dayKey }.map(\.set)
     }
-    func plannedSets(_ exercise: Exercise) -> Int { setOverrides[exercise.id] ?? payload.defaultSets }
+    func plannedSets(_ exercise: Exercise) -> Int {
+        if let item = planned[exercise.id], item.at > (payload.defaultSetsAt ?? .distantPast) { return item.count }
+        return payload.defaultSets
+    }
     func changePlannedSets(_ delta: Int, for exercise: Exercise) {
-        setOverrides[exercise.id] = min(10, max(max(1, sets(for: exercise).count), plannedSets(exercise) + delta))
+        let count = min(10, max(max(1, sets(for: exercise).count), plannedSets(exercise) + delta))
+        guard count != plannedSets(exercise) else { return }
+        let item = WatchPlanned(count: count, at: .now)
+        planned[exercise.id] = item
+        savePlanned()
+        send(WatchKey.planned, WatchPlannedMessage(exerciseID: exercise.id, dayKey: dayKey, planned: item))
+        syncState()
+    }
+    /// 마지막으로 기록한 세트를 지운다(아이폰에도 전달).
+    func undoLastSet(for exercise: Exercise) {
+        guard restRemaining == nil, let last = sets(for: exercise).last else { return }
+        deleted.insert(last.id)
+        pending.removeAll { $0.set.id == last.id }
+        if let data = try? JSONEncoder().encode(pending) { UserDefaults.standard.set(data, forKey: Self.pendingKey) }
+        let message = WatchDeleteMessage(exerciseID: exercise.id, dayKey: dayKey, setID: last.id)
+        deleteMessages.append(message)
+        send(WatchKey.delete, message)
+        syncState()
+        WKInterfaceDevice.current().play(.click)
+    }
+    /// 아직 아이폰이 확인하지 않은 변경을 전체 상태로 다시 보낸다. 여러 번 보내도 안전하다.
+    func syncState() {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated else { return }
+        let today = dayKey
+        let state = WatchState(
+            sets: pending.filter { $0.dayKey == today },
+            deletes: deleteMessages.filter { $0.dayKey == today },
+            planned: planned.map { WatchPlannedMessage(exerciseID: $0.key, dayKey: today, planned: $0.value) })
+        guard let data = try? JSONEncoder().encode(state) else { return }
+        try? WCSession.default.updateApplicationContext([WatchKey.state: data])
+        if WCSession.default.isReachable { WCSession.default.sendMessage([WatchKey.state: data], replyHandler: nil, errorHandler: nil) }
+    }
+    private func send<T: Encodable>(_ key: String, _ message: T) {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated, let data = try? JSONEncoder().encode(message) else { return }
+        WCSession.default.transferUserInfo([key: data])
     }
     func defaultWeight(for exercise: Exercise) -> Double? { payload.hints[exercise.id]?.weight }
     func defaultReps(for exercise: Exercise) -> Int { payload.hints[exercise.id]?.target ?? exercise.defaultTarget }
@@ -71,9 +120,8 @@ final class WatchStore: NSObject, WCSessionDelegate {
         let message = WatchSetMessage(exerciseID: exercise.id, dayKey: dayKey, set: set)
         pending.append(message)
         if let data = try? JSONEncoder().encode(pending) { UserDefaults.standard.set(data, forKey: Self.pendingKey) }
-        if WCSession.default.activationState == .activated, let data = try? JSONEncoder().encode(message) {
-            WCSession.default.transferUserInfo([WatchKey.set: data])
-        }
+        send(WatchKey.set, message)
+        syncState()
         WKInterfaceDevice.current().play(.success)
         if sets(for: exercise).count < plannedSets(exercise) { startRest(seconds: payload.restSeconds) }
     }
@@ -129,13 +177,24 @@ final class WatchStore: NSObject, WCSessionDelegate {
         payload = received
         UserDefaults.standard.set(data, forKey: Self.payloadKey)
         let known = Set(received.today.values.flatMap { $0 }.map(\.id))
-        pending.removeAll { known.contains($0.set.id) || $0.dayKey != dayKey }
+        let acked = Set(received.acked ?? [])
+        pending.removeAll { known.contains($0.set.id) || acked.contains($0.set.id) || $0.dayKey != dayKey }
+        deleted = deleted.filter { known.contains($0) }
+        deleteMessages.removeAll { !known.contains($0.setID) || $0.dayKey != dayKey }
+        for (id, item) in received.overrides ?? [:] where item.at > (planned[id]?.at ?? .distantPast) { planned[id] = item }
+        savePlanned()
         if let encoded = try? JSONEncoder().encode(pending) { UserDefaults.standard.set(encoded, forKey: Self.pendingKey) }
     }
 
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        guard let data = session.receivedApplicationContext[WatchKey.payload] as? Data else { return }
-        Task { @MainActor in self.apply(data) }
+        let data = session.receivedApplicationContext[WatchKey.payload] as? Data
+        Task { @MainActor in
+            if let data { self.apply(data) }
+            self.syncState()
+        }
+    }
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        Task { @MainActor in self.syncState() }
     }
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         guard let data = applicationContext[WatchKey.payload] as? Data else { return }

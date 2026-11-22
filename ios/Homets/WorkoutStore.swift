@@ -17,20 +17,53 @@ final class WorkoutStore {
     private var restTask: Task<Void, Never>?
     private static let storageKey = "homets_native_v1"
     var defaultSets = UserDefaults.standard.integer(forKey: "homets.sets") == 0 ? 3 : UserDefaults.standard.integer(forKey: "homets.sets")
-    var setOverrides: [String: Int] = [:]
+    private struct PlannedState: Codable { var day: String; var overrides: [String: WatchPlanned]; var defaultSetsAt: Date }
+    private static let plannedKey = "homets.planned.v1"
+    private static let ackedKey = "homets.watch.acked"
+    /// 운동별 세트 수(오늘 한정). 워치에서 바꾼 값과 시각 기준으로 합친다.
+    private(set) var plannedOverrides: [String: WatchPlanned] = [:]
+    private(set) var defaultSetsAt = Date.distantPast
+    private var ackedWatchIDs: [UUID] = []
     private var restDeadline: Date?
     private var systemAlarmID: UUID?
     private var restSoundPlayer: AVAudioPlayer?
-    func plannedSets(_ id: String) -> Int { setOverrides[id] ?? defaultSets }
+    var watchAcked: [UUID] { ackedWatchIDs }
+    func plannedSets(_ id: String) -> Int {
+        if let item = plannedOverrides[id], item.at > defaultSetsAt { return item.count }
+        return defaultSets
+    }
     func changeSets(_ delta: Int, id: String? = nil) {
-        if let id { setOverrides[id] = min(10, max(1, max(today.sets[id]?.count ?? 0, plannedSets(id) + delta))) }
-        else { defaultSets = min(10, max(1, defaultSets + delta)); UserDefaults.standard.set(defaultSets, forKey: "homets.sets"); setOverrides = [:] }
+        if let id {
+            let count = min(10, max(1, max(today.sets[id]?.count ?? 0, plannedSets(id) + delta)))
+            plannedOverrides[id] = WatchPlanned(count: count, at: .now)
+        } else {
+            defaultSets = min(10, max(1, defaultSets + delta)); UserDefaults.standard.set(defaultSets, forKey: "homets.sets")
+            plannedOverrides = [:]; defaultSetsAt = .now
+        }
+        savePlanned(); WatchSync.shared.push()
+    }
+    private func savePlanned() {
+        let state = PlannedState(day: dateKey(), overrides: plannedOverrides, defaultSetsAt: defaultSetsAt)
+        if let encoded = try? JSONEncoder().encode(state) { UserDefaults.standard.set(encoded, forKey: Self.plannedKey) }
+    }
+    private func loadPlanned() {
+        if let raw = UserDefaults.standard.data(forKey: Self.plannedKey), let state = try? JSONDecoder().decode(PlannedState.self, from: raw), state.day == dateKey() {
+            plannedOverrides = state.overrides; defaultSetsAt = state.defaultSetsAt
+        }
+        if let raw = UserDefaults.standard.data(forKey: Self.ackedKey), let ids = try? JSONDecoder().decode([UUID].self, from: raw) { ackedWatchIDs = ids }
+    }
+    private func ack(_ id: UUID) {
+        guard !ackedWatchIDs.contains(id) else { return }
+        ackedWatchIDs.append(id)
+        if ackedWatchIDs.count > 300 { ackedWatchIDs.removeFirst(ackedWatchIDs.count - 300) }
+        if let encoded = try? JSONEncoder().encode(ackedWatchIDs) { UserDefaults.standard.set(encoded, forKey: Self.ackedKey) }
     }
 
     init() {
         if let raw = UserDefaults.standard.data(forKey: Self.storageKey), let decoded = try? JSONDecoder().decode(StoredData.self, from: raw) { data = decoded }
         else { data = StoredData() }
         UIApplication.shared.isIdleTimerDisabled = data.settings.keepAwake
+        loadPlanned()
     }
     var exercises: [Exercise] { Exercise.builtIn + data.customExercises }
     var activeExercises: [Exercise] { data.settings.activeExerciseIDs.compactMap { id in exercises.first { $0.id == id } } }
@@ -152,15 +185,31 @@ final class WorkoutStore {
         var hints: [String: WatchHint] = [:]
         for exercise in list { hints[exercise.id] = WatchHint(weight: suggestedWeight(for: exercise), target: suggestedTarget(for: exercise)) }
         return WatchPayload(english: hometsIsEnglish, exercises: list, restSeconds: data.settings.defaultRestSeconds,
-                            defaultSets: defaultSets, dayKey: dateKey(), today: today.sets, hints: hints)
+                            defaultSets: defaultSets, dayKey: dateKey(), today: today.sets, hints: hints,
+                            overrides: plannedOverrides, defaultSetsAt: defaultSetsAt, acked: ackedWatchIDs)
     }
     func ingestWatch(_ message: WatchSetMessage) {
         var day = data.days[message.dayKey] ?? WorkoutDay(id: message.dayKey)
         var items = day.sets[message.exerciseID, default: []]
-        guard !items.contains(where: { $0.id == message.set.id }) else { return }
+        // 이미 처리한 세트(삭제된 것 포함)는 다시 추가하지 않는다.
+        guard !ackedWatchIDs.contains(message.set.id), !items.contains(where: { $0.id == message.set.id }) else { return }
+        ack(message.set.id)
         items.append(message.set); items.sort { $0.date < $1.date }
         day.sets[message.exerciseID] = items; data.days[message.dayKey] = day
         save()
+    }
+    func ingestWatchDelete(_ message: WatchDeleteMessage) {
+        ack(message.setID)
+        guard var day = data.days[message.dayKey], var items = day.sets[message.exerciseID], let index = items.firstIndex(where: { $0.id == message.setID }) else { save(); return }
+        items.remove(at: index); day.sets[message.exerciseID] = items; data.days[message.dayKey] = day
+        save()
+    }
+    func ingestWatchPlanned(_ message: WatchPlannedMessage) {
+        guard message.dayKey == dateKey() else { return }
+        if let current = plannedOverrides[message.exerciseID], current.at >= message.planned.at { return }
+        let floor = max(1, today.sets[message.exerciseID]?.count ?? 0)
+        plannedOverrides[message.exerciseID] = WatchPlanned(count: min(10, max(floor, message.planned.count)), at: message.planned.at)
+        savePlanned(); WatchSync.shared.push()
     }
     private func dateKey(_ date: Date = .now) -> String { let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: date) }
     private func scheduleNotification(after seconds: Int) {

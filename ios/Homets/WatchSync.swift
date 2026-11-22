@@ -42,9 +42,25 @@ final class WatchSync: NSObject, WCSessionDelegate {
         Task { @MainActor in self.push() }
     }
 
+    nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) { receive(applicationContext) }
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) { receive(message) }
+    private nonisolated func receive(_ info: [String: Any]) {
+        guard let data = info[WatchKey.state] as? Data, let state = try? JSONDecoder().decode(WatchState.self, from: data) else { return }
+        Task { @MainActor in
+            for item in state.sets { self.store?.ingestWatch(item) }
+            for item in state.deletes { self.store?.ingestWatchDelete(item) }
+            for item in state.planned { self.store?.ingestWatchPlanned(item) }
+        }
+    }
+
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-        guard let data = userInfo[WatchKey.set] as? Data,
-              let message = try? JSONDecoder().decode(WatchSetMessage.self, from: data) else { return }
-        Task { @MainActor in self.store?.ingestWatch(message) }
+        let decoder = JSONDecoder()
+        if let data = userInfo[WatchKey.set] as? Data, let message = try? decoder.decode(WatchSetMessage.self, from: data) {
+            Task { @MainActor in self.store?.ingestWatch(message) }
+        } else if let data = userInfo[WatchKey.delete] as? Data, let message = try? decoder.decode(WatchDeleteMessage.self, from: data) {
+            Task { @MainActor in self.store?.ingestWatchDelete(message) }
+        } else if let data = userInfo[WatchKey.planned] as? Data, let message = try? decoder.decode(WatchPlannedMessage.self, from: data) {
+            Task { @MainActor in self.store?.ingestWatchPlanned(message) }
+        }
     }
 }

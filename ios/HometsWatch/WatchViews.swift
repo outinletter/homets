@@ -5,9 +5,10 @@ private func number(_ value: Double) -> String { value.truncatingRemainder(divid
 
 struct WatchRootView: View {
     let store: WatchStore
+    @State private var path: [Exercise] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 if let remaining = store.restRemaining {
                     HStack(spacing: 6) {
@@ -21,7 +22,7 @@ struct WatchRootView: View {
                     .listRowBackground(RoundedRectangle(cornerRadius: 16).fill(WatchStyle.mintFill))
                     .accessibilityIdentifier("restBanner")
                 }
-                ForEach(store.exercises) { exercise in
+                ForEach(store.orderedExercises) { exercise in
                     NavigationLink(value: exercise) { row(exercise) }
                         .listRowBackground(RoundedRectangle(cornerRadius: 16).fill(WatchStyle.surfaceRaised))
                 }
@@ -31,6 +32,8 @@ struct WatchRootView: View {
             .containerBackground(WatchStyle.screenBackground, for: .navigation)
         }
         .tint(WatchStyle.blue)
+        // 설정한 세트를 모두 마치면 자동으로 전체 목록으로 돌아간다.
+        .onChange(of: store.completionTick) { _, _ in path.removeAll() }
     }
 
     private func row(_ exercise: Exercise) -> some View {
@@ -127,6 +130,8 @@ struct ExerciseView: View {
             VStack(spacing: 8) {
                 if let remaining = store.restRemaining {
                     restView(remaining)
+                } else if let left = store.timedRemaining, store.timedExerciseID == exercise.id {
+                    timedView(left)
                 } else {
                     HStack(spacing: 6) {
                         tile(.sets, title: store.text("세트", "SETS"), value: "\(done)/\(planned)", id: "tile-sets", tint: done >= planned ? WatchStyle.mint : WatchStyle.ink)
@@ -161,10 +166,14 @@ struct ExerciseView: View {
                             .opacity(done == 0 && planned <= store.defaultSetCount ? 0.35 : 1)
                             .accessibilityLabel(store.text("세트 삭제", "Remove set"))
                             .accessibilityIdentifier("undoSet")
-                        Button { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) } label: {
-                            Text(store.text("세트 완료", "Done"))
+                        Button {
+                            if isSeconds { store.startTimed(exercise, seconds: reps) }
+                            else { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) }
+                        } label: {
+                            Text(isSeconds ? store.text("시작", "Start") : store.text("세트 완료", "Done"))
                         }
                         .buttonStyle(WatchPrimaryButtonStyle())
+                        .disabled(isSeconds && store.timedExerciseID != nil)
                         .accessibilityIdentifier("logSet")
                         // 세트 추가(계획 세트 수 +1)는 기호 버튼으로 둔다.
                         Button { store.changePlannedSets(1, for: exercise); if field == .sets { crown = ticks(for: .sets) } } label: { Image(systemName: "plus") }
@@ -189,6 +198,7 @@ struct ExerciseView: View {
         .onChange(of: crown) { _, value in apply(value) }
         .onChange(of: field) { _, _ in crown = ticks(for: field); crownFocused = true }
         .onChange(of: store.restRemaining) { _, _ in crownFocused = true }
+        .onChange(of: store.timedRemaining) { _, _ in crownFocused = true }
         .onAppear { crownFocused = true }
     }
 
@@ -207,6 +217,28 @@ struct ExerciseView: View {
         .accessibilityLabel(title)
         .accessibilityValue(value)
         .accessibilityIdentifier(id)
+    }
+
+    private func timedView(_ remaining: Int) -> some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle().stroke(WatchStyle.border.opacity(0.7), lineWidth: 7)
+                Circle().trim(from: 0, to: min(1, Double(remaining) / Double(max(store.timedTotal, remaining))))
+                    .stroke(WatchStyle.ringGradient, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: -2) {
+                    Text(clock(remaining)).font(WatchStyle.font(30, .bold)).monospacedDigit().foregroundStyle(WatchStyle.ink)
+                        .accessibilityIdentifier("timedTime")
+                    Text(store.text("\(done + 1)세트 진행 중", "SET \(done + 1)")).font(WatchStyle.font(10, .semibold)).tracking(0.8).foregroundStyle(WatchStyle.text3)
+                }
+            }
+            .frame(width: 88, height: 88)
+            .padding(.top, 26)
+            Button(store.text("취소", "Cancel")) { store.cancelTimed() }
+                .buttonStyle(WatchGhostButtonStyle(tint: WatchStyle.lavender))
+                .accessibilityIdentifier("cancelTimed")
+        }
+        .padding(.bottom, 4)
     }
 
     private func restView(_ remaining: Int) -> some View {

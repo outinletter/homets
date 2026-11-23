@@ -143,8 +143,12 @@ final class WorkoutStore {
                 let seconds = max(0, Int(ceil(self.restDeadline?.timeIntervalSinceNow ?? 0)))
                 self.restRemaining = seconds == 0 ? nil : seconds
                 if seconds == 0, self.data.settings.timerSound {
-                    self.cancelSystemAlarm()
-                    self.playRestSound()
+                    if self.systemAlarmID != nil {
+                        // 시스템 알람이 울리는 중: 앱이 켜져 있으면 잠깐 울린 뒤 멈춘다.
+                        Task { [weak self] in try? await Task.sleep(for: .seconds(3)); self?.cancelSystemAlarm() }
+                    } else {
+                        self.playRestSound()
+                    }
                 }
             }
         }
@@ -181,11 +185,18 @@ final class WorkoutStore {
         WatchSync.shared.push()
     }
     func watchPayload() -> WatchPayload {
-        let list = activeExercises.filter { $0.tracking != .cardio }
+        var list = activeExercises.filter { $0.tracking != .cardio }
+        let sortMode = UserDefaults.standard.string(forKey: "homets.sort") ?? "default"
+        // 아이폰 운동 목록의 정렬 설정을 워치에도 그대로 적용한다(완료 운동을 아래로 보내는 기본 정렬은 워치가 실시간으로 처리).
+        switch sortMode {
+        case "name": list.sort { $0.localizedName.localizedStandardCompare($1.localizedName) == .orderedAscending }
+        case "group": list.sort { ($0.localizedGroup, $0.localizedName) < ($1.localizedGroup, $1.localizedName) }
+        default: break
+        }
         var hints: [String: WatchHint] = [:]
         for exercise in list { hints[exercise.id] = WatchHint(weight: suggestedWeight(for: exercise), target: suggestedTarget(for: exercise)) }
         return WatchPayload(english: hometsIsEnglish, exercises: list, restSeconds: data.settings.defaultRestSeconds,
-                            defaultSets: defaultSets, dayKey: dateKey(), today: today.sets, hints: hints,
+                            defaultSets: defaultSets, dayKey: dateKey(), today: today.sets, hints: hints, sortMode: sortMode,
                             overrides: plannedOverrides, defaultSetsAt: defaultSetsAt, acked: ackedWatchIDs)
     }
     func ingestWatch(_ message: WatchSetMessage) {
@@ -214,7 +225,8 @@ final class WorkoutStore {
     private func dateKey(_ date: Date = .now) -> String { let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: date) }
     private func scheduleNotification(after seconds: Int) {
         guard data.settings.timerSound else { return }
-        scheduleLocalNotification(after: seconds)
+        // 잠금 화면에서도 아이폰에서 소리가 나도록 시스템 알람을 쓴다. 알림은 잠금 상태에서 워치로만 전달되는 경우가 있다.
+        if #available(iOS 26.0, *) { scheduleSystemAlarm(after: seconds) } else { scheduleLocalNotification(after: seconds) }
     }
     private func scheduleLocalNotification(after seconds: Int) {
         let center = UNUserNotificationCenter.current()

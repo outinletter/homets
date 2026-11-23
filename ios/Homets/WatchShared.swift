@@ -15,6 +15,7 @@ struct WatchPayload: Codable, Equatable {
     var today: [String: [LoggedSet]] = [:]
     var hints: [String: WatchHint] = [:]
     /// 운동별 세트 수 변경(마지막으로 바꾼 쪽이 우선), 기본 세트 수를 바꾼 시각, 아이폰이 처리를 끝낸 워치 세트 ID.
+    var sortMode: String?
     var overrides: [String: WatchPlanned]?
     var defaultSetsAt: Date?
     var acked: [UUID]?

@@ -44,6 +44,23 @@ final class WatchStore: NSObject, WCSessionDelegate {
     var english: Bool { payload.english }
     func text(_ korean: String, _ english: String) -> String { payload.english ? english : korean }
     var exercises: [Exercise] { payload.exercises }
+    /// 아이폰 앱과 같은 정렬: 기본 정렬에서는 완료한 운동이 목록 맨 아래로 내려간다. 이름순·분류순은 아이폰이 정한 순서를 그대로 쓴다.
+    var orderedExercises: [Exercise] {
+        let list = payload.exercises
+        guard (payload.sortMode ?? "default") == "default" else { return list }
+        let unfinished = list.filter { sets(for: $0).count < plannedSets($0) }
+        let completed = list.filter { sets(for: $0).count >= plannedSets($0) }
+        return unfinished + completed
+    }
+    /// 계획한 세트를 모두 마치면 값이 올라가고, 화면은 이를 보고 전체 목록으로 돌아간다.
+    private(set) var completionTick = 0
+    // 시간(초) 운동 카운트다운
+    var timedExerciseID: String?
+    var timedRemaining: Int?
+    private(set) var timedTotal = 0
+    private var timedDeadline: Date?
+    private var timedTask: Task<Void, Never>?
+    private static let timedID = "homets-watch-timed"
     func name(_ exercise: Exercise) -> String { payload.english ? (Exercise.englishNames[exercise.id] ?? exercise.name) : exercise.name }
 
     private static let dayFormatter: DateFormatter = {
@@ -143,8 +160,52 @@ final class WatchStore: NSObject, WCSessionDelegate {
         send(WatchKey.set, message)
         syncState()
         WKInterfaceDevice.current().play(.success)
+        if sets(for: exercise).count == plannedSets(exercise) { completionTick += 1 }
         // 계획한 마지막 세트만 휴식 없이 끝낸다. 추가로 기록하는 세트(계획 초과)는 다음 세트가 이어지므로 휴식한다.
         if sets(for: exercise).count != plannedSets(exercise) { startRest(seconds: payload.restSeconds) }
+    }
+
+    // MARK: 시간(초) 운동
+
+    /// 시작 버튼을 누르면 카운트다운하고, 끝나면 그 시간을 한 세트로 기록한다.
+    func startTimed(_ exercise: Exercise, seconds: Int) {
+        guard restRemaining == nil, timedExerciseID == nil else { return }
+        let length = max(1, seconds)
+        timedExerciseID = exercise.id; timedTotal = length; timedRemaining = length
+        timedDeadline = Date.now.addingTimeInterval(Double(length))
+        scheduleTimedNotification(after: length, name: name(exercise))
+        WKInterfaceDevice.current().play(.start)
+        timedTask = Task { [weak self] in
+            while let self, self.timedRemaining != nil {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                let left = max(0, Int(ceil(self.timedDeadline?.timeIntervalSinceNow ?? 0)))
+                if left == 0 { self.finishTimed(exercise) } else if left != self.timedRemaining { self.timedRemaining = left }
+            }
+        }
+    }
+    private func finishTimed(_ exercise: Exercise) {
+        let length = timedTotal
+        clearTimed()
+        log(length, weight: nil, for: exercise)
+    }
+    func cancelTimed() { clearTimed() }
+    private func clearTimed() {
+        timedTask?.cancel(); timedTask = nil
+        timedExerciseID = nil; timedRemaining = nil; timedDeadline = nil
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [Self.timedID])
+    }
+    private func scheduleTimedNotification(after seconds: Int, name: String) {
+        guard !ProcessInfo.processInfo.arguments.contains("-uitest") else { return }
+        let body = text("\(name) 시간이 끝났습니다.", "\(name) timer is complete.")
+        let id = Self.timedID
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "HOMETS"; content.body = body; content.sound = .default
+            center.add(UNNotificationRequest(identifier: id, content: content, trigger: UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false)))
+        }
     }
 
     // MARK: 휴식 타이머

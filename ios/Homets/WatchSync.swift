@@ -6,6 +6,7 @@ final class WatchSync: NSObject, WCSessionDelegate {
     @MainActor static let shared = WatchSync()
     @MainActor private weak var store: WorkoutStore?
     @MainActor private var lastEnglish = hometsIsEnglish
+    @MainActor private var lastSort = UserDefaults.standard.string(forKey: "homets.sort") ?? "default"
     @MainActor private var observer: NSObjectProtocol?
 
     @MainActor func start(store: WorkoutStore) {
@@ -13,8 +14,10 @@ final class WatchSync: NSObject, WCSessionDelegate {
         if observer == nil {
             observer = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated {
-                    guard let self, self.lastEnglish != hometsIsEnglish else { return }
-                    self.lastEnglish = hometsIsEnglish
+                    guard let self else { return }
+                    let sort = UserDefaults.standard.string(forKey: "homets.sort") ?? "default"
+                    guard self.lastEnglish != hometsIsEnglish || self.lastSort != sort else { return }
+                    self.lastEnglish = hometsIsEnglish; self.lastSort = sort
                     self.push()
                 }
             }

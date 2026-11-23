@@ -83,7 +83,7 @@ final class WatchStore: NSObject, WCSessionDelegate {
         savePlanned()
         scheduleSync()
     }
-    /// 마지막으로 기록한 세트를 지운다(아이폰에도 전달).
+    /// 가장 최근에 기록한 세트를 지운다. 누를 때마다 그 다음으로 최근 세트가 지워진다(아이폰에도 전달).
     func undoLastSet(for exercise: Exercise) {
         guard restRemaining == nil, let last = sets(for: exercise).last else { return }
         deleted.insert(last.id)

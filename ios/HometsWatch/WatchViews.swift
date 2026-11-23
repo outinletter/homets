@@ -153,8 +153,8 @@ struct ExerciseView: View {
                         .foregroundStyle(WatchStyle.text3)
                     }
                     HStack(spacing: 6) {
-                        // 세트 삭제(마지막 세트 취소)는 기호 버튼으로, 세트 완료가 주 버튼이다.
-                        Button { store.undoLastSet(for: exercise) } label: { Image(systemName: "arrow.uturn.backward") }
+                        // 세트 삭제(가장 최근 세트부터 하나씩)는 기호 버튼으로, 세트 완료가 주 버튼이다.
+                        Button { store.undoLastSet(for: exercise) } label: { Image(systemName: "trash") }
                             .buttonStyle(WatchGhostButtonStyle(tint: WatchStyle.lavender))
                             .frame(width: 46)
                             .disabled(done == 0)

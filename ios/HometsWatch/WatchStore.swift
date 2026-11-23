@@ -83,6 +83,15 @@ final class WatchStore: NSObject, WCSessionDelegate {
         savePlanned()
         scheduleSync()
     }
+    var defaultSetCount: Int { payload.defaultSets }
+    /// 삭제 버튼 동작: 계획 세트 수가 기본값(그리고 완료한 세트 수)보다 크면 먼저 계획 세트를 하나씩 줄이고,
+    /// 더 줄일 수 없으면 가장 최근에 기록한 세트부터 지운다. 예) 1/7 → 1/6 → … → 1/3 → 0/3, 3/3 → 2/3 → 1/3.
+    func removeSet(for exercise: Exercise) {
+        guard restRemaining == nil else { return }
+        let floor = max(payload.defaultSets, sets(for: exercise).count)
+        if plannedSets(exercise) > floor { changePlannedSets(-1, for: exercise); WKInterfaceDevice.current().play(.click) }
+        else { undoLastSet(for: exercise) }
+    }
     /// 가장 최근에 기록한 세트를 지운다. 누를 때마다 그 다음으로 최근 세트가 지워진다(아이폰에도 전달).
     func undoLastSet(for exercise: Exercise) {
         guard restRemaining == nil, let last = sets(for: exercise).last else { return }

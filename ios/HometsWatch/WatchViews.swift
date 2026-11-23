@@ -153,13 +153,13 @@ struct ExerciseView: View {
                         .foregroundStyle(WatchStyle.text3)
                     }
                     HStack(spacing: 6) {
-                        // 세트 삭제(가장 최근 세트부터 하나씩)는 기호 버튼으로, 세트 완료가 주 버튼이다.
-                        Button { store.undoLastSet(for: exercise) } label: { Image(systemName: "trash") }
+                        // 세트 삭제(−): 늘린 계획 세트를 먼저 줄이고, 기본 세트 수에 닿으면 가장 최근 기록부터 지운다., 세트 완료가 주 버튼이다.
+                        Button { store.removeSet(for: exercise) } label: { Image(systemName: "minus") }
                             .buttonStyle(WatchGhostButtonStyle(tint: WatchStyle.lavender))
                             .frame(width: 46)
-                            .disabled(done == 0)
-                            .opacity(done == 0 ? 0.35 : 1)
-                            .accessibilityLabel(store.text("마지막 세트 삭제", "Delete last set"))
+                            .disabled(done == 0 && planned <= store.defaultSetCount)
+                            .opacity(done == 0 && planned <= store.defaultSetCount ? 0.35 : 1)
+                            .accessibilityLabel(store.text("세트 삭제", "Remove set"))
                             .accessibilityIdentifier("undoSet")
                         Button { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) } label: {
                             Text(store.text("세트 완료", "Done"))

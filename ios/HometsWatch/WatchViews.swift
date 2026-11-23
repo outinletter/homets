@@ -153,18 +153,27 @@ struct ExerciseView: View {
                         .foregroundStyle(WatchStyle.text3)
                     }
                     HStack(spacing: 6) {
-                        if done > 0 {
-                            Button { store.undoLastSet(for: exercise) } label: { Image(systemName: "arrow.uturn.backward") }
-                                .buttonStyle(WatchGhostButtonStyle(tint: WatchStyle.lavender))
-                                .frame(width: 50)
-                                .accessibilityLabel(store.text("마지막 세트 삭제", "Delete last set"))
-                                .accessibilityIdentifier("undoSet")
-                        }
+                        // 세트 삭제(마지막 세트 취소)는 기호 버튼으로, 세트 완료가 주 버튼이다.
+                        Button { store.undoLastSet(for: exercise) } label: { Image(systemName: "arrow.uturn.backward") }
+                            .buttonStyle(WatchGhostButtonStyle(tint: WatchStyle.lavender))
+                            .frame(width: 46)
+                            .disabled(done == 0)
+                            .opacity(done == 0 ? 0.35 : 1)
+                            .accessibilityLabel(store.text("마지막 세트 삭제", "Delete last set"))
+                            .accessibilityIdentifier("undoSet")
                         Button { store.log(reps, weight: usesWeight ? weight : nil, for: exercise) } label: {
-                            Text(done >= planned ? store.text("세트 추가", "Add set") : store.text("세트 완료", "Done"))
+                            Text(store.text("세트 완료", "Done"))
                         }
                         .buttonStyle(WatchPrimaryButtonStyle())
                         .accessibilityIdentifier("logSet")
+                        // 세트 추가(계획 세트 수 +1)는 기호 버튼으로 둔다.
+                        Button { store.changePlannedSets(1, for: exercise); if field == .sets { crown = ticks(for: .sets) } } label: { Image(systemName: "plus") }
+                            .buttonStyle(WatchGhostButtonStyle())
+                            .frame(width: 46)
+                            .disabled(planned >= 10)
+                            .opacity(planned >= 10 ? 0.35 : 1)
+                            .accessibilityLabel(store.text("세트 추가", "Add set"))
+                            .accessibilityIdentifier("addSet")
                     }
                 }
             }

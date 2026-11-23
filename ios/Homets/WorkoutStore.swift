@@ -143,12 +143,11 @@ final class WorkoutStore {
                 let seconds = max(0, Int(ceil(self.restDeadline?.timeIntervalSinceNow ?? 0)))
                 self.restRemaining = seconds == 0 ? nil : seconds
                 if seconds == 0, self.data.settings.timerSound {
-                    if self.systemAlarmID != nil {
-                        // 시스템 알람이 울리는 중: 앱이 켜져 있으면 잠깐 울린 뒤 멈춘다.
-                        Task { [weak self] in try? await Task.sleep(for: .seconds(3)); self?.cancelSystemAlarm() }
-                    } else {
-                        self.playRestSound()
-                    }
+                    self.cancelSystemAlarm()
+                    // 앱이 실행 중일 때 끝난 경우에만 소리를 낸다. 잠금 중에 끝나 알림이 워치로 전달됐다면,
+                    // 나중에 아이폰을 켰을 때 뒤늦게 울리지 않도록 마감 시각이 2초 넘게 지났으면 소리를 내지 않는다.
+                    let overdue = -(self.restDeadline?.timeIntervalSinceNow ?? 0)
+                    if overdue < 2 { self.playRestSound() }
                 }
             }
         }
@@ -225,8 +224,7 @@ final class WorkoutStore {
     private func dateKey(_ date: Date = .now) -> String { let f = DateFormatter(); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: date) }
     private func scheduleNotification(after seconds: Int) {
         guard data.settings.timerSound else { return }
-        // 잠금 화면에서도 아이폰에서 소리가 나도록 시스템 알람을 쓴다. 알림은 잠금 상태에서 워치로만 전달되는 경우가 있다.
-        if #available(iOS 26.0, *) { scheduleSystemAlarm(after: seconds) } else { scheduleLocalNotification(after: seconds) }
+        scheduleLocalNotification(after: seconds)
     }
     private func scheduleLocalNotification(after seconds: Int) {
         let center = UNUserNotificationCenter.current()
